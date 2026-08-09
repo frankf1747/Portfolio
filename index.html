@@ -12,112 +12,145 @@
 </head>
 <body>
 
-<!-- Entry flash: timed, skippable, once per session. NOT scroll-driven. -->
+<!-- Entry flash: timed, skippable, once per session -->
 <div id="flash" aria-hidden="true">
-  <div class="flash-screen" data-bg="#314B98" data-fg="#FEF8DD"><span>Data enthusiast</span></div>
-  <div class="flash-screen" data-bg="#B42318" data-fg="#F9CEE1"><span>Product mindset</span></div>
+  <div class="flash-screen" data-bg="#0B4FD8" data-fg="#FEF8DD"><span>Data enthusiast</span></div>
+  <div class="flash-screen" data-bg="#E8451F" data-fg="#F9CEE1"><span>Product mindset</span></div>
   <div class="flash-screen" data-bg="#004632" data-fg="#BDD0A0"><span>UX designer</span></div>
-  <div class="flash-screen" data-bg="#0A0A0C" data-fg="#FEF8DD"><span>Frank Fu</span></div>
+  <div class="flash-screen" data-bg="#05060A" data-fg="#FEF8DD"><span>Frank Fu</span></div>
 </div>
 
-<!-- Left rail: scroll progress + section nav -->
-<nav id="rail" aria-label="Sections">
-  <div class="rail-track"><div class="rail-fill"></div></div>
-  <a href="#top" class="rail-link" data-cursor="Intro">Intro</a>
-  <a href="#focus" class="rail-link" data-cursor="Focus">Focus</a>
-  <a href="#work" class="rail-link" data-cursor="Work">Work</a>
-  <a href="#contact" class="rail-link" data-cursor="Contact">Contact</a>
-</nav>
+<!-- The living surface: one shader, both pages -->
+<canvas id="field" aria-hidden="true"></canvas>
 
-<header id="top" class="band band-hero">
-  <div class="blob blob-a"></div>
-  <div class="blob blob-b"></div>
-  <div class="hero-inner">
-    <p class="kicker">Los Angeles · open to full-time</p>
-    <h1 class="hero-title">
-      <span class="line">Frank</span>
-      <span class="line">Fu</span>
-    </h1>
-    <p class="hero-sub">A hybrid of <em>data analysis</em>, <em>product management</em>,
-      and <em>UX design</em> — I make complex things legible, then make them work.</p>
-    <p class="scroll-hint" aria-hidden="true">scroll ↓</p>
+<!-- Global nav — monopo 3-column -->
+<header id="nav">
+  <a class="nav-logo" href="#/" data-route="home" data-cursor="Home">frank fu <span class="nav-logo-sub">| los angeles</span></a>
+  <nav class="nav-primary" aria-label="Primary">
+    <a href="#/" data-route="home" class="nav-link is-active" data-cursor="Home"><span class="tick">►</span> Home</a>
+    <a href="#/work" data-route="work" class="nav-link" data-cursor="Work"><span class="tick">►</span> Work</a>
+  </nav>
+  <div class="nav-side">
+    <a href="mailto:frankfu1747@gmail.com" data-cursor="Email me">Email</a>
+    <a href="https://github.com/frankf1747" target="_blank" rel="noopener" data-cursor="GitHub">GitHub</a>
+    <span class="nav-clock" id="clock">— : —</span>
   </div>
 </header>
 
-<section id="focus" class="band band-focus">
-  <h2 class="band-label" aria-label="Focus">Focus</h2>
-  <ol class="focus-list">
-    <li class="focus-item">
-      <span class="focus-num">01</span>
-      <h3>Data</h3>
-      <p>Causal inference, experimentation, search relevance. Numbers that answer
-        questions instead of decorating slides.</p>
-    </li>
-    <li class="focus-item">
-      <span class="focus-num">02</span>
-      <h3>Product</h3>
-      <p>Roadmaps grounded in evidence. I've shipped prototypes, cut scope, and
-        written the specs other people build from.</p>
-    </li>
-    <li class="focus-item">
-      <span class="focus-num">03</span>
-      <h3>Design</h3>
-      <p>UX with a bias for usability over spectacle. Interfaces that explain
-        themselves — like this one is trying to.</p>
-    </li>
-  </ol>
-</section>
+<main id="app">
 
-<section id="work" class="band band-work">
-  <h2 class="band-label" aria-label="Selected work">Work</h2>
-  <ul class="work-list">
-    <li class="work-card" data-cursor="View project">
-      <div class="work-media" aria-hidden="true"><span class="play">▶</span></div>
-      <div class="work-meta">
-        <span class="work-tags">Data · Search</span>
-        <h3>Starbucks search relevance</h3>
-        <p>Ranking menu queries for the UCLA × Starbucks challenge — query
-          understanding, offline evaluation, and an error taxonomy.</p>
+  <!-- ======== HOME ======== -->
+  <section class="view" data-view="home">
+    <div class="hero">
+      <h1 class="hero-title">
+        <span class="l l1">Data, product</span>
+        <span class="l l2">&amp; des<i>i</i>gn →</span>
+        <span class="l l3">one h<i>y</i>brid</span>
+      </h1>
+      <p class="hero-aside">Analyst by training, PM by habit, designer by taste.
+        I make complex things legible — then make them work.</p>
+      <div class="hero-foot">
+        <div><strong>Based in LA</strong><span>UCLA MSBA</span></div>
+        <div><strong>Data-driven</strong><span>causal &amp; search</span></div>
+        <div><strong>Open to</strong><span>full-time roles</span></div>
+        <span class="hero-arrow">↓</span>
       </div>
-    </li>
-    <li class="work-card" data-cursor="View project">
-      <div class="work-media" aria-hidden="true"><span class="play">▶</span></div>
-      <div class="work-meta">
-        <span class="work-tags">Data · Causal</span>
-        <h3>DoorDash regression discontinuity</h3>
-        <p>Estimating the effect of a delivery-fee threshold with an RDD —
-          identification strategy, robustness checks, honest caveats.</p>
-      </div>
-    </li>
-    <li class="work-card" data-cursor="View project">
-      <div class="work-media" aria-hidden="true"><span class="play">▶</span></div>
-      <div class="work-meta">
-        <span class="work-tags">Product · AI</span>
-        <h3>Multi-agent RAG system</h3>
-        <p>A working agent pipeline with retrieval, tools, and tests — built,
-          not just diagrammed.</p>
-      </div>
-    </li>
-  </ul>
-  <p class="work-note">Demo videos land here soon — each card becomes a short screen capture.</p>
-</section>
+    </div>
 
-<footer id="contact" class="band band-contact">
-  <h2 class="contact-title"><span class="line">Say</span><span class="line">hello</span></h2>
-  <button id="copy-email" class="email" data-cursor="Copy email">frankfu1747@gmail.com</button>
-  <div class="contact-links">
-    <a href="https://github.com/frankf1747" data-cursor="GitHub">GitHub</a>
-    <a href="https://www.linkedin.com/" data-cursor="LinkedIn">LinkedIn</a>
-    <a href="#" data-cursor="Resume">Resume</a>
-  </div>
-  <p class="colophon">Designed as a system: grain over every field, colour pairs that
-    always cross the light/dark split, and nothing that hijacks your scroll.</p>
-</footer>
+    <div class="recent">
+      <p class="section-tag">Recent work</p>
+      <a class="recent-row" href="#/work" data-cursor="View work">
+        <span class="recent-num">01</span>
+        <span class="recent-name">Starbucks — search re<i>l</i>evance</span>
+        <span class="recent-cat">Data</span>
+      </a>
+      <a class="recent-row" href="#/work" data-cursor="View work">
+        <span class="recent-num">02</span>
+        <span class="recent-name">DoorDash — regress<i>i</i>on discontinuity</span>
+        <span class="recent-cat">Data</span>
+      </a>
+      <a class="recent-row" href="#/work" data-cursor="View work">
+        <span class="recent-num">03</span>
+        <span class="recent-name">Multi-agent RAG s<i>y</i>stem</span>
+        <span class="recent-cat">Product</span>
+      </a>
+      <a class="recent-all" href="#/work" data-cursor="All work">All work →</a>
+    </div>
 
-<!-- Grain overlay: one layer over everything -->
+    <div class="contact-strip">
+      <h2 class="contact-big">Say he<i>l</i>lo</h2>
+      <button id="copy-email" class="email" data-cursor="Copy email">frankfu1747@gmail.com</button>
+    </div>
+  </section>
+
+  <!-- ======== WORK ======== -->
+  <section class="view" data-view="work" hidden>
+    <div class="work-hero">
+      <h1 class="work-title">
+        <span class="l l1">Three crafts,</span>
+        <span class="l l2">one po<i>i</i>nt of view</span>
+      </h1>
+      <p class="work-aside">Every project here shipped something real — a model,
+        a prototype, a decision. Filter by what you care about.</p>
+    </div>
+
+    <div class="work-body">
+      <nav class="filter-rail" aria-label="Filter projects">
+        <button class="filter is-active" data-filter="all"><span class="tick">►</span> All</button>
+        <button class="filter" data-filter="data"><span class="tick">►</span> Data</button>
+        <button class="filter" data-filter="product"><span class="tick">►</span> Product</button>
+        <button class="filter" data-filter="design"><span class="tick">►</span> Design</button>
+      </nav>
+
+      <ul class="grid">
+        <li class="card" data-cat="data" data-cursor="View project">
+          <div class="card-media m-blue"><span class="play">▶</span></div>
+          <h3>Starbucks search relevance</h3>
+          <p>Ranking menu queries — query understanding, offline eval, error taxonomy.</p>
+          <span class="card-tags">Data · Search</span>
+        </li>
+        <li class="card" data-cat="data" data-cursor="View project">
+          <div class="card-media m-red"><span class="play">▶</span></div>
+          <h3>DoorDash RDD</h3>
+          <p>Causal effect of a delivery-fee threshold. Identification, robustness, caveats.</p>
+          <span class="card-tags">Data · Causal</span>
+        </li>
+        <li class="card" data-cat="product" data-cursor="View project">
+          <div class="card-media m-green"><span class="play">▶</span></div>
+          <h3>Multi-agent RAG system</h3>
+          <p>Retrieval, tools, tests — a working pipeline, not a diagram.</p>
+          <span class="card-tags">Product · AI</span>
+        </li>
+        <li class="card" data-cat="product" data-cursor="View project">
+          <div class="card-media m-orange"><span class="play">▶</span></div>
+          <h3>Dell — M&amp;A analysis</h3>
+          <p>Market sizing and strategy for a live case, argued to a partner panel.</p>
+          <span class="card-tags">Product · Strategy</span>
+        </li>
+        <li class="card" data-cat="design" data-cursor="View project">
+          <div class="card-media m-indigo"><span class="play">▶</span></div>
+          <h3>AI Joke Factory</h3>
+          <p>End-to-end product design — flows, backend logic, and a v2 shipped on user notes.</p>
+          <span class="card-tags">Design · Product</span>
+        </li>
+        <li class="card" data-cat="design" data-cursor="View project">
+          <div class="card-media m-cream"><span class="play">▶</span></div>
+          <h3>This portfolio</h3>
+          <p>Taste-discovery workflow → design tokens → the site you're looking at.</p>
+          <span class="card-tags">Design · Process</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="contact-strip">
+      <h2 class="contact-big">Say he<i>l</i>lo</h2>
+      <button class="email js-copy" data-cursor="Copy email">frankfu1747@gmail.com</button>
+    </div>
+  </section>
+
+</main>
+
 <div id="grain" aria-hidden="true"></div>
-
-<!-- Custom cursor label -->
 <div id="cursor" aria-hidden="true"><span id="cursor-label"></span></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
