@@ -78,14 +78,12 @@ void main(){
         genuinely re-forms rather than sliding. */
   vec2 mo = (uMouse - 0.5) * 1.35;
 
-  /* 2) local REPULSION — space is pushed outward around the pointer, so the
-        colour flows around it and a hollow opens where the cursor sits.
-        This is the whole interaction: the field parts for your hand. */
-  vec2 mp = (uMouse - 0.5) * vec2(uRes.x / uRes.y, 1.0) / (uZoom * uScale);
-  vec2 away = p - mp;
-  float md = length(away);
-  float bell = exp(-md * md * 0.72);
-  p += normalize(away + vec2(1e-5)) * bell * uRepel;
+  /* 2) AVOIDANCE — the colour mass slides away from the pointer as a whole.
+        Deliberately NOT a radial push from the cursor: displacing along
+        normalize(p - mouse) makes the field radiate out of the pointer,
+        which reads as expanding from it rather than shying away. A single
+        translation opposite the pointer is what "avoiding" looks like. */
+  vec2 avoid = (uMouse - 0.5) * vec2(1.75, 0.85) * uRepel;
 
   /* Anisotropic domain — noise features stretch along X, so the whole
      field trends horizontally instead of blooming radially. */
@@ -100,19 +98,24 @@ void main(){
 
   /* four colour blobs strung out in a horizontal row, each a wide ellipse —
      the band reads as one long ribbon crossing the frame */
-  vec2 q = rot(w - uColorOffset, uColorRotation);
+  vec2 q = rot(w - uColorOffset + avoid, uColorRotation);
   vec2 s0 = vec2(-1.62,  0.12) * uColorSpacing;
   vec2 s1 = vec2(-0.54, -0.17) * uColorSpacing;
   vec2 s2 = vec2( 0.54,  0.15) * uColorSpacing;
   vec2 s3 = vec2( 1.62, -0.11) * uColorSpacing;
 
+  /* COVERAGE follows the pointer's horizontal position: at the left edge
+     the field swells to flood the frame, at the right edge it retreats and
+     black takes over. Centre sits near 1.0 — the resting look. */
+  float cov = mix(1.52, 0.66, clamp(uMouse.x, 0.0, 1.0));
+
   /* wide + short, and unequal: the deep/warm pair carry the field, the
      cool and the acid yellow stay highlights rather than equal stripes */
   const vec2 ELL = vec2(0.58, 1.85);
-  float d0 = smoothstep(uColorSize * 1.18, 0.0, length((q - s0) * ELL));
-  float d1 = smoothstep(uColorSize * 1.02, 0.0, length((q - s1) * ELL));
-  float d2 = smoothstep(uColorSize * 0.78, 0.0, length((q - s2) * ELL));
-  float d3 = smoothstep(uColorSize * 0.50, 0.0, length((q - s3) * ELL));
+  float d0 = smoothstep(uColorSize * 1.18 * cov, 0.0, length((q - s0) * ELL));
+  float d1 = smoothstep(uColorSize * 1.02 * cov, 0.0, length((q - s1) * ELL));
+  float d2 = smoothstep(uColorSize * 0.78 * cov, 0.0, length((q - s2) * ELL));
+  float d3 = smoothstep(uColorSize * 0.50 * cov, 0.0, length((q - s3) * ELL));
 
   /* spread sharpens the falloff — the black between the light */
   d0 = pow(d0, uColorSpread * 0.25);
@@ -120,22 +123,19 @@ void main(){
   d2 = pow(d2, uColorSpread * 0.25);
   d3 = pow(d3, uColorSpread * 0.25);
 
-  /* Colour FILLS the frame: the deep tone is the canvas, not black, and the
-     others layer over it. Black is something the interaction creates, not
-     the state the field starts from. */
-  vec3 col = uC0;
+  /* Black base with the ribbon laid over it — the resting look. Coverage
+     is what the pointer changes, not the base: no hollow is carved at the
+     cursor, because a dark disc tracking the pointer reads as centred on
+     it rather than avoiding it. */
+  vec3 col = vec3(0.0);
+  col = mix(col, uC0, d0);
   col = mix(col, uC1, d1);
   col = mix(col, uC2, d2);
   col = mix(col, uC3, d3);
-  col = mix(col, uC0 * 1.35, d0 * 0.7);
 
-  /* broad luminance passages so it still breathes light-to-dark */
-  float f = 0.5 + 0.5 * (n1 * 0.55 + n2 * 0.45);
-  float lum = smoothstep(0.10, 0.72, f);
-  col *= 0.34 + 0.78 * lum;
-
-  /* the hollow the pointer carves — a soft void that travels with it */
-  col *= 1.0 - uVoid * exp(-md * md * 0.80);
+  /* thin tails fall to true black — the darkness between the light */
+  float cover = max(max(d0, d1), max(d2, d3));
+  col *= smoothstep(0.015, 0.34, cover);
 
   /* film grain, also dithers the dark falloff — static, like real film */
   float g = hash(gl_FragCoord.xy * uNoiseSize);
@@ -188,11 +188,11 @@ class GradientApp {
     my: 0.5,
     tmx: 0.5,
     tmy: 0.5,
-    colorSize: 1.55,       // large enough that the blobs overlap and fill
-    colorSpacing: 0.72,
-    colorSpread: 2.1,      // gentle falloff — no hard black gaps
-    repel: 1.15,
-    void: 0.93,
+    colorSize: 0.92,       // resting size; the pointer's X scales it
+    colorSpacing: 0.64,
+    colorSpread: 4.6,       // sharp falloff — real black between the light
+    repel: 1.0,             // avoidance strength (whole-field translation)
+    void: 0.0,              // retired: a hollow at the cursor read as centred on it
     colorRotation: 0.07,   // near-flat: the band runs across, not diagonally
     displacement: 3.6,
     spacing: 2.6,
