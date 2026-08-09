@@ -30,6 +30,8 @@ uniform float uZoom;          // ~0.72
 uniform float uSeed;
 uniform float uNoiseSize;     // grain scale
 uniform float uNoiseIntensity;// ~0.06
+uniform float uRepel;         // how hard the pointer pushes the field away
+uniform float uVoid;          // how dark the hollow around the pointer goes
 
 /* --- 2D simplex noise (Ashima / IQ derivative, inlined) --- */
 vec3 permute(vec3 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
@@ -76,11 +78,14 @@ void main(){
         genuinely re-forms rather than sliding. */
   vec2 mo = (uMouse - 0.5) * 1.35;
 
-  /* 2) local pull — space bends toward the cursor with a soft falloff,
-        so motion feels attached to the hand near the pointer. */
+  /* 2) local REPULSION — space is pushed outward around the pointer, so the
+        colour flows around it and a hollow opens where the cursor sits.
+        This is the whole interaction: the field parts for your hand. */
   vec2 mp = (uMouse - 0.5) * vec2(uRes.x / uRes.y, 1.0) / (uZoom * uScale);
-  float md = length(p - mp);
-  p += (mp - p) * 0.16 * exp(-md * 1.6);
+  vec2 away = p - mp;
+  float md = length(away);
+  float bell = exp(-md * md * 0.72);
+  p += normalize(away + vec2(1e-5)) * bell * uRepel;
 
   /* Anisotropic domain — noise features stretch along X, so the whole
      field trends horizontally instead of blooming radially. */
@@ -115,16 +120,22 @@ void main(){
   d2 = pow(d2, uColorSpread * 0.25);
   d3 = pow(d3, uColorSpread * 0.25);
 
-  vec3 col = vec3(0.0);
-  col = mix(col, uC0, d0);
+  /* Colour FILLS the frame: the deep tone is the canvas, not black, and the
+     others layer over it. Black is something the interaction creates, not
+     the state the field starts from. */
+  vec3 col = uC0;
   col = mix(col, uC1, d1);
   col = mix(col, uC2, d2);
   col = mix(col, uC3, d3);
+  col = mix(col, uC0 * 1.35, d0 * 0.7);
 
-  /* fall the thin tails all the way to true black — the darkness between
-     the light is the point, and it stops the milky wash */
-  float cover = max(max(d0, d1), max(d2, d3));
-  col *= smoothstep(0.015, 0.34, cover);
+  /* broad luminance passages so it still breathes light-to-dark */
+  float f = 0.5 + 0.5 * (n1 * 0.55 + n2 * 0.45);
+  float lum = smoothstep(0.10, 0.72, f);
+  col *= 0.34 + 0.78 * lum;
+
+  /* the hollow the pointer carves — a soft void that travels with it */
+  col *= 1.0 - uVoid * exp(-md * md * 0.80);
 
   /* film grain, also dithers the dark falloff — static, like real film */
   float g = hash(gl_FragCoord.xy * uNoiseSize);
@@ -177,9 +188,11 @@ class GradientApp {
     my: 0.5,
     tmx: 0.5,
     tmy: 0.5,
-    colorSize: 0.86,
-    colorSpacing: 0.60,
-    colorSpread: 5.4,
+    colorSize: 1.55,       // large enough that the blobs overlap and fill
+    colorSpacing: 0.72,
+    colorSpread: 2.1,      // gentle falloff — no hard black gaps
+    repel: 1.15,
+    void: 0.93,
     colorRotation: 0.07,   // near-flat: the band runs across, not diagonally
     displacement: 3.6,
     spacing: 2.6,
@@ -233,7 +246,8 @@ class GradientApp {
       "uRes", "uMouse", "uTransform", "uOpacity", "uScale",
       "uC0", "uC1", "uC2", "uC3",
       "uColorSize", "uColorSpacing", "uColorSpread", "uColorOffset", "uColorRotation",
-      "uDisplacement", "uSpacing", "uZoom", "uSeed", "uNoiseSize", "uNoiseIntensity"
+      "uDisplacement", "uSpacing", "uZoom", "uSeed", "uNoiseSize", "uNoiseIntensity",
+      "uRepel", "uVoid"
     ].forEach(n => { this.u[n] = gl.getUniformLocation(prog, n); });
 
     this.resize();
@@ -310,6 +324,8 @@ class GradientApp {
     gl.uniform1f(this.u.uSeed, s.seed);
     gl.uniform1f(this.u.uNoiseSize, s.noiseSize);
     gl.uniform1f(this.u.uNoiseIntensity, s.noiseIntensity);
+    gl.uniform1f(this.u.uRepel, s.repel);
+    gl.uniform1f(this.u.uVoid, s.void);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.draws++;
     this.raf = requestAnimationFrame(this.frame);

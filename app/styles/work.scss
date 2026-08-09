@@ -19,8 +19,11 @@
 
 .c-Work-content { position: relative; z-index: 1; }
 
-/* N empty spacers give the section its height — 100vh each */
-.c-Work-project { height: 100vh; }
+/* N empty spacers give the section its height. Taller than a viewport so a
+   single trackpad flick advances part of one project rather than several —
+   the dwell needs room to be felt. */
+.c-Work { --project-scroll: 210vh; }
+.c-Work-project { height: var(--project-scroll); }
 
 .c-Work-sticky {
   position: absolute;
