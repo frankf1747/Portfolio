@@ -7,7 +7,7 @@
 }
 
 /* ---------- Page wrapper (above the canvas) ---------- */
-.c-Page { position: relative; z-index: 1; }
+.c-Page { position: relative; z-index: 2; }
 
 /* ---------- Preloader ---------- */
 .c-Preloader {
@@ -208,89 +208,6 @@
 @keyframes heroArrow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(8px); }
-}
-
-/* ---------- Selected Work (pinned deck) ---------- */
-.c-Work { position: relative; }
-.c-Work-stage {
-  height: 100svh;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  padding: 0 var(--pad);
-}
-.c-Work-ruler {
-  position: absolute;
-  left: calc(var(--pad) * 0.35);
-  top: 8%; bottom: 8%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  i {
-    width: 5px; height: 1px;
-    background: var(--muted);
-    display: block;
-  }
-}
-.c-Work-marker {
-  position: absolute;
-  left: 10px;
-  font-size: 0.6rem;
-  transition: top 0.2s linear;
-}
-.c-Work-slide {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 4vw;
-  align-items: center;
-  padding: 0 var(--pad);
-  visibility: hidden;
-}
-.c-Work-title {
-  font-size: clamp(2rem, 3.5vw, 3.25rem);
-  font-weight: 400;
-  text-transform: uppercase;
-  line-height: 1.08;
-  margin: 1.2rem 0 0.8rem;
-}
-.c-Work-tags { font-size: 0.78rem; letter-spacing: 0.12em; }
-.c-Work-open {
-  display: inline-block;
-  margin-top: 1.6rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--white);
-  padding-bottom: 0.3em;
-}
-.c-Work-card { display: block; }
-.c-Work-cardArt {
-  aspect-ratio: 16 / 10;
-  transition: transform 0.35s var(--ease);
-  .c-Work-card:hover & { transform: scale(1.03); }
-}
-.c-Work-cta {
-  display: flex;
-  justify-content: center;
-  padding: 10vh var(--pad) 14vh;
-}
-
-/* unpinned stack below 1024 */
-@media (max-width: 1023px) {
-  .c-Work-stage { height: auto; display: block; padding: 12vh var(--pad); }
-  .c-Work-slide {
-    position: static;
-    visibility: visible !important;
-    opacity: 1 !important;
-    display: block;
-    margin-bottom: 12vh;
-  }
-  .c-Work-ruler { display: none; }
-  .c-Work-card { margin-top: 1.6rem; }
 }
 
 /* ---------- Capabilities ---------- */

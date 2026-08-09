@@ -1,0 +1,310 @@
+/* ============================================================
+   RECENT WORK — scroll-pinned showcase
+   ============================================================ */
+
+.c-Work { position: relative; }
+
+/* One fixed canvas for the whole filmstrip. It sits at z-index 0 *inside*
+   .c-Page (which is z-index 2 at the root), so it is above the fullscreen
+   gradient but below this section's own content. The sticky layer sets
+   will-change: transform, which makes it a stacking context at z-index
+   auto — so the canvas must be below it, not at z-index 1, or it would
+   paint over the titles. The text-over-photograph overlap is the point. */
+.c-Work-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.c-Work-content { position: relative; z-index: 1; }
+
+/* N empty spacers give the section its height — 100vh each */
+.c-Work-project { height: 100vh; }
+
+.c-Work-sticky {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 100vh;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  padding-inline: 3.9vw;
+}
+
+/* ---------- LAYER A: images (behind) ---------- */
+.c-Work-media {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.c-Work-media .row { width: 100%; }
+.c-Work-window-link { display: block; pointer-events: auto; }
+.c-Work-window {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.6;       /* 16:10 — fixed window, never changes */
+  overflow: hidden;
+}
+
+/* ---------- LAYER B: text (on top, deliberately overlapping) ---------- */
+.c-Work-layer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 31vh;
+  display: flex;
+  align-items: center;
+}
+.c-Work-layer .row { width: 100%; align-items: stretch; }
+
+.c-Work-text { position: relative; }
+
+.t-text--sm {
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-bottom: 1.2rem;
+}
+
+.c-Work-titles {
+  position: relative;
+  min-height: 9rem;
+}
+.c-Work-titles-item {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+
+.c-Work-title {
+  font-size: clamp(1.75rem, 2.35vw, 4rem);
+  font-weight: 400;
+  line-height: 1.2;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* per-character wrapping gives animation hooks; capital I renders slashed */
+.c-Char {
+  font-style: normal;
+  display: inline-block;
+  white-space: pre;
+  &.is-slashed {
+    transform: skewX(-19deg) scaleX(0.86);
+    margin: 0 0.03em;
+  }
+  &.is-sep {
+    font-size: 0.55em;
+    vertical-align: 0.18em;
+    margin: 0 0.28em;
+    opacity: 0.9;
+  }
+}
+
+.c-Work-categories {
+  margin-top: 1.1rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  li {
+    display: inline;
+    &:not(:last-child)::after { content: " · "; }
+  }
+}
+
+/* the plain semantic list — present for crawlers and keyboard users */
+.c-Work-list {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  a:focus-visible {
+    position: fixed;
+    top: 6rem; left: 3.9vw;
+    width: auto; height: auto;
+    clip: auto;
+    padding: 0.6em 1em;
+    background: var(--white);
+    color: var(--black);
+    z-index: 60;
+  }
+}
+
+/* ---------- RULER ---------- */
+.c-Work-ruler-container { align-self: stretch; }
+.c-Work-ruler {
+  position: relative;
+  height: 31vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.c-Work-ruler-cm {
+  position: relative;
+  width: 6px;
+  height: 1px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+/* nine subdivisions distributed down each cm block */
+.c-Work-ruler-cm:not(:last-child) {
+  height: calc(31vh / 4);
+}
+.c-Work-ruler-mm {
+  width: 2px;
+  height: 1px;
+  background: var(--white);
+}
+.c-Work-ruler-cursor {
+  position: absolute;
+  top: 0; left: 10px;
+  width: 0; height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 5px solid var(--white);
+  will-change: transform;
+}
+
+/* ---------- CTA ---------- */
+.c-Work-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 8vh;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 1em 2.2em;
+  border: 1px solid var(--white);
+  border-radius: 999px;
+  background: transparent;
+  overflow: hidden;
+  font-size: 1.1rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--white);
+    transform: translateY(101%);
+    transition: transform var(--dur-base) var(--ease);
+    z-index: -1;
+  }
+  &:hover { color: var(--black); }
+  &:hover::before { transform: translateY(0); }
+  .arrow { transition: transform var(--dur-base) var(--ease); }
+  &:hover .arrow { transform: translateX(6px); }
+}
+
+/* ---------- floating menu button ---------- */
+.c-MenuBtn {
+  position: fixed;
+  top: clamp(18px, 2.5vh, 28px);
+  right: 3.9vw;
+  z-index: 55;
+  width: 56px; height: 56px;
+  border: 1px solid var(--white);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.7);
+  pointer-events: none;
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease);
+  &:hover { background: rgba(255, 255, 255, 0.1); }
+}
+.c-MenuBtn-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  i { display: block; width: 18px; height: 1px; background: var(--white); }
+}
+
+.c-MenuPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 54;
+  background: var(--black);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.c-MenuPanel-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  text-align: center;
+  a {
+    font-size: clamp(2rem, 6vw, 5rem);
+    font-weight: 400;
+    text-transform: uppercase;
+    transition: opacity var(--dur-fast) var(--ease);
+    &:hover { opacity: 0.5; }
+  }
+}
+
+/* ---------- responsive: the mechanism unwinds ---------- */
+@media (max-width: 1023px) {
+  .c-Work-canvas { display: none; }
+  .c-Work-project { height: auto; }
+  .c-Work-sticky {
+    position: static;
+    height: auto;
+    display: block;
+    padding-block: 10vh;
+  }
+  .c-Work-media { position: static; display: block; }
+  .c-Work-window {
+    background: linear-gradient(120deg, #7A1030, #E03A3E 55%, #4FC3F7);
+    margin-bottom: 2rem;
+  }
+  .c-Work-layer { height: auto; display: block; }
+  .c-Work-ruler-container { display: none; }
+  .c-Work-titles { min-height: 0; }
+  .c-Work-titles-item {
+    position: static;
+    opacity: 1 !important;
+    transform: none !important;
+    margin-bottom: 3rem;
+  }
+  .c-Work-title { font-size: clamp(1.5rem, 6vw, 2.25rem); }
+  .c-Work-list {
+    position: static;
+    width: auto; height: auto;
+    clip: auto;
+    overflow: visible;
+    white-space: normal;
+    margin-top: 2rem;
+    li { margin-bottom: 0.6rem; }
+  }
+  .c-Work-btn {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    margin-top: 2rem;
+  }
+  .c-MenuBtn { width: 48px; height: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-Work-canvas { display: none; }
+  .c-Work-project { height: auto; }
+  .c-Work-sticky { position: static; height: auto; display: block; padding-block: 8vh; }
+  .c-Work-media { position: static; }
+  .c-Work-titles-item { position: static; opacity: 1 !important; transform: none !important; }
+  .c-Work-ruler-container { display: none; }
+}

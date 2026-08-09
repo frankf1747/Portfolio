@@ -14,6 +14,7 @@ import { onTransition } from "@/lib/transition";
 import Nav from "./Nav";
 import Cursor from "./Cursor";
 import Preloader from "./Preloader";
+import MenuButton from "./MenuButton";
 
 export default function Shell({ children }: { children: ReactNode }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,6 +59,7 @@ export default function Shell({ children }: { children: ReactNode }) {
       <canvas ref={canvasRef} className="c-Gradient" aria-hidden="true" />
       <Preloader />
       <Nav />
+      <MenuButton />
       <div className="c-Page">{children}</div>
       <div ref={wipeRef} className="c-Wipe" aria-hidden="true" />
       <Cursor />

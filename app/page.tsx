@@ -1,5 +1,5 @@
 import Hero from "@/components/Hero";
-import SelectedWork from "@/components/SelectedWork";
+import RecentWork from "@/components/RecentWork";
 import Capabilities from "@/components/Capabilities";
 import Footer from "@/components/Footer";
 
@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <SelectedWork />
+      <RecentWork />
       <Capabilities />
       <Footer />
     </>
