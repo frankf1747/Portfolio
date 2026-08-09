@@ -4,22 +4,28 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import TransitionLink from "./TransitionLink";
 
-/* UCLA, Los Angeles */
-const UCLA = { lat: "34.0689° N", lon: "118.4452° W", tz: "America/Los_Angeles" };
+/* Coordinates are UCLA's */
+const COORDS = "34.0689° N, 118.4452° W";
 
-function useClock() {
-  const [time, setTime] = useState("--:--:--");
+const ZONES = [
+  { label: "LA", tz: "America/Los_Angeles" },
+  { label: "Toronto", tz: "America/Toronto" }
+];
+
+function useClocks() {
+  const [times, setTimes] = useState<string[]>(ZONES.map(() => "--:--:--"));
   useEffect(() => {
-    const fmt = new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-      hour12: false, timeZone: UCLA.tz
-    });
-    const tick = () => setTime(fmt.format(new Date()));
+    const fmts = ZONES.map(z =>
+      new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false, timeZone: z.tz
+      }));
+    const tick = () => setTimes(fmts.map(f => f.format(new Date())));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return time;
+  return times;
 }
 
 const LINKS = [
@@ -30,7 +36,7 @@ const LINKS = [
 ];
 
 export default function Nav() {
-  const time = useClock();
+  const times = useClocks();
   const pathname = usePathname();
 
   return (
@@ -60,17 +66,14 @@ export default function Nav() {
       </nav>
 
       <div className="c-Nav-clocks">
-        <div className="c-Nav-clock">
-          <span className="c-Nav-clockCity">UCLA</span>
-          <span className="c-Nav-clockTime">{time}</span>
-        </div>
-        <div className="c-Nav-clock">
-          <span className="c-Nav-clockCity">Lat</span>
-          <span className="c-Nav-clockTime">{UCLA.lat}</span>
-        </div>
-        <div className="c-Nav-clock">
-          <span className="c-Nav-clockCity">Long</span>
-          <span className="c-Nav-clockTime">{UCLA.lon}</span>
+        {ZONES.map((z, i) => (
+          <div className="c-Nav-clock" key={z.tz}>
+            <span className="c-Nav-clockCity">{z.label}</span>
+            <span className="c-Nav-clockTime">{times[i]}</span>
+          </div>
+        ))}
+        <div className="c-Nav-clock c-Nav-clock--coords">
+          <span className="c-Nav-clockTime">{COORDS}</span>
         </div>
       </div>
     </header>

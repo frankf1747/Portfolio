@@ -82,7 +82,9 @@
   text-transform: uppercase;
 }
 .c-Nav-clockCity { color: var(--muted); }
-.c-Nav-clockTime { font-variant-numeric: tabular-nums; }
+.c-Nav-clockTime { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* coordinates sit on one line, no label */
+.c-Nav-clock--coords .c-Nav-clockTime { color: var(--muted); }
 
 /* ---------- Cursor ---------- */
 .c-Cursor {
