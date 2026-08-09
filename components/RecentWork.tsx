@@ -29,7 +29,7 @@ export default function RecentWork() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const windowRef = useRef<HTMLAnchorElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
-  const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const stripRef = useRef<HTMLDivElement>(null);
   const [enhanced, setEnhanced] = useState(false);
 
   useEffect(() => {
@@ -47,13 +47,15 @@ export default function RecentWork() {
     );
 
     /* rects cached on resize — never read layout during scroll */
-    let cTop = 0, cHeight = 0, vh = innerHeight;
+    let cTop = 0, cHeight = 0, vh = innerHeight, itemH = 0;
     const measure = () => {
       const r = container.getBoundingClientRect();
       const y = lenis ? lenis.scroll : window.scrollY;
       cTop = r.top + y;
       cHeight = container.offsetHeight;
       vh = innerHeight;
+      const first = stripRef.current?.firstElementChild as HTMLElement | null;
+      itemH = first ? first.offsetHeight : 0;
     };
     measure();
     addEventListener("resize", measure);
@@ -96,20 +98,18 @@ export default function RecentWork() {
       filmstrip.progress = progress;
       vel += ((lenis ? (lenis as unknown as { velocity: number }).velocity ?? 0 : 0) - vel) * 0.15;
       filmstrip.velocity = gsap.utils.clamp(-3, 3, vel * 0.05);
+      /* the photograph swells slightly as the section is scrolled, and
+         responds a touch more while actually moving — settles when idle */
+      filmstrip.zoom = 1.20 + progress * 0.10 + Math.min(0.05, Math.abs(vel) * 0.004);
       filmstrip.render();
 
-      /* titles: outgoing fades in place, incoming rises 40px, last ~20% */
-      const t = clamp01((local - 0.8) / 0.2);
-      itemsRef.current.forEach((el, i) => {
-        if (!el) return;
-        let o = 0, ty2 = 40;
-        if (i === index) { o = 1 - t; ty2 = 0; }
-        else if (i === index + 1) { o = t; ty2 = 40 * (1 - t); }
-        el.style.opacity = String(o);
-        el.style.transform = `translateY(${ty2}px)`;
-        el.classList.toggle("is-active", i === index);
-        el.classList.toggle("is-next", i === index + 1);
-      });
+      /* Titles are a vertical reel, not a crossfade: the strip scrolls
+         continuously on the same d as the filmstrip, so type and image
+         travel together and you briefly see two titles at the seam. */
+      if (stripRef.current && itemH) {
+        stripRef.current.style.transform = `translate3d(0, ${-scaled * itemH}px, 0)`;
+      }
+      void local;
 
       /* ruler cursor — continuous, never stepped */
       if (cursorRef.current) {
@@ -173,21 +173,19 @@ export default function RecentWork() {
               <div className="c-Work-text col-9of24 col-sm-12of12 offset-sm-0">
                 <div className="t-text--sm">Recent work</div>
                 <div className="c-Work-titles">
-                  {featured.map((p, i) => (
-                    <div
-                      className={"c-Work-titles-item" + (i === 0 ? " is-active" : " is-next")}
-                      key={p.slug}
-                      ref={el => { itemsRef.current[i] = el; }}
-                    >
-                      <h3 className="c-Work-title">
-                        <span className="u-sr-only">{plainTitle(p.client, p.descriptor)}</span>
-                        {slashChars(`${p.client} ▸ ${p.descriptor}`, p.slug)}
-                      </h3>
-                      <ul className="c-Work-categories">
-                        {p.categories.map(c => <li key={c}>{c}</li>)}
-                      </ul>
-                    </div>
-                  ))}
+                  <div ref={stripRef} className="c-Work-titles-strip">
+                    {featured.map(p => (
+                      <div className="c-Work-titles-item" key={p.slug}>
+                        <h3 className="c-Work-title">
+                          <span className="u-sr-only">{plainTitle(p.client, p.descriptor)}</span>
+                          {slashChars(`${p.client} ▸ ${p.descriptor}`, p.slug)}
+                        </h3>
+                        <ul className="c-Work-categories">
+                          {p.categories.map(c => <li key={c}>{c}</li>)}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

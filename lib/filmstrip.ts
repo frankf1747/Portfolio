@@ -23,10 +23,10 @@ uniform vec4      uRect;      // window x, y, w, h in px (y from top)
 uniform float     uProgress;  // 0..1 across the whole section
 uniform float     uCount;     // N projects
 uniform float     uVelocity;  // scroll velocity, settles to 0
+uniform float     uZoom;      // magnification — swells slightly with scroll
 uniform sampler2D uAtlas;
 
-const float ZOOM = 1.20;      // headroom so parallax never samples off-image
-const float PAR  = 0.085;     // ~0.5x drift within the slot
+const float PAR = 0.085;      // ~0.5x drift within the slot
 
 void main(){
   float px = gl_FragCoord.x;
@@ -43,8 +43,8 @@ void main(){
   float f      = clamp(yStrip - slot, 0.0, 1.0);
   float phase  = d - slot;                          // slot's travel through the window
 
-  float texV = (f - 0.5) / ZOOM + 0.5 + phase * PAR;
-  float texU = (local.x - 0.5) / ZOOM + 0.5;
+  float texV = (f - 0.5) / uZoom + 0.5 + phase * PAR;
+  float texU = (local.x - 0.5) / uZoom + 0.5;
 
   /* velocity: slight vertical stretch + shear while flinging, 0 at rest */
   texV  = (texV - 0.5) * (1.0 + abs(uVelocity) * 0.22) + 0.5;
@@ -121,6 +121,7 @@ class Filmstrip {
   rect = { x: 0, y: 0, w: 0, h: 0 };
   progress = 0;
   velocity = 0;
+  zoom = 1.2;
 
   mount(canvas: HTMLCanvasElement, palettes: string[][], images: (string | undefined)[]) {
     if (this.gl) return;
@@ -149,7 +150,7 @@ class Filmstrip {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-    ["uRes", "uRect", "uProgress", "uCount", "uVelocity", "uAtlas"].forEach(n => {
+    ["uRes", "uRect", "uProgress", "uCount", "uVelocity", "uZoom", "uAtlas"].forEach(n => {
       this.u[n] = gl.getUniformLocation(prog, n);
     });
 
@@ -217,9 +218,14 @@ class Filmstrip {
     gl.uniform1f(this.u.uProgress, this.progress);
     gl.uniform1f(this.u.uCount, this.count);
     gl.uniform1f(this.u.uVelocity, this.velocity);
+    gl.uniform1f(this.u.uZoom, this.zoom);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.disable(gl.SCISSOR_TEST);
   }
 }
 
 export const filmstrip = new Filmstrip();
+
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  (window as unknown as { __filmstrip: Filmstrip }).__filmstrip = filmstrip;
+}

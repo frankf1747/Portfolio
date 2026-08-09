@@ -7,7 +7,14 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DUR, easeExpo, isTouch, prefersReduced } from "@/lib/motion";
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* how far each headline line slides as the hero scrolls away, as a
+   fraction of viewport width. Alternating sign: left, right, left. */
+const DRIFT = [-0.13, 0.13, -0.09];
 
 const LINES = ["Data, product", "and design —", "one point of view."];
 const LINES_ALT = ["数据、产品", "与设计 —", "同一种眼光。"];
@@ -32,14 +39,40 @@ export default function Hero() {
       addEventListener("preload:done", reveal, { once: true });
     }
 
+    /* Headline lines slide apart horizontally as the hero scrolls away —
+       left, right, left — scrubbed so it reverses exactly on scroll-up.
+       Both language layers move together so the lens stays aligned. */
+    let lineST: ScrollTrigger[] = [];
+    if (!prefersReduced()) {
+      const rows = [0, 1, 2].map(i =>
+        root.querySelectorAll<HTMLElement>(`.c-Hero-line-${i}`));
+      rows.forEach((els, i) => {
+        if (!els.length) return;
+        const tw = gsap.to(els, {
+          x: () => innerWidth * DRIFT[i],
+          ease: "none",
+          scrollTrigger: {
+            trigger: root,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.6,
+            invalidateOnRefresh: true
+          }
+        });
+        if (tw.scrollTrigger) lineST.push(tw.scrollTrigger);
+      });
+    }
+
     /* lens follows pointer — vars live on the stage, and are measured
        against the stage's own rect: both the hole in the English layer and
        the window onto the Chinese layer read the same coordinates */
+    let raf = 0;
+    let onMove: ((e: PointerEvent) => void) | null = null;
     if (!isTouch() && !prefersReduced() && stageRef.current) {
       const stage = stageRef.current;
-      let x = -300, y = -300, rx = -300, ry = -300, raf = 0;
-      const move = (e: PointerEvent) => { x = e.clientX; y = e.clientY; };
-      addEventListener("pointermove", move, { passive: true });
+      let x = -300, y = -300, rx = -300, ry = -300;
+      onMove = (e: PointerEvent) => { x = e.clientX; y = e.clientY; };
+      addEventListener("pointermove", onMove, { passive: true });
       const loop = () => {
         rx += (x - rx) * 0.12;
         ry += (y - ry) * 0.12;
@@ -49,8 +82,13 @@ export default function Hero() {
         raf = requestAnimationFrame(loop);
       };
       raf = requestAnimationFrame(loop);
-      return () => { removeEventListener("pointermove", move); cancelAnimationFrame(raf); };
     }
+
+    return () => {
+      if (onMove) removeEventListener("pointermove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+      lineST.forEach(st => st.kill());
+    };
   }, []);
 
   return (

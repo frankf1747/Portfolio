@@ -69,14 +69,21 @@
   margin-bottom: 1.2rem;
 }
 
+/* a window onto a vertical reel of titles — they scroll rather than fade,
+   so type and photograph travel on the same value */
 .c-Work-titles {
   position: relative;
-  min-height: 9rem;
+  height: 10rem;
+  overflow: hidden;
+}
+.c-Work-titles-strip {
+  will-change: transform;
 }
 .c-Work-titles-item {
-  position: absolute;
-  inset: 0;
-  will-change: transform, opacity;
+  height: 10rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .c-Work-title {
@@ -274,13 +281,9 @@
   }
   .c-Work-layer { height: auto; display: block; }
   .c-Work-ruler-container { display: none; }
-  .c-Work-titles { min-height: 0; }
-  .c-Work-titles-item {
-    position: static;
-    opacity: 1 !important;
-    transform: none !important;
-    margin-bottom: 3rem;
-  }
+  .c-Work-titles { height: auto; overflow: visible; }
+  .c-Work-titles-strip { transform: none !important; }
+  .c-Work-titles-item { height: auto; margin-bottom: 3rem; }
   .c-Work-title { font-size: clamp(1.5rem, 6vw, 2.25rem); }
   .c-Work-list {
     position: static;
@@ -305,6 +308,8 @@
   .c-Work-project { height: auto; }
   .c-Work-sticky { position: static; height: auto; display: block; padding-block: 8vh; }
   .c-Work-media { position: static; }
-  .c-Work-titles-item { position: static; opacity: 1 !important; transform: none !important; }
+  .c-Work-titles { height: auto; overflow: visible; }
+  .c-Work-titles-strip { transform: none !important; }
+  .c-Work-titles-item { height: auto; }
   .c-Work-ruler-container { display: none; }
 }
