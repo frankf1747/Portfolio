@@ -23,6 +23,23 @@ import TransitionLink from "./TransitionLink";
 const N = featured.length;
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
+/* Fraction of each project's scroll range spent at rest before the strip
+   moves on. 0 would be the old continuous roll; higher dwells longer. */
+const HOLD = 0.62;
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/* Maps raw scroll progress to the strip position, so each project settles
+   and holds, then transitions quickly into the next. */
+function stripPosition(progress: number) {
+  const s = progress * N;
+  const index = Math.min(N - 1, Math.floor(s));
+  const local = s - index;
+  const t = clamp01((local - HOLD) / (1 - HOLD));
+  const d = Math.min(index + easeInOutCubic(t), N - 1);
+  return { index, d };
+}
+
 export default function RecentWork() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -33,7 +50,11 @@ export default function RecentWork() {
   const [enhanced, setEnhanced] = useState(false);
 
   useEffect(() => {
-    if (prefersReduced() || innerWidth < 1024) return;
+    /* matchMedia rather than a one-shot innerWidth check: loading in a
+       narrow window and then widening must bring the mechanism to life,
+       and narrowing must tear it down cleanly. */
+    const mm = gsap.matchMedia();
+    mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
     setEnhanced(true);
 
     const container = containerRef.current!;
@@ -83,9 +104,9 @@ export default function RecentWork() {
       }
       sticky.style.transform = `translate3d(0, ${ty}px, 0)`;
 
-      const scaled = progress * (N - 1);
-      const index = Math.min(N - 1, Math.floor(progress * N));
-      const local = progress * N - Math.floor(progress * N);
+      /* d holds steady through most of each project, then eases to the next */
+      const { index, d } = stripPosition(progress);
+      const dNorm = N > 1 ? d / (N - 1) : 0;
 
       /* Frame scale is driven by raw scroll velocity, not progress: it
          swells the moment you move and returns to exactly 1 when you stop.
@@ -106,18 +127,17 @@ export default function RecentWork() {
           ? { x: r.left, y: r.top, w: r.width, h: r.height }
           : { x: 0, y: 0, w: 0, h: 0 };
       }
-      filmstrip.progress = progress;
+      filmstrip.progress = dNorm;
       vel += (rawVel - vel) * 0.15;
       filmstrip.velocity = gsap.utils.clamp(-3, 3, vel * 0.05);
       filmstrip.render();
 
-      /* Titles are a vertical reel, not a crossfade: the strip scrolls
-         continuously on the same d as the filmstrip, so type and image
-         travel together and you briefly see two titles at the seam. */
+      /* Titles are a vertical reel, not a crossfade, riding the same held
+         value as the filmstrip — so type and image rest together on each
+         project, then move to the next in one quick pass. */
       if (stripRef.current && itemH) {
-        stripRef.current.style.transform = `translate3d(0, ${-scaled * itemH}px, 0)`;
+        stripRef.current.style.transform = `translate3d(0, ${-d * itemH}px, 0)`;
       }
-      void local;
 
       /* ruler cursor — continuous, never stepped */
       if (cursorRef.current) {
@@ -129,14 +149,21 @@ export default function RecentWork() {
         lastIndex = index;
         gradient.setPalette(featured[index].palette, 1.2);
       }
-      void scaled;
     };
 
     gsap.ticker.add(update);
     return () => {
       gsap.ticker.remove(update);
       removeEventListener("resize", measure);
+      /* release the GL context so a later remount rebinds to a fresh canvas */
+      filmstrip.unmount();
+      setEnhanced(false);
+      sticky.style.transform = "";
+      sticky.classList.remove("is-sticky");
     };
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (

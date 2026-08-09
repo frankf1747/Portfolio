@@ -36,25 +36,57 @@
   pointer-events: none;
 }
 
-/* ---------- Nav ---------- */
+/* ---------- Nav — horizontal: wordmark left, routes centre, icons right ---------- */
 .c-Nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 40;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: start;
-  padding: clamp(18px, 2.5vh, 28px) var(--pad);
-  mix-blend-mode: normal;
+  align-items: center;
+  gap: 2rem;
+  padding: clamp(14px, 2vh, 22px) var(--pad);
 }
-.c-Nav-logo { font-weight: 800; font-size: 0.95rem; letter-spacing: 0.02em; }
-.c-Nav-links { display: flex; gap: clamp(2rem, 4vw, 5rem); }
-.c-Nav-col { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.c-Nav-left {
+  display: flex;
+  align-items: baseline;
+  gap: 1.4rem;
+  min-width: 0;
+}
+.c-Nav-logo {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.c-Nav-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.c-Nav-metaItem--coords { opacity: 0.75; }
+
+/* routes sit on one horizontal row, centred */
+.c-Nav-center {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  justify-self: center;
+}
 .c-Nav-link {
   font-size: 0.8rem;
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
   transition: color var(--dur-fast) var(--ease);
   &:hover { color: var(--muted); }
 }
@@ -66,25 +98,33 @@
   transition: opacity var(--dur-fast);
   &.is-active { opacity: 1; }
 }
-.c-Nav-clocks {
+
+/* outbound links as icons */
+.c-Nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
   justify-self: end;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  text-align: right;
 }
-.c-Nav-clock {
-  display: flex;
-  gap: 1em;
-  justify-content: flex-end;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.c-Nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  color: var(--white);
+  opacity: 0.75;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  svg { width: 19px; height: 19px; display: block; }
+  &:hover { opacity: 1; background: rgba(255, 255, 255, 0.12); }
 }
-.c-Nav-clockCity { color: var(--muted); }
-.c-Nav-clockTime { font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* coordinates sit on one line, no label */
-.c-Nav-clock--coords .c-Nav-clockTime { color: var(--muted); }
+
+@media (max-width: 1023px) {
+  .c-Nav { grid-template-columns: auto 1fr auto; gap: 1rem; }
+  .c-Nav-meta { display: none; }
+  .c-Nav-center { gap: 1.2rem; }
+  .c-Nav-icon { width: 30px; height: 30px; svg { width: 17px; height: 17px; } }
+}
 
 /* ---------- Cursor ---------- */
 .c-Cursor {
