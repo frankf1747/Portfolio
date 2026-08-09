@@ -1,0 +1,100 @@
+/* ============================================================
+   Frank Fu — design system (per spec)
+   Pure black. One gradient. General Sans 400/800. Motion eases.
+   ============================================================ */
+
+:root {
+  --black: #000000;
+  --white: #ffffff;
+  --muted: rgba(255, 255, 255, 0.45);
+  --hairline: rgba(255, 255, 255, 0.14);
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.4s;
+  --dur-base: 0.8s;
+  --dur-slow: 1.4s;
+
+  --pad: clamp(24px, 7vw, 160px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { background: var(--black); }
+
+body {
+  font-family: "General Sans", "Neue Montreal", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+  background: var(--black);
+  color: var(--white);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.has-customCursor,
+html.has-customCursor * { cursor: none !important; }
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+li { list-style: none; }
+
+:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+/* ---------- type utilities ---------- */
+.u-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--white);
+}
+.u-muted { color: var(--muted); }
+
+.u-line { display: block; overflow: hidden; }
+.u-line-inner { display: block; will-change: transform; }
+
+.u-pill {
+  display: inline-block;
+  padding: 0.9em 2em;
+  border: 1px solid var(--white);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition: color var(--dur-fast) var(--ease);
+  z-index: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 0%;
+    background: var(--white);
+    z-index: -1;
+    transition: height var(--dur-fast) var(--ease);
+  }
+  &:hover { color: var(--black); }
+  &:hover::after { height: 100%; }
+
+  &--small { padding: 0.55em 1.3em; }
+  &.is-active { background: var(--white); color: var(--black); }
+}
+
+.container {
+  width: 100%;
+  padding-inline: var(--pad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@import "./components.scss";

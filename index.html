@@ -14,10 +14,10 @@
 
 <!-- Entry flash: timed, skippable, once per session -->
 <div id="flash" aria-hidden="true">
-  <div class="flash-screen" data-bg="#0B4FD8" data-fg="#FEF8DD"><span>Data enthusiast</span></div>
-  <div class="flash-screen" data-bg="#E8451F" data-fg="#F9CEE1"><span>Product mindset</span></div>
-  <div class="flash-screen" data-bg="#004632" data-fg="#BDD0A0"><span>UX designer</span></div>
-  <div class="flash-screen" data-bg="#05060A" data-fg="#FEF8DD"><span>Frank Fu</span></div>
+  <div class="flash-screen" data-bg="#E8F53C" data-fg="#F0269B"><span>Data enthusiast</span></div>
+  <div class="flash-screen" data-bg="#F0269B" data-fg="#FDF6E4"><span>Product mindset</span></div>
+  <div class="flash-screen" data-bg="#1F3FD8" data-fg="#E8F53C"><span>UX designer</span></div>
+  <div class="flash-screen" data-bg="#05060A" data-fg="#FDF6E4"><span>Frank Fu</span></div>
 </div>
 
 <!-- The living surface: one shader, both pages -->
@@ -53,28 +53,137 @@
         <div><strong>Based in LA</strong><span>UCLA MSBA</span></div>
         <div><strong>Data-driven</strong><span>causal &amp; search</span></div>
         <div><strong>Open to</strong><span>full-time roles</span></div>
-        <span class="hero-arrow">↓</span>
       </div>
+      <span class="hero-arrow" aria-hidden="true">↓</span>
     </div>
 
-    <div class="recent">
-      <p class="section-tag">Recent work</p>
-      <a class="recent-row" href="#/work" data-cursor="View work">
-        <span class="recent-num">01</span>
-        <span class="recent-name">Starbucks — search re<i>l</i>evance</span>
-        <span class="recent-cat">Data</span>
-      </a>
-      <a class="recent-row" href="#/work" data-cursor="View work">
-        <span class="recent-num">02</span>
-        <span class="recent-name">DoorDash — regress<i>i</i>on discontinuity</span>
-        <span class="recent-cat">Data</span>
-      </a>
-      <a class="recent-row" href="#/work" data-cursor="View work">
-        <span class="recent-num">03</span>
-        <span class="recent-name">Multi-agent RAG s<i>y</i>stem</span>
-        <span class="recent-cat">Product</span>
-      </a>
-      <a class="recent-all" href="#/work" data-cursor="All work">All work →</a>
+    <div class="journey">
+      <p class="section-tag">The journey</p>
+      <div class="journey-grid">
+
+        <figure class="portrait" aria-label="Illustrated portrait of Frank Fu">
+          <svg viewBox="0 0 520 640" role="img" aria-hidden="true">
+            <rect x="8" y="8" width="504" height="624" rx="26" fill="#F6F0DF" stroke="#241C15" stroke-width="6"/>
+            <!-- checkerboard floor -->
+            <g>
+              <clipPath id="panelClip"><rect x="8" y="8" width="504" height="624" rx="26"/></clipPath>
+              <g clip-path="url(#panelClip)">
+                <g fill="#241C15">
+                  <rect x="8"   y="536" width="63" height="52"/><rect x="134" y="536" width="63" height="52"/><rect x="260" y="536" width="63" height="52"/><rect x="386" y="536" width="63" height="52"/>
+                  <rect x="71"  y="588" width="63" height="52"/><rect x="197" y="588" width="63" height="52"/><rect x="323" y="588" width="63" height="52"/><rect x="449" y="588" width="63" height="52"/>
+                </g>
+                <!-- paint dots -->
+                <circle cx="452" cy="70"  r="13" fill="#F0269B"/>
+                <circle cx="478" cy="104" r="9"  fill="#E8F53C" stroke="#241C15" stroke-width="3"/>
+                <circle cx="440" cy="122" r="7"  fill="#1F3FD8"/>
+                <circle cx="62"  cy="90"  r="8"  fill="#2E8BF0"/>
+
+                <!-- torso: green track jacket -->
+                <path d="M104 640 C106 524 128 470 176 448 C208 434 232 428 260 428 C288 428 312 434 344 448 C392 470 414 524 416 640 Z"
+                      fill="#2E6B3A" stroke="#241C15" stroke-width="6"/>
+                <!-- shoulder stripes -->
+                <path d="M126 494 C158 462 198 446 236 441" fill="none" stroke="#E9D75A" stroke-width="11" stroke-linecap="round"/>
+                <path d="M118 516 C152 480 196 462 238 456" fill="none" stroke="#E9D75A" stroke-width="11" stroke-linecap="round"/>
+                <path d="M394 494 C362 462 322 446 284 441" fill="none" stroke="#E9D75A" stroke-width="11" stroke-linecap="round"/>
+                <path d="M402 516 C368 480 324 462 282 456" fill="none" stroke="#E9D75A" stroke-width="11" stroke-linecap="round"/>
+                <!-- collar + tee -->
+                <path d="M212 432 L232 476 L260 452 L288 476 L308 432 C292 424 276 421 260 421 C244 421 228 424 212 432 Z"
+                      fill="#2E6B3A" stroke="#241C15" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M232 476 L260 452 L288 476 L279 512 L241 512 Z" fill="#F7F3EA" stroke="#241C15" stroke-width="5" stroke-linejoin="round"/>
+                <line x1="260" y1="512" x2="260" y2="640" stroke="#241C15" stroke-width="5"/>
+                <!-- paint smudges on jacket -->
+                <circle cx="180" cy="560" r="6" fill="#F0269B"/>
+                <circle cx="352" cy="586" r="5" fill="#E8F53C"/>
+
+                <!-- neck -->
+                <path d="M238 386 L238 448 C238 460 282 460 282 448 L282 386 Z" fill="#F2DDC4" stroke="#241C15" stroke-width="5"/>
+                <path d="M238 386 L238 404 C252 414 268 414 282 404 L282 386 Z" fill="#E3C0A0"/>
+
+                <!-- ears -->
+                <path d="M182 288 C170 284 166 300 172 314 C177 326 188 330 192 322 Z" fill="#F2DDC4" stroke="#241C15" stroke-width="5"/>
+                <path d="M338 288 C350 284 354 300 348 314 C343 326 332 330 328 322 Z" fill="#F2DDC4" stroke="#241C15" stroke-width="5"/>
+                <circle cx="342" cy="322" r="6" fill="#E8B23C" stroke="#241C15" stroke-width="3"/>
+
+                <!-- face -->
+                <path d="M184 292 C184 212 216 176 260 176 C304 176 336 212 336 292 C336 352 306 392 260 392 C214 392 184 352 184 292 Z"
+                      fill="#F2DDC4" stroke="#241C15" stroke-width="6"/>
+
+                <!-- hair -->
+                <path d="M178 300 C168 240 176 196 204 172 C228 152 292 152 316 172 C344 196 352 240 342 300
+                         C338 276 332 264 324 258 C328 240 322 226 312 218 C314 232 308 240 300 244
+                         C304 226 296 210 282 204 C286 218 282 228 272 234 C274 218 264 206 250 202
+                         C252 216 246 226 236 232 C236 216 226 206 212 204 C216 218 212 230 202 238
+                         C194 248 188 268 186 284 Z"
+                      fill="#221A16" stroke="#241C15" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M206 190 C216 180 232 174 248 172" fill="none" stroke="#4A3B30" stroke-width="4" stroke-linecap="round"/>
+                <path d="M282 174 C296 176 308 182 316 190" fill="none" stroke="#4A3B30" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- brows -->
+                <path d="M204 254 C214 248 228 247 238 250" fill="none" stroke="#241C15" stroke-width="5" stroke-linecap="round"/>
+                <path d="M282 250 C292 247 306 248 316 254" fill="none" stroke="#241C15" stroke-width="5" stroke-linecap="round"/>
+
+                <!-- glasses -->
+                <rect x="192" y="262" width="62" height="52" rx="17" fill="rgba(255,255,255,0.14)" stroke="#241C15" stroke-width="8"/>
+                <rect x="266" y="262" width="62" height="52" rx="17" fill="rgba(255,255,255,0.14)" stroke="#241C15" stroke-width="8"/>
+                <line x1="254" y1="282" x2="266" y2="282" stroke="#241C15" stroke-width="7"/>
+                <line x1="192" y1="284" x2="180" y2="292" stroke="#241C15" stroke-width="6"/>
+                <line x1="328" y1="284" x2="340" y2="292" stroke="#241C15" stroke-width="6"/>
+
+                <!-- eyes -->
+                <ellipse cx="223" cy="290" rx="9" ry="13" fill="#241C15"/>
+                <ellipse cx="297" cy="290" rx="9" ry="13" fill="#241C15"/>
+                <circle cx="220" cy="285" r="3.2" fill="#FFFFFF"/>
+                <circle cx="294" cy="285" r="3.2" fill="#FFFFFF"/>
+
+                <!-- blush -->
+                <ellipse cx="204" cy="330" rx="14" ry="8" fill="#F0BBA0" opacity="0.7"/>
+                <ellipse cx="316" cy="330" rx="14" ry="8" fill="#F0BBA0" opacity="0.7"/>
+                <path d="M198 326 L210 336 M206 324 L218 334" stroke="#E39A78" stroke-width="3" stroke-linecap="round"/>
+                <path d="M310 326 L322 336 M318 324 L330 334" stroke="#E39A78" stroke-width="3" stroke-linecap="round"/>
+
+                <!-- nose + mouth -->
+                <path d="M258 322 C262 328 262 334 258 338" fill="none" stroke="#241C15" stroke-width="4" stroke-linecap="round"/>
+                <path d="M236 356 C248 368 272 368 284 356" fill="none" stroke="#241C15" stroke-width="6" stroke-linecap="round"/>
+              </g>
+            </g>
+          </svg>
+          <figcaption>me, roughly</figcaption>
+        </figure>
+
+        <ol class="timeline">
+          <li class="tl-item">
+            <span class="tl-year">2021 — 25</span>
+            <h3>University of Toronto</h3>
+            <p>BSc, Applied Statistics × Technology &amp; UX — the hybrid started as a double major. Dean's List, 3.72.</p>
+          </li>
+          <li class="tl-item">
+            <span class="tl-year">2025</span>
+            <h3>Camping in Ontario · Digital Analyst</h3>
+            <p>GA4 funnel and path analysis — landing-to-action conversion +15%, booking abandonment −13%.</p>
+          </li>
+          <li class="tl-item">
+            <span class="tl-year">2025 — 26</span>
+            <h3>UCLA Anderson · MSBA</h3>
+            <p>Product analytics, causal inference, machine learning. Los Angeles.</p>
+          </li>
+          <li class="tl-item">
+            <span class="tl-year">2025 — now</span>
+            <h3>UCLA Anderson · Research Assistant</h3>
+            <p>Rebuilt a spreadsheet-run ops simulation as a React app used across 7 MBA courses by ~600 students — measured efficiency up ~35%.</p>
+          </li>
+          <li class="tl-item">
+            <span class="tl-year">2026 — now</span>
+            <h3>BioMarin · Insights &amp; Analytics Intern</h3>
+            <p>Digital Transformation. SQL over SAP bronze tables in Databricks; proposed the ingestion guideline standardizing 11 external partner data sources.</p>
+          </li>
+          <li class="tl-item">
+            <span class="tl-year">ongoing</span>
+            <h3>MOOBOX · Founder</h3>
+            <p>E-commerce venture at 50K+ daily orders — segmentation, forecasting, and a customer-inquiry agent in progress.</p>
+          </li>
+        </ol>
+      </div>
+      <a class="journey-all" href="#/work" data-cursor="All work">See the work →</a>
     </div>
 
     <div class="contact-strip">
@@ -110,25 +219,25 @@
           <span class="card-tags">Data · Search</span>
         </li>
         <li class="card" data-cat="data" data-cursor="View project">
-          <div class="card-media m-red"><span class="play">▶</span></div>
+          <div class="card-media m-pink"><span class="play">▶</span></div>
           <h3>DoorDash RDD</h3>
           <p>Causal effect of a delivery-fee threshold. Identification, robustness, caveats.</p>
           <span class="card-tags">Data · Causal</span>
         </li>
         <li class="card" data-cat="product" data-cursor="View project">
-          <div class="card-media m-green"><span class="play">▶</span></div>
+          <div class="card-media m-violet"><span class="play">▶</span></div>
           <h3>Multi-agent RAG system</h3>
           <p>Retrieval, tools, tests — a working pipeline, not a diagram.</p>
           <span class="card-tags">Product · AI</span>
         </li>
         <li class="card" data-cat="product" data-cursor="View project">
-          <div class="card-media m-orange"><span class="play">▶</span></div>
+          <div class="card-media m-acid"><span class="play">▶</span></div>
           <h3>Dell — M&amp;A analysis</h3>
           <p>Market sizing and strategy for a live case, argued to a partner panel.</p>
           <span class="card-tags">Product · Strategy</span>
         </li>
         <li class="card" data-cat="design" data-cursor="View project">
-          <div class="card-media m-indigo"><span class="play">▶</span></div>
+          <div class="card-media m-cyan"><span class="play">▶</span></div>
           <h3>AI Joke Factory</h3>
           <p>End-to-end product design — flows, backend logic, and a v2 shipped on user notes.</p>
           <span class="card-tags">Design · Product</span>
