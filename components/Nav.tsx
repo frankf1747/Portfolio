@@ -4,26 +4,22 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import TransitionLink from "./TransitionLink";
 
-const CITIES: { label: string; tz: string }[] = [
-  { label: "Los Angeles", tz: "America/Los_Angeles" },
-  { label: "Tokyo", tz: "Asia/Tokyo" },
-  { label: "New York", tz: "America/New_York" }
-];
+/* UCLA, Los Angeles */
+const UCLA = { lat: "34.0689° N", lon: "118.4452° W", tz: "America/Los_Angeles" };
 
-function useClocks() {
-  const [times, setTimes] = useState<string[]>(CITIES.map(() => "--:--:--"));
+function useClock() {
+  const [time, setTime] = useState("--:--:--");
   useEffect(() => {
-    const fmts = CITIES.map(c =>
-      new Intl.DateTimeFormat("en-GB", {
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
-        hour12: false, timeZone: c.tz
-      }));
-    const tick = () => setTimes(fmts.map(f => f.format(new Date())));
+    const fmt = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false, timeZone: UCLA.tz
+    });
+    const tick = () => setTime(fmt.format(new Date()));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return times;
+  return time;
 }
 
 const LINKS = [
@@ -34,7 +30,7 @@ const LINKS = [
 ];
 
 export default function Nav() {
-  const times = useClocks();
+  const time = useClock();
   const pathname = usePathname();
 
   return (
@@ -64,12 +60,18 @@ export default function Nav() {
       </nav>
 
       <div className="c-Nav-clocks">
-        {CITIES.map((c, i) => (
-          <div className="c-Nav-clock" key={c.tz}>
-            <span className="c-Nav-clockCity">{c.label}</span>
-            <span className="c-Nav-clockTime">{times[i]}</span>
-          </div>
-        ))}
+        <div className="c-Nav-clock">
+          <span className="c-Nav-clockCity">UCLA</span>
+          <span className="c-Nav-clockTime">{time}</span>
+        </div>
+        <div className="c-Nav-clock">
+          <span className="c-Nav-clockCity">Lat</span>
+          <span className="c-Nav-clockTime">{UCLA.lat}</span>
+        </div>
+        <div className="c-Nav-clock">
+          <span className="c-Nav-clockCity">Long</span>
+          <span className="c-Nav-clockTime">{UCLA.lon}</span>
+        </div>
       </div>
     </header>
   );

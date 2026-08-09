@@ -14,7 +14,7 @@ precision highp float;
 out vec4 fragColor;
 
 uniform vec2  uRes;
-uniform float uTime;
+uniform vec2  uMouse;         // lerped pointer, 0..1 — the only animator
 uniform vec2  uTransform;     // scroll-driven travel
 uniform float uOpacity;       // preloader bloom + section fades
 uniform float uScale;         // bloom scale-down
@@ -70,23 +70,44 @@ void main(){
   p /= uZoom * uScale;
   p += uTransform;
 
+  /* The pointer is the only animator: no clock anywhere in this shader.
+     Two effects, both settling to a fixed frame when the pointer stops.
+     1) travel — the pointer walks the noise domain, so the ribbon
+        genuinely re-forms rather than sliding. */
+  vec2 mo = (uMouse - 0.5) * 1.35;
+
+  /* 2) local pull — space bends toward the cursor with a soft falloff,
+        so motion feels attached to the hand near the pointer. */
+  vec2 mp = (uMouse - 0.5) * vec2(uRes.x / uRes.y, 1.0) / (uZoom * uScale);
+  float md = length(p - mp);
+  p += (mp - p) * 0.16 * exp(-md * 1.6);
+
+  /* Anisotropic domain — noise features stretch along X, so the whole
+     field trends horizontally instead of blooming radially. */
+  const vec2 ANISO = vec2(0.44, 1.9);
+
   /* domain warp, applied twice — first noise feeds the second lookup */
-  float n1 = snoise(p * uSpacing * 0.25 + uSeed + uTime * 0.05);
-  vec2 w1 = p + uDisplacement * 0.14 * vec2(n1, snoise(p * uSpacing * 0.25 - uSeed - uTime * 0.04));
-  float n2 = snoise(w1 * uSpacing * 0.55 - uSeed * 2.0 + uTime * 0.03);
-  vec2 w = w1 + uDisplacement * 0.10 * vec2(n2, n1);
+  vec2 pa = p * ANISO;
+  float n1 = snoise(pa * uSpacing * 0.25 + uSeed + mo);
+  vec2 w1 = p + uDisplacement * vec2(0.20, 0.075) * vec2(n1, snoise(pa * uSpacing * 0.25 - uSeed - mo * 0.8));
+  float n2 = snoise(w1 * ANISO * uSpacing * 0.55 - uSeed * 2.0 + mo * 0.6);
+  vec2 w = w1 + uDisplacement * vec2(0.15, 0.055) * vec2(n2, n1);
 
-  /* four colour blobs on a rotated cross, blended by smooth inverse distance */
+  /* four colour blobs strung out in a horizontal row, each a wide ellipse —
+     the band reads as one long ribbon crossing the frame */
   vec2 q = rot(w - uColorOffset, uColorRotation);
-  vec2 s0 = vec2(-uColorSpacing, 0.0);
-  vec2 s1 = vec2( uColorSpacing, 0.0);
-  vec2 s2 = vec2(0.0, -uColorSpacing);
-  vec2 s3 = vec2(0.0,  uColorSpacing);
+  vec2 s0 = vec2(-1.62,  0.12) * uColorSpacing;
+  vec2 s1 = vec2(-0.54, -0.17) * uColorSpacing;
+  vec2 s2 = vec2( 0.54,  0.15) * uColorSpacing;
+  vec2 s3 = vec2( 1.62, -0.11) * uColorSpacing;
 
-  float d0 = smoothstep(uColorSize, 0.0, pow(length(q - s0), 1.0) ) ;
-  float d1 = smoothstep(uColorSize, 0.0, length(q - s1));
-  float d2 = smoothstep(uColorSize, 0.0, length(q - s2));
-  float d3 = smoothstep(uColorSize, 0.0, length(q - s3));
+  /* wide + short, and unequal: the deep/warm pair carry the field, the
+     cool and the acid yellow stay highlights rather than equal stripes */
+  const vec2 ELL = vec2(0.58, 1.85);
+  float d0 = smoothstep(uColorSize * 1.18, 0.0, length((q - s0) * ELL));
+  float d1 = smoothstep(uColorSize * 1.02, 0.0, length((q - s1) * ELL));
+  float d2 = smoothstep(uColorSize * 0.78, 0.0, length((q - s2) * ELL));
+  float d3 = smoothstep(uColorSize * 0.50, 0.0, length((q - s3) * ELL));
 
   /* spread sharpens the falloff — the black between the light */
   d0 = pow(d0, uColorSpread * 0.25);
@@ -100,8 +121,13 @@ void main(){
   col = mix(col, uC2, d2);
   col = mix(col, uC3, d3);
 
-  /* film grain, also dithers the dark falloff */
-  float g = hash(gl_FragCoord.xy * uNoiseSize + fract(uTime) * 61.7);
+  /* fall the thin tails all the way to true black — the darkness between
+     the light is the point, and it stops the milky wash */
+  float cover = max(max(d0, d1), max(d2, d3));
+  col *= smoothstep(0.015, 0.34, cover);
+
+  /* film grain, also dithers the dark falloff — static, like real film */
+  float g = hash(gl_FragCoord.xy * uNoiseSize);
   col += (g - 0.5) * uNoiseIntensity;
 
   fragColor = vec4(col * uOpacity, 1.0);
@@ -114,16 +140,20 @@ const hex2rgb = (h: string): [number, number, number] => {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 };
 
+/* Drawn from the ZZZ key art (crimson field, teal hair, cream) with the
+   K-R4 card's acid yellow and sky blue as the highlight notes. */
 export const PALETTES: Record<string, Palette> = {
-  home: ["#16254b", "#23418a", "#aadfd9", "#e64f0f"]
+  home: ["#8E1229", "#E8452F", "#35C9C0", "#F2E63C"]
 };
 
 class GradientApp {
   private gl: WebGL2RenderingContext | null = null;
   private u: Record<string, WebGLUniformLocation | null> = {};
   private raf = 0;
-  private t0 = 0;
+  private lastSig = "";
   private running = false;
+  /** frames actually drawn — should stop climbing once the pointer settles */
+  draws = 0;
   private reduced = false;
   private canvas: HTMLCanvasElement | null = null;
 
@@ -133,10 +163,15 @@ class GradientApp {
     scale: 1.06,
     tx: 0,
     ty: 0,
-    colorSize: 0.75,
-    colorSpacing: 0.52,
-    colorSpread: 4.5,
-    colorRotation: 0.6,
+    /* lerped pointer (mx/my) chasing the raw target (tmx/tmy) */
+    mx: 0.5,
+    my: 0.5,
+    tmx: 0.5,
+    tmy: 0.5,
+    colorSize: 0.86,
+    colorSpacing: 0.60,
+    colorSpread: 5.4,
+    colorRotation: 0.07,   // near-flat: the band runs across, not diagonally
     displacement: 3.6,
     spacing: 2.6,
     zoom: 0.62,
@@ -186,7 +221,7 @@ class GradientApp {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     [
-      "uRes", "uTime", "uTransform", "uOpacity", "uScale",
+      "uRes", "uMouse", "uTransform", "uOpacity", "uScale",
       "uC0", "uC1", "uC2", "uC3",
       "uColorSize", "uColorSpacing", "uColorSpread", "uColorOffset", "uColorRotation",
       "uDisplacement", "uSpacing", "uZoom", "uSeed", "uNoiseSize", "uNoiseIntensity"
@@ -198,8 +233,15 @@ class GradientApp {
       document.hidden ? this.stop() : this.start();
     });
 
+    /* pointer is the animator — ignored under reduced motion */
+    if (!reduced) {
+      addEventListener("pointermove", (e) => {
+        this.state.tmx = e.clientX / innerWidth;
+        this.state.tmy = 1 - e.clientY / innerHeight;
+      }, { passive: true });
+    }
+
     this.ok = true;
-    this.t0 = performance.now();
     this.start();
   }
 
@@ -211,15 +253,36 @@ class GradientApp {
     this.canvas.style.width = innerWidth + "px";
     this.canvas.style.height = innerHeight + "px";
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.invalidate();
   };
 
-  private frame = (now: number) => {
+  private frame = () => {
     if (!this.running) return;
     const gl = this.gl!;
     const s = this.state;
-    const t = this.reduced ? 12.0 : (now - this.t0) / 1000;
+
+    /* ease toward the pointer; when it stops, this converges and the
+       signature below stops changing, so we stop drawing entirely */
+    s.mx += (s.tmx - s.mx) * 0.055;
+    s.my += (s.tmy - s.my) * 0.055;
+    /* snap once imperceptibly close, so it truly stops instead of
+       asymptotically crawling and redrawing forever */
+    if (Math.abs(s.tmx - s.mx) < 2e-4) s.mx = s.tmx;
+    if (Math.abs(s.tmy - s.my) < 2e-4) s.my = s.tmy;
+
+    const sig =
+      `${s.mx.toFixed(5)}|${s.my.toFixed(5)}|${s.tx.toFixed(4)}|${s.ty.toFixed(4)}` +
+      `|${s.opacity.toFixed(4)}|${s.scale.toFixed(4)}` +
+      `|${s.c0.join()}|${s.c1.join()}|${s.c2.join()}|${s.c3.join()}` +
+      `|${gl.canvas.width}x${gl.canvas.height}`;
+    if (sig === this.lastSig) {
+      this.raf = requestAnimationFrame(this.frame);
+      return;
+    }
+    this.lastSig = sig;
+
     gl.uniform2f(this.u.uRes, gl.canvas.width, gl.canvas.height);
-    gl.uniform1f(this.u.uTime, t);
+    gl.uniform2f(this.u.uMouse, s.mx, s.my);
     gl.uniform2f(this.u.uTransform, s.tx, s.ty);
     gl.uniform1f(this.u.uOpacity, s.opacity);
     gl.uniform1f(this.u.uScale, s.scale);
@@ -239,8 +302,12 @@ class GradientApp {
     gl.uniform1f(this.u.uNoiseSize, s.noiseSize);
     gl.uniform1f(this.u.uNoiseIntensity, s.noiseIntensity);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.draws++;
     this.raf = requestAnimationFrame(this.frame);
   };
+
+  /** force the next frame to draw (resize, palette jump, bloom start) */
+  invalidate() { this.lastSig = ""; }
 
   start() {
     if (this.running || !this.gl) return;
@@ -275,3 +342,7 @@ class GradientApp {
 }
 
 export const gradient = new GradientApp();
+
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  (window as unknown as { __gradient: GradientApp }).__gradient = gradient;
+}

@@ -21,7 +21,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["Search", "Ranking", "Evaluation"],
     discipline: "data",
-    palette: ["#16254b", "#23418a", "#aadfd9", "#e64f0f"],
+    palette: ["#7A1030", "#E03A3E", "#4FC3F7", "#F2E63C"] as [string, string, string, string],
     summary:
       "Ranking menu queries for the UCLA × Starbucks challenge — query understanding, offline evaluation, and an error taxonomy that changed where the team spent its time.",
     role: "Data analyst",
@@ -40,7 +40,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["Causal inference", "Econometrics"],
     discipline: "data",
-    palette: ["#2b0508", "#8f0d1c", "#e8455a", "#ffd9c2"],
+    palette: ["#5C0F22", "#F4623A", "#35C9C0", "#F2E8CE"] as [string, string, string, string],
     summary:
       "Estimating the causal effect of a delivery-fee threshold with a regression discontinuity design — identification strategy, robustness checks, honest caveats.",
     role: "Analyst",
@@ -59,7 +59,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["AI", "Retrieval", "Product"],
     discipline: "product",
-    palette: ["#1a1c0d", "#4f5a1e", "#b7c46a", "#c25a20"],
+    palette: ["#0E2E3A", "#1E7F8C", "#35C9C0", "#F2E63C"] as [string, string, string, string],
     summary:
       "A working agent pipeline — retrieval, tools, tests — built and shipped, not just diagrammed. Chroma for vectors, a test suite that keeps it honest.",
     role: "Builder / PM",
@@ -78,7 +78,7 @@ export const projects: Project[] = [
     year: "2025",
     tags: ["Strategy", "Valuation"],
     discipline: "product",
-    palette: ["#16254b", "#23418a", "#aadfd9", "#e64f0f"],
+    palette: ["#8E1229", "#E8452F", "#4FC3F7", "#F2E8CE"] as [string, string, string, string],
     summary:
       "Market sizing and acquisition strategy for a live case, argued to a partner panel under questioning.",
     role: "Strategy lead",
@@ -95,7 +95,7 @@ export const projects: Project[] = [
     year: "2025",
     tags: ["UX", "Product design"],
     discipline: "design",
-    palette: ["#2b0508", "#8f0d1c", "#e8455a", "#ffd9c2"],
+    palette: ["#6B1030", "#F4623A", "#35C9C0", "#FFE800"] as [string, string, string, string],
     summary:
       "End-to-end product design — flows, backend logic, and a v2 rebuilt on what users actually said.",
     role: "Product designer",
@@ -112,7 +112,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["Design system", "WebGL"],
     discipline: "design",
-    palette: ["#1a1c0d", "#4f5a1e", "#b7c46a", "#c25a20"],
+    palette: ["#101820", "#4FC3F7", "#35C9C0", "#F2E63C"] as [string, string, string, string],
     summary:
       "A structured taste-discovery workflow — specimens, falsifiable hypotheses, checkpoint probes — compiled into design tokens, then into the site you are reading.",
     role: "Designer / developer",
