@@ -14,7 +14,7 @@ const LINES_ALT = ["数据、产品", "与设计 —", "同一种眼光。"];
 
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
-  const lensRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = rootRef.current!;
@@ -32,18 +32,20 @@ export default function Hero() {
       addEventListener("preload:done", reveal, { once: true });
     }
 
-    /* lens follows pointer */
-    if (!isTouch() && !prefersReduced() && lensRef.current) {
-      const lens = lensRef.current;
+    /* lens follows pointer — vars live on the stage, and are measured
+       against the stage's own rect: both the hole in the English layer and
+       the window onto the Chinese layer read the same coordinates */
+    if (!isTouch() && !prefersReduced() && stageRef.current) {
+      const stage = stageRef.current;
       let x = -300, y = -300, rx = -300, ry = -300, raf = 0;
       const move = (e: PointerEvent) => { x = e.clientX; y = e.clientY; };
       addEventListener("pointermove", move, { passive: true });
       const loop = () => {
         rx += (x - rx) * 0.12;
         ry += (y - ry) * 0.12;
-        const r = root.getBoundingClientRect();
-        lens.style.setProperty("--lx", `${rx - r.left}px`);
-        lens.style.setProperty("--ly", `${ry - r.top}px`);
+        const r = stage.getBoundingClientRect();
+        stage.style.setProperty("--lx", `${rx - r.left}px`);
+        stage.style.setProperty("--ly", `${ry - r.top}px`);
         raf = requestAnimationFrame(loop);
       };
       raf = requestAnimationFrame(loop);
@@ -53,7 +55,7 @@ export default function Hero() {
 
   return (
     <section ref={rootRef} className="c-Hero" aria-label="Introduction">
-      <div className="c-Hero-stage">
+      <div ref={stageRef} className="c-Hero-stage">
         <h1 className="c-Hero-title">
           {LINES.map((l, i) => (
             <span className={`u-line c-Hero-line-${i}`} key={i}>
@@ -62,7 +64,7 @@ export default function Hero() {
           ))}
         </h1>
         {/* hidden layer, revealed by the lens */}
-        <div ref={lensRef} className="c-Hero-lens" aria-hidden="true">
+        <div className="c-Hero-lens" aria-hidden="true">
           <p className="c-Hero-titleAlt">
             {LINES_ALT.map((l, i) => (
               <span className={`u-line c-Hero-line-${i}`} key={i}>

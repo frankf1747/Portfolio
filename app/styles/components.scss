@@ -126,7 +126,12 @@
   padding: 0 var(--pad);
   position: relative;
 }
-.c-Hero-stage { position: relative; }
+.c-Hero-stage {
+  position: relative;
+  /* lens coordinates — shared by the hole (English) and the window (Chinese) */
+  --lx: -300px;
+  --ly: -300px;
+}
 .c-Hero-title,
 .c-Hero-titleAlt {
   font-size: clamp(3.5rem, 9vw, 8.25rem);
@@ -137,14 +142,23 @@
 .c-Hero-line-1 { margin-left: 6vw; }
 .c-Hero-line-2 { margin-left: 12vw; }
 
+/* the lens REPLACES content: the base layer gets a hole punched where the
+   circle sits, so the two languages never overprint. Gated to the same
+   breakpoint as the lens itself — no empty holes on small viewports. */
+@media (min-width: 1024px) {
+  .c-Hero-title {
+    -webkit-mask-image: radial-gradient(circle 100px at var(--lx) var(--ly), transparent 97px, #000 100px);
+    mask-image: radial-gradient(circle 100px at var(--lx) var(--ly), transparent 97px, #000 100px);
+  }
+}
+
 .c-Hero-lens {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  --lx: -300px;
-  --ly: -300px;
   clip-path: circle(100px at var(--lx) var(--ly));
 
+  /* rim: hairline ring + inner glow so the circle reads as glass */
   &::before {
     content: "";
     position: absolute;
@@ -152,12 +166,17 @@
     width: 200px; height: 200px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+      inset 0 0 18px rgba(255, 255, 255, 0.22),
+      inset 0 0 2px rgba(255, 255, 255, 0.5);
   }
 }
 .c-Hero-titleAlt {
   color: var(--white);
-  transform: scale(1.012);
+  /* magnify around the lens centre — the refraction fake */
+  transform: scale(1.06);
+  transform-origin: var(--lx) var(--ly);
 }
 
 .c-Hero-foot {
