@@ -184,6 +184,7 @@
   left: var(--pad); right: var(--pad);
   bottom: clamp(24px, 5vh, 56px);
   display: flex;
+  justify-content: center;
   gap: clamp(2rem, 5vw, 6rem);
   align-items: flex-end;
 }
@@ -192,11 +193,15 @@
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.9rem;
-  padding-right: clamp(2rem, 5vw, 6rem);
-  &:not(:last-of-type) { border-right: 1px solid var(--hairline); }
+  &:not(:last-of-type) {
+    padding-right: clamp(2rem, 5vw, 6rem);
+    border-right: 1px solid var(--hairline);
+  }
 }
 .c-Hero-arrow {
-  margin-left: auto;
+  position: absolute;
+  right: 0;
+  bottom: 0;
   font-size: 1.1rem;
   animation: heroArrow 2.2s var(--ease) infinite;
 }
