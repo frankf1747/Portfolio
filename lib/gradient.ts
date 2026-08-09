@@ -143,8 +143,17 @@ const hex2rgb = (h: string): [number, number, number] => {
 /* Drawn from the ZZZ key art (crimson field, teal hair, cream) with the
    K-R4 card's acid yellow and sky blue as the highlight notes. */
 export const PALETTES: Record<string, Palette> = {
-  home: ["#8E1229", "#E8452F", "#35C9C0", "#F2E63C"]
+  home: ["#8E1229", "#E8452F", "#35C9C0", "#F2E63C"],
+  work: ["#0E2E3A", "#1E7F8C", "#4FC3F7", "#F2E8CE"],
+  about: ["#2B0A2E", "#8E1229", "#F4623A", "#F2E63C"]
 };
+
+/** Each route owns a gradient mood; detail pages fall back to work. */
+export function paletteForPath(path: string): Palette {
+  if (path === "/") return PALETTES.home;
+  if (path.startsWith("/about")) return PALETTES.about;
+  return PALETTES.work;
+}
 
 class GradientApp {
   private gl: WebGL2RenderingContext | null = null;
@@ -332,6 +341,25 @@ class GradientApp {
     gsap.to(s.c1, { 0: b[0], 1: b[1], 2: b[2], duration, ease: "power2.inOut" });
     gsap.to(s.c2, { 0: c[0], 1: c[1], 2: c[2], duration, ease: "power2.inOut" });
     gsap.to(s.c3, { 0: d[0], 1: d[1], 2: d[2], duration, ease: "power2.inOut" });
+  }
+
+  /** Route change: the field genuinely becomes a different gradient.
+      Colours cross over while the seed and travel shift, so the ribbon
+      re-forms rather than just re-tinting. Deliberately longer than the
+      wipe panel, so part of the morph is visible on the way out and part
+      on the way in. Interruptible — a second call retargets mid-flight. */
+  morphTo(p: Palette, duration = 1.6) {
+    this.setPalette(p, duration);
+    gsap.to(this.state, {
+      seed: this.state.seed + 3.1 + Math.random() * 2,
+      duration,
+      ease: "expo.inOut",
+      overwrite: "auto"
+    });
+    gsap.fromTo(this.state,
+      { scale: 1 },
+      { scale: 1.05, duration: duration * 0.45, ease: "power2.out", yoyo: true, repeat: 1, overwrite: "auto" }
+    );
   }
 
   /** scroll progress drives the ribbon's travel */

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "//build": "writes to .next-build so a production build can never clobber a running dev server's chunks",
+    "build": "NEXT_DIST_DIR=.next-build next build",
     "start": "next start",
     "lint": "next lint"
   },

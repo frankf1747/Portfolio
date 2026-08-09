@@ -9,7 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { bootMotion, scrollToTop, prefersReduced, DUR } from "@/lib/motion";
-import { gradient } from "@/lib/gradient";
+import { gradient, paletteForPath } from "@/lib/gradient";
 import { onTransition } from "@/lib/transition";
 import Nav from "./Nav";
 import Cursor from "./Cursor";
@@ -25,12 +25,21 @@ export default function Shell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     bootMotion();
-    if (canvasRef.current) gradient.mount(canvasRef.current, prefersReduced());
+    if (canvasRef.current) {
+      gradient.mount(canvasRef.current, prefersReduced());
+      /* a direct load lands on its own route's palette, no morph */
+      gradient.setPalette(paletteForPath(window.location.pathname), 0.01);
+    }
   }, []);
 
   /* transition: wipe up → push route → (pathname effect) wipe off */
   useEffect(() => {
     onTransition((href) => {
+      /* Start the gradient morph immediately and run it longer than the
+         wipe, so the outgoing page's field is already changing before the
+         panel covers, and the incoming one is still settling after it
+         lifts — the gradient carries across both pages. */
+      gradient.morphTo(paletteForPath(href), 1.6);
       if (prefersReduced() || !wipeRef.current) { router.push(href); return; }
       pendingHref.current = href;
       gsap.fromTo(wipeRef.current,

@@ -61,7 +61,8 @@ export default function RecentWork() {
     addEventListener("resize", measure);
 
     let lastIndex = -1;
-    let vel = 0;
+    let vel = 0;                       // smoothed, for the shader skew
+    let frameScale = 1;                // the window's own scale, velocity-driven
 
     const update = () => {
       const y = lenis ? lenis.scroll : window.scrollY;
@@ -86,9 +87,19 @@ export default function RecentWork() {
       const index = Math.min(N - 1, Math.floor(progress * N));
       const local = progress * N - Math.floor(progress * N);
 
-      /* filmstrip: rect in CSS px, top-left origin */
+      /* Frame scale is driven by raw scroll velocity, not progress: it
+         swells the moment you move and returns to exactly 1 when you stop.
+         Fast attack / slow release gives the immediate "jump" on movement
+         without a jolt on the way back. Transform only — no reflow — and
+         the WebGL plane follows because it syncs to the live rect. */
+      const rawVel = lenis ? (lenis as unknown as { velocity: number }).velocity ?? 0 : 0;
+      const target = 1 + Math.min(0.075, Math.abs(rawVel) * 0.0016);
+      frameScale += (target - frameScale) * (target > frameScale ? 0.4 : 0.075);
+      if (Math.abs(target - frameScale) < 0.0004) frameScale = target;
+
       const wr = windowRef.current;
       if (wr) {
+        wr.style.transform = `scale(${frameScale.toFixed(4)})`;
         const r = wr.getBoundingClientRect();
         const onScreen = r.bottom > 0 && r.top < vh && r.width > 0;
         filmstrip.rect = onScreen
@@ -96,11 +107,8 @@ export default function RecentWork() {
           : { x: 0, y: 0, w: 0, h: 0 };
       }
       filmstrip.progress = progress;
-      vel += ((lenis ? (lenis as unknown as { velocity: number }).velocity ?? 0 : 0) - vel) * 0.15;
+      vel += (rawVel - vel) * 0.15;
       filmstrip.velocity = gsap.utils.clamp(-3, 3, vel * 0.05);
-      /* the photograph swells slightly as the section is scrolled, and
-         responds a touch more while actually moving — settles when idle */
-      filmstrip.zoom = 1.20 + progress * 0.10 + Math.min(0.05, Math.abs(vel) * 0.004);
       filmstrip.render();
 
       /* Titles are a vertical reel, not a crossfade: the strip scrolls

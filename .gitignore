@@ -6,3 +6,4 @@ project_raw/
 node_modules/
 out/
 next-env.d.ts
+.next-build/
