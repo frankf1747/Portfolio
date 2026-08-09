@@ -378,6 +378,29 @@ class GradientApp {
     );
   }
 
+  /* Scroll-driven palette. `a`→`b` by `t` gives the colour of the strip
+     position itself, so the background crosses on exactly the same value
+     as the filmstrip; `from`/`amount` fades that in over the route's own
+     palette as the section rises into view. Written directly, not tweened
+     — the easing already lives in the scroll mapping. */
+  drivePalette(from: Palette, a: Palette, b: Palette, t: number, amount: number) {
+    const F = from.map(hex2rgb);
+    const A = a.map(hex2rgb);
+    const B = b.map(hex2rgb);
+    const dst = [this.state.c0, this.state.c1, this.state.c2, this.state.c3];
+    for (let i = 0; i < 4; i++) {
+      for (let k = 0; k < 3; k++) {
+        const ab = A[i][k] + (B[i][k] - A[i][k]) * t;
+        dst[i][k] = F[i][k] + (ab - F[i][k]) * amount;
+      }
+    }
+  }
+
+  /** stop any route tween before scroll takes the wheel */
+  releasePaletteTweens() {
+    gsap.killTweensOf([this.state.c0, this.state.c1, this.state.c2, this.state.c3]);
+  }
+
   /** scroll progress drives the ribbon's travel */
   setScroll(progress: number) {
     this.state.tx = progress * 0.9;

@@ -14,7 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { featured } from "@/data/projects";
-import { gradient } from "@/lib/gradient";
+import { gradient, paletteForPath, type Palette } from "@/lib/gradient";
 import { filmstrip } from "@/lib/filmstrip";
 import { lenis, prefersReduced } from "@/lib/motion";
 import { slashChars, plainTitle } from "@/lib/slashText";
@@ -81,8 +81,9 @@ export default function RecentWork() {
     measure();
     addEventListener("resize", measure);
 
-    let lastIndex = -1;
-    let vel = 0;                       // smoothed, for the shader skew
+    let vel = 0;
+    let driving = false;
+    const basePalette: Palette = paletteForPath("/");                       // smoothed, for the shader skew
     let frameScale = 1;                // the window's own scale, velocity-driven
 
     const update = () => {
@@ -144,11 +145,30 @@ export default function RecentWork() {
         cursorRef.current.style.transform = `translateY(${progress * 100}%)`;
       }
 
-      /* background palette follows the active project */
-      if (index !== lastIndex) {
-        lastIndex = index;
-        gradient.setPalette(featured[index].palette, 1.2);
+      /* Background rides the same value as the strip. The cutoffs are where
+         d crosses an integer, so the colour crosses exactly when the images
+         do — and holds still through each dwell, because d does. */
+      const lo = Math.min(N - 1, Math.floor(d));
+      const hi = Math.min(N - 1, lo + 1);
+      const frac = d - lo;
+
+      /* fade it in over the route's own palette as the section rises in,
+         so the hero doesn't snap to project 1's colours on approach */
+      const rectTop = cTop - y;
+      const enter = clamp01((vh - rectTop) / (vh * 0.85));
+
+      if (enter > 0 && !driving) { driving = true; gradient.releasePaletteTweens(); }
+      if (enter <= 0 && driving) { driving = false; }
+      if (enter > 0) {
+        gradient.drivePalette(
+          basePalette,
+          featured[lo].palette,
+          featured[hi].palette,
+          frac,
+          enter
+        );
       }
+      void index;
     };
 
     gsap.ticker.add(update);
