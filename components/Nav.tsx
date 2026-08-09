@@ -28,11 +28,16 @@ function useClocks() {
   return times;
 }
 
-const LINKS = [
+/* first column: routes. second column: outbound. */
+const ROUTES = [
+  { href: "/", label: "Home" },
   { href: "/work", label: "Work" },
-  { href: "/about", label: "About" },
-  { href: "mailto:frankfu1747@gmail.com", label: "Contact", external: true },
-  { href: "https://github.com/frankf1747", label: "GitHub", external: true }
+  { href: "/about", label: "About" }
+];
+const OUTBOUND = [
+  { href: "mailto:frankfu1747@gmail.com", label: "Contact" },
+  { href: "https://github.com/frankf1747", label: "GitHub" },
+  { href: "https://www.linkedin.com/", label: "LinkedIn" }
 ];
 
 export default function Nav() {
@@ -47,15 +52,18 @@ export default function Nav() {
 
       <nav className="c-Nav-links" aria-label="Primary">
         <div className="c-Nav-col">
-          {LINKS.slice(0, 2).map(l => (
-            <TransitionLink key={l.href} href={l.href} className="c-Nav-link" cursor={l.label}>
-              <span className={"c-Nav-marker" + (pathname.startsWith(l.href) ? " is-active" : "")}>▸</span>
-              {l.label}
-            </TransitionLink>
-          ))}
+          {ROUTES.map(l => {
+            const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
+            return (
+              <TransitionLink key={l.href} href={l.href} className="c-Nav-link" cursor={l.label}>
+                <span className={"c-Nav-marker" + (active ? " is-active" : "")}>▸</span>
+                {l.label}
+              </TransitionLink>
+            );
+          })}
         </div>
         <div className="c-Nav-col">
-          {LINKS.slice(2).map(l => (
+          {OUTBOUND.map(l => (
             <a key={l.href} href={l.href} className="c-Nav-link" data-cursor={l.label}
                {...(l.href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}>
               <span className="c-Nav-marker">▸</span>

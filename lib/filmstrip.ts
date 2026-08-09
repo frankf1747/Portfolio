@@ -115,6 +115,8 @@ class Filmstrip {
   private u: Record<string, WebGLUniformLocation | null> = {};
   private canvas: HTMLCanvasElement | null = null;
   private count = 0;
+  /** the painted atlas is expensive; keep it across remounts */
+  private atlasCanvas: HTMLCanvasElement | null = null;
   ok = false;
 
   /** written by the section each frame */
@@ -123,8 +125,21 @@ class Filmstrip {
   velocity = 0;
   zoom = 1.2;
 
+  /** Release GL objects bound to a canvas that has left the DOM. */
+  unmount() {
+    removeEventListener("resize", this.resize);
+    this.gl = null;
+    this.canvas = null;
+    this.u = {};
+    this.ok = false;
+  }
+
+  /* Route changes unmount the section, so React hands us a NEW canvas each
+     time we come back. Bailing out on `this.gl` alone would leave the
+     context bound to the old, detached element and nothing would draw. */
   mount(canvas: HTMLCanvasElement, palettes: string[][], images: (string | undefined)[]) {
-    if (this.gl) return;
+    if (this.gl && this.canvas === canvas) return;
+    if (this.gl) this.unmount();
     this.canvas = canvas;
     const gl = canvas.getContext("webgl2", { antialias: false, alpha: true, premultipliedAlpha: false });
     if (!gl) return;
@@ -154,11 +169,16 @@ class Filmstrip {
       this.u[n] = gl.getUniformLocation(prog, n);
     });
 
-    /* build the atlas: N cells stacked vertically in one texture */
-    const atlas = document.createElement("canvas");
-    atlas.width = TW; atlas.height = TH * this.count;
+    /* build the atlas once: N cells stacked vertically in one texture */
+    if (!this.atlasCanvas) {
+      const a = document.createElement("canvas");
+      a.width = TW; a.height = TH * this.count;
+      const c2 = a.getContext("2d")!;
+      palettes.forEach((p, i) => paintCell(c2, i * TH, p, i + 1));
+      this.atlasCanvas = a;
+    }
+    const atlas = this.atlasCanvas;
     const ctx = atlas.getContext("2d")!;
-    palettes.forEach((p, i) => paintCell(ctx, i * TH, p, i + 1));
 
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);

@@ -33,6 +33,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["Search", "Ranking", "Evaluation"],
     discipline: "data",
+    image: "/work/starbucks-search.jpg",
     palette: ["#7A1030", "#E03A3E", "#4FC3F7", "#F2E63C"],
     summary:
       "Ranking menu queries for the UCLA × Starbucks challenge — query understanding, offline evaluation, and an error taxonomy that changed where the team spent its time.",
@@ -55,6 +56,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["Causal inference", "Econometrics"],
     discipline: "data",
+    image: "/work/doordash-rdd.jpg",
     palette: ["#5C0F22", "#F4623A", "#35C9C0", "#F2E8CE"],
     summary:
       "Estimating the causal effect of a delivery-fee threshold with a regression discontinuity design — identification strategy, robustness checks, honest caveats.",
@@ -77,6 +79,7 @@ export const projects: Project[] = [
     year: "2026",
     tags: ["AI", "Retrieval", "Product"],
     discipline: "product",
+    image: "/work/multi-agent-rag.jpg",
     palette: ["#0E2E3A", "#1E7F8C", "#35C9C0", "#F2E63C"],
     summary:
       "A working agent pipeline — retrieval, tools, tests — built and shipped, not just diagrammed. Chroma for vectors, a test suite that keeps it honest.",
@@ -99,6 +102,7 @@ export const projects: Project[] = [
     year: "2025",
     tags: ["UX", "Product design"],
     discipline: "design",
+    image: "/work/ai-joke-factory.jpg",
     palette: ["#6B1030", "#F4623A", "#35C9C0", "#FFE800"],
     summary:
       "End-to-end product design — flows, backend logic, and a v2 rebuilt on what users actually said.",
