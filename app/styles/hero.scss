@@ -38,21 +38,21 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Many tight, hard-edged patches rather than a few soft ones — a smooth
-     radial wash reads as a generic gradient, a mottled field reads as paint.
+  /* Dark foundation only: midnight navy / indigo / dark violet / plum,
+     with one near-black teal field upper-left (per the reference) and a
+     faint indigo lift above the eruption source at (50%, 82%). All colour
+     energy lives in the stroke layers, not here.
      REPLACE-ME: a real painted plate can simply become a background-image
      here, with these kept underneath as a fallback. */
   background:
-    radial-gradient(22% 18% at 12% 14%, #10514a 0%, transparent 62%),
-    radial-gradient(18% 22% at 30% 8%, #1c6b3f 0%, transparent 60%),
-    radial-gradient(24% 20% at 88% 18%, #1d2f7d 0%, transparent 64%),
-    radial-gradient(20% 24% at 72% 6%, #4a1a6e 0%, transparent 62%),
-    radial-gradient(26% 22% at 6% 52%, #5a1f3a 0%, transparent 66%),
-    radial-gradient(22% 20% at 94% 56%, #6b2410 0%, transparent 64%),
-    radial-gradient(24% 26% at 16% 88%, #23106b 0%, transparent 64%),
-    radial-gradient(26% 22% at 84% 92%, #5c1250 0%, transparent 66%),
-    radial-gradient(30% 26% at 50% 96%, #10484e 0%, transparent 68%),
-    radial-gradient(46% 40% at 50% 52%, #3a1266 0%, transparent 74%),
+    radial-gradient(30% 26% at 16% 12%, #0a2f33 0%, transparent 66%),
+    radial-gradient(26% 24% at 84% 12%, #2a0d52 0%, transparent 64%),
+    radial-gradient(24% 28% at 4% 48%, #14103d 0%, transparent 66%),
+    radial-gradient(24% 26% at 96% 52%, #3a0f33 0%, transparent 66%),
+    radial-gradient(30% 24% at 12% 88%, #171043 0%, transparent 66%),
+    radial-gradient(28% 24% at 88% 90%, #260b4d 0%, transparent 66%),
+    radial-gradient(40% 30% at 50% 84%, #221056 0%, transparent 70%),
+    radial-gradient(50% 60% at 50% 40%, #0e0a24 0%, transparent 78%),
     var(--c-ink);
   opacity: 0;
   transition: opacity 620ms var(--ease-io);
@@ -288,8 +288,11 @@
 /* ---------- central figure ---------- */
 
 .c-figure {
-  /* ~45% bigger than the first pass — the figure must anchor the page */
+  /* ~45% bigger than the first pass — the figure must anchor the page.
+     Pushed below centre so it stands directly above the eruption source
+     at (50%, 82%) rather than floating in the middle of the canvas. */
   width: clamp(170px, 21vw, 300px);
+  margin-top: clamp(48px, 14vh, 150px);
   opacity: 0;
   transform: translateY(14px);
   transition:

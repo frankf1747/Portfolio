@@ -21,14 +21,16 @@
   /* cool family — data */
   --c-cyan: #29e0f5;
   --c-turquoise: #17d9a6;
+  --c-mint: #4df5b5;
   --c-green: #86f03c;
+  --c-lime: #c3f531;
   --c-blue: #2f5cf0;
 
   /* warm family — product */
   --c-orange: #ff6a1f;
   --c-amber: #ffa11c;
   --c-yellow: #f2e13c;
-  --c-red: #ef2f2f;
+  --c-red: #f5321f;
 
   /* hot family — design */
   --c-magenta: #f0269b;
@@ -38,12 +40,15 @@
   /* neutral paper shards */
   --c-sand: #e8c39a;
 
-  /* dark paint masses — the layer-2 colour fields behind everything */
-  --m-navy: #141c4d;
-  --m-purple: #38105e;
-  --m-green: #0c3527;
-  --m-burgundy: #471028;
-  --m-plum: #2c0f45;
+  /* dark paint masses — the layer-2 colour fields behind everything.
+     All variations on midnight navy / indigo / dark violet / plum, plus
+     one near-black teal for the reference's upper-left field. */
+  --m-navy: #10173f;
+  --m-indigo: #14103d;
+  --m-purple: #2a0d52;
+  --m-plum: #3a0f33;
+  --m-teal: #0a2f33;
+  --m-violetd: #260b4d;
 
   /* figure */
   --figure-ink: #06030b;

@@ -42,12 +42,20 @@ function Mark({ s }: { s: Stroke }) {
     );
   } else {
     /* Filled painted shapes. Grouped `paths` (dry-brush slivers, splash
-       droplets) build up unevenly via decreasing opacity. */
+       droplets, target rings) build up unevenly via decreasing opacity;
+       `palette` gives per-path colour (targets), `fillRule` carves open
+       rings out of double-wound paths. */
     const paths = s.paths ?? [s.d ?? ""];
     art = (
       <g filter={`url(#fx-rough-${s.fx})`}>
         {paths.map((d, i) => (
-          <path key={i} d={d} fill={`var(${s.color})`} opacity={1 - i * 0.1} />
+          <path
+            key={i}
+            d={d}
+            fill={`var(${s.palette?.[i] ?? s.color})`}
+            fillRule={s.fillRule}
+            opacity={s.palette ? 1 : 1 - i * 0.1}
+          />
         ))}
       </g>
     );
