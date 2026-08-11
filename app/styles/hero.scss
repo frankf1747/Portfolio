@@ -1,0 +1,747 @@
+/* ============================================================
+   v2 hero — maximalist painted composition.
+
+   Layer order, back to front:
+     ground → back strokes → giant word → mid strokes → figure
+     → fore strokes → editorial furniture
+   ============================================================ */
+
+.c-hero {
+  --pad: clamp(18px, 3.4vw, 56px);
+
+  /* display scale. The word is meant to bleed off the sides — cropping is
+     part of the look, so the upper bound is deliberately past the viewport. */
+  --fs-word: clamp(4.5rem, 20vw, 22rem);
+
+  /* parallax travel per layer, in px, per the depth ladder */
+  --d-bg: 3px;
+  --d-type: 5px;
+  --d-mid: 8px;
+  --d-fore: 12px;
+  --d-figure: 4px;
+
+  --t-word: 1.1s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--c-ink);
+  color: var(--c-paper);
+}
+
+/* ---------- ground ---------- */
+
+.c-hero__ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* Many tight, hard-edged patches rather than a few soft ones — a smooth
+     radial wash reads as a generic gradient, a mottled field reads as paint.
+     REPLACE-ME: a real painted plate can simply become a background-image
+     here, with these kept underneath as a fallback. */
+  background:
+    radial-gradient(22% 18% at 12% 14%, #10514a 0%, transparent 62%),
+    radial-gradient(18% 22% at 30% 8%, #1c6b3f 0%, transparent 60%),
+    radial-gradient(24% 20% at 88% 18%, #1d2f7d 0%, transparent 64%),
+    radial-gradient(20% 24% at 72% 6%, #4a1a6e 0%, transparent 62%),
+    radial-gradient(26% 22% at 6% 52%, #5a1f3a 0%, transparent 66%),
+    radial-gradient(22% 20% at 94% 56%, #6b2410 0%, transparent 64%),
+    radial-gradient(24% 26% at 16% 88%, #23106b 0%, transparent 64%),
+    radial-gradient(26% 22% at 84% 92%, #5c1250 0%, transparent 66%),
+    radial-gradient(30% 26% at 50% 96%, #10484e 0%, transparent 68%),
+    radial-gradient(46% 40% at 50% 52%, #3a1266 0%, transparent 74%),
+    var(--c-ink);
+  opacity: 0;
+  transition: opacity 620ms var(--ease-io);
+}
+
+.c-hero.is-ready .c-hero__ground {
+  opacity: 1;
+}
+
+/* film grain — keeps the flat colour from looking vector-clean */
+.c-hero__ground::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.19;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* corner vignette — buys guaranteed contrast for the editorial furniture */
+.c-hero__ground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(118% 96% at 50% 50%, transparent 38%, rgba(5, 2, 11, 0.82) 100%);
+  pointer-events: none;
+}
+
+/* ---------- parallax layers ---------- */
+
+.c-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform: translate3d(calc(var(--px, 0) * var(--d)), calc(var(--py, 0) * var(--d)), 0);
+  will-change: transform;
+
+  &[data-depth="bg"] { --d: var(--d-bg); z-index: 1; }
+  &[data-depth="type"] { --d: var(--d-type); z-index: 2; }
+  &[data-depth="mid"] { --d: var(--d-mid); z-index: 3; }
+  &[data-depth="figure"] { --d: var(--d-figure); z-index: 4; }
+  &[data-depth="fore"] { --d: var(--d-fore); z-index: 5; }
+}
+
+/* ---------- the giant word ---------- */
+
+.c-word {
+  font-family: var(--font-display), "Archivo", system-ui, sans-serif;
+  font-weight: 900;
+  font-variation-settings: "wdth" 112, "wght" 900;
+  font-size: var(--fs-word);
+  line-height: 0.8;
+  letter-spacing: -0.035em;
+  text-align: center;
+  color: var(--c-paper);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.c-word__stack {
+  display: grid;
+  place-items: center;
+}
+
+.c-word__item {
+  grid-area: 1 / 1;
+  will-change: opacity, filter, transform;
+  transition:
+    opacity var(--t-word) var(--ease-io),
+    filter var(--t-word) var(--ease-io),
+    transform var(--t-word) var(--ease-out),
+    clip-path var(--t-word) var(--ease-out);
+
+  /* waiting below, blurred, clipped to a thin band */
+  /* Blur only exists mid-transition and stays modest — the resting word
+     is razor sharp so it reads as architecture, not atmosphere. */
+  &[data-state="idle"] {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(0.14em) scale(0.965);
+    clip-path: inset(42% 0 42% 0);
+  }
+
+  &[data-state="active"] {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+    clip-path: inset(-25% 0 -25% 0);
+    /* the faintest halo, so the letters sit IN the paint, not printed on it */
+    text-shadow: 0 0 70px rgba(244, 240, 228, 0.16);
+  }
+
+  /* dissolving upward and outward as the next word arrives */
+  &[data-state="leaving"] {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(-0.12em) scale(1.045);
+    clip-path: inset(-25% 0 -25% 0);
+  }
+}
+
+.c-hero:not(.is-ready) .c-word__item[data-state="active"] {
+  opacity: 0;
+  filter: blur(9px);
+  transform: translateY(0.18em) scale(0.94);
+}
+
+.c-hero.is-ready .c-word__item[data-state="active"] {
+  transition-delay: 0.14s;
+}
+
+/* ---------- brush marks ---------- */
+
+.c-field {
+  position: absolute;
+  inset: 0;
+
+  &[data-layer="back"] { --burst-d: 26px; }
+  &[data-layer="mid"] { --burst-d: 46px; }
+  &[data-layer="fore"] { --burst-d: 68px; }
+}
+
+.c-mark {
+  --boost: 0;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.55);
+  transition:
+    opacity 680ms var(--ease-out),
+    transform 820ms var(--ease-out);
+  transition-delay: calc(0.26s + var(--order) * 16ms);
+}
+
+.c-hero.is-ready .c-mark {
+  /* Dormant families stay near full strength — the composition should read
+     as saturated everywhere, with the surge as a lift rather than the only
+     thing keeping the picture alive. */
+  opacity: calc(var(--o) * (0.8 + 0.2 * var(--boost)));
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* which family surges for which focus */
+.c-hero[data-focus="data"] .c-mark[data-family="cool"],
+.c-hero[data-focus="product"] .c-mark[data-family="warm"],
+.c-hero[data-focus="design"] .c-mark[data-family="hot"] {
+  --boost: 1;
+}
+
+.c-mark svg {
+  display: block;
+  overflow: visible;
+  transform: rotate(var(--r)) scale(calc(var(--s) * (1 + 0.07 * var(--boost))));
+  transform-origin: center;
+  transition: transform 900ms var(--ease-out);
+}
+
+/* burst outward from centre, retriggered on every focus change */
+.c-mark__burst {
+  animation-fill-mode: both;
+}
+
+.c-hero.is-bursting .c-mark__burst {
+  animation: burst 1050ms var(--ease-out) both;
+  animation-delay: calc(var(--order) * 9ms);
+}
+
+/* inhale → explode → settle: the field contracts toward the figure for a
+   beat before flying outward, which is what sells it as one organism */
+@keyframes burst {
+  0% { transform: translate(0, 0) scale(1); }
+  18% {
+    transform: translate(
+      calc(var(--bx) * var(--burst-d) * -0.22),
+      calc(var(--by) * var(--burst-d) * -0.22)
+    ) scale(0.97);
+  }
+  58% {
+    transform: translate(
+      calc(var(--bx) * var(--burst-d)),
+      calc(var(--by) * var(--burst-d))
+    ) scale(1.03);
+  }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ambient drift — four variants, each mark on its own period so nothing
+   ever pulses in unison */
+.c-mark__drift {
+  animation-duration: var(--dur);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: var(--ease-io);
+
+  &[data-drift="a"] { animation-name: drift-a; }
+  &[data-drift="b"] { animation-name: drift-b; }
+  &[data-drift="c"] { animation-name: drift-c; }
+  &[data-drift="d"] { animation-name: drift-d; }
+}
+
+@keyframes drift-a {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(16px, -11px) rotate(2.4deg); }
+}
+@keyframes drift-b {
+  from { transform: translate(0, 0) rotate(0deg) scale(1); }
+  to { transform: translate(-19px, 13px) rotate(-3.1deg) scale(1.045); }
+}
+@keyframes drift-c {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(11px, 17px) rotate(3.4deg); }
+}
+@keyframes drift-d {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-13px, -15px) scale(0.95); }
+}
+
+/* stroked marks draw themselves on at entrance */
+.c-mark__draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 880ms var(--ease-out) forwards;
+  animation-delay: calc(0.32s + var(--order) * 20ms + var(--sub, 0ms));
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------- central figure ---------- */
+
+.c-figure {
+  /* ~45% bigger than the first pass — the figure must anchor the page */
+  width: clamp(170px, 21vw, 300px);
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 620ms var(--ease-out),
+    transform 720ms var(--ease-out);
+  transition-delay: 0.3s;
+  filter: drop-shadow(0 18px 46px rgba(5, 2, 11, 0.75));
+}
+
+.c-hero.is-ready .c-figure {
+  opacity: 1;
+  transform: none;
+}
+
+.c-figure__art {
+  width: 100%;
+  height: auto;
+  animation: bob 9.5s infinite alternate var(--ease-io);
+}
+
+@keyframes bob {
+  from { transform: translateY(-4px); }
+  to { transform: translateY(5px); }
+}
+
+/* ---------- editorial furniture ---------- */
+
+.c-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--pad);
+  padding: var(--pad);
+  pointer-events: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+
+  > * {
+    pointer-events: auto;
+  }
+
+  /* Corner scrim. The ground vignette sits under the artwork, so it can't
+     protect the furniture — this rides above every stroke but below the
+     text, buying contrast in the four corners while the centre stays wild. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(42% 36% at 0% 0%, rgba(5, 2, 11, 0.94), rgba(5, 2, 11, 0.5) 46%, transparent 76%),
+      radial-gradient(42% 36% at 100% 0%, rgba(5, 2, 11, 0.94), rgba(5, 2, 11, 0.5) 46%, transparent 76%),
+      radial-gradient(48% 38% at 0% 100%, rgba(5, 2, 11, 0.95), rgba(5, 2, 11, 0.55) 46%, transparent 76%),
+      radial-gradient(48% 38% at 100% 100%, rgba(5, 2, 11, 0.96), rgba(5, 2, 11, 0.58) 46%, transparent 76%);
+  }
+}
+
+.c-ui__tl { grid-area: 1 / 1; justify-self: start; }
+.c-ui__tr { grid-area: 1 / 2; justify-self: end; }
+.c-ui__bl { grid-area: 3 / 1; justify-self: start; align-self: end; }
+.c-ui__br { grid-area: 3 / 2; justify-self: end; align-self: end; }
+
+/* every furniture block fades up on the same late beat */
+.c-ui > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 560ms var(--ease-out);
+}
+
+.c-hero.is-ready .c-ui > * {
+  opacity: 1;
+  transform: none;
+}
+
+.c-hero.is-ready .c-ui__tl { transition-delay: 0.72s; }
+.c-hero.is-ready .c-ui__tr { transition-delay: 0.8s; }
+.c-hero.is-ready .c-ui__bl { transition-delay: 0.88s; }
+.c-hero.is-ready .c-ui__br { transition-delay: 0.96s; }
+
+/* text sitting over chaos needs its own floor */
+.c-mark-word,
+.c-kicker,
+.c-nav__link,
+.c-statement,
+.c-focus {
+  text-shadow: 0 1px 14px rgba(5, 2, 11, 0.9), 0 0 3px rgba(5, 2, 11, 0.7);
+}
+
+.c-mark-word {
+  display: inline-block;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-variation-settings: "wdth" 108, "wght" 800;
+  font-size: clamp(1.05rem, 1.5vw, 1.4rem);
+  letter-spacing: 0.14em;
+  color: var(--c-paper);
+}
+
+.c-kicker {
+  margin-top: 0.5em;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-dim);
+}
+
+/* ---------- nav ---------- */
+
+.c-nav ul {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6em;
+}
+
+.c-nav__link {
+  display: inline-block;
+  font-size: clamp(0.82rem, 1vw, 0.95rem);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--c-paper);
+
+  span {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* a rough painted underline rather than a rule */
+  span::after {
+    content: "";
+    position: absolute;
+    left: -3px;
+    right: -3px;
+    bottom: -7px;
+    height: 6px;
+    background: var(--c-accent);
+    clip-path: polygon(
+      0 42%, 8% 8%, 21% 58%, 35% 14%, 49% 62%, 63% 18%, 77% 60%, 90% 22%, 100% 46%,
+      100% 100%, 0 100%
+    );
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 400ms var(--ease-out);
+  }
+
+  &:hover span::after,
+  &:focus-visible span::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- statement ---------- */
+
+.c-statement {
+  max-width: 34ch;
+  font-size: clamp(0.85rem, 1.05vw, 1rem);
+  line-height: 1.65;
+  color: rgba(244, 240, 228, 0.92);
+}
+
+/* ---------- focus controls ---------- */
+
+.c-focus {
+  ul {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3em;
+  }
+}
+
+.c-focus__legend {
+  margin-bottom: 0.7em;
+  font-size: 0.7rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--c-dim);
+}
+
+.c-focus__btn {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.34em 0.2em;
+  font-family: inherit;
+  color: var(--c-paper);
+}
+
+.c-focus__idx {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  padding: 0.24em 0.4em;
+  border: 1px solid rgba(244, 240, 228, 0.5);
+  color: var(--c-dim);
+  transition: all 320ms var(--ease-out);
+}
+
+.c-focus__label {
+  font-size: clamp(0.78rem, 0.95vw, 0.9rem);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  opacity: 0.78;
+  transition: all 320ms var(--ease-out);
+}
+
+/* the bar is the primary non-colour state cue */
+.c-focus__bar {
+  grid-column: 1 / -1;
+  height: 2px;
+  width: 100%;
+  background: var(--c-faint);
+  transform: scaleX(0.14);
+  transform-origin: right center;
+  transition: transform 460ms var(--ease-out), background-color 320ms var(--ease-out);
+}
+
+.c-focus__btn[aria-pressed="true"] {
+  .c-focus__idx {
+    border-color: var(--c-accent);
+    background: var(--c-accent);
+    color: #0b0512;
+  }
+
+  .c-focus__label {
+    opacity: 1;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+  }
+
+  .c-focus__bar {
+    transform: scaleX(1);
+    background: var(--c-accent);
+  }
+}
+
+.c-focus__btn:hover .c-focus__label {
+  opacity: 0.85;
+}
+
+/* ---------- filter defs + focus motifs ---------- */
+
+.c-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.c-motifs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.c-motif {
+  position: absolute;
+  height: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 750ms var(--ease-io), transform 750ms var(--ease-out);
+}
+
+.c-hero[data-focus="data"] .c-motif[data-m="data"],
+.c-hero[data-focus="product"] .c-motif[data-m="product"],
+.c-hero[data-focus="design"] .c-motif[data-m="design"] {
+  opacity: 0.34;
+  transform: none;
+}
+
+/* ---------- accent follows the active focus ---------- */
+
+.c-hero[data-focus="data"] { --c-accent: var(--c-cyan); }
+.c-hero[data-focus="product"] { --c-accent: var(--c-amber); }
+.c-hero[data-focus="design"] { --c-accent: var(--c-pink); }
+
+/* ---------- focus visibility ---------- */
+
+.c-hero :focus-visible {
+  outline: 2px solid var(--c-paper);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   Responsive — the mobile layout is composed separately rather
+   than scaled down from desktop.
+   ============================================================ */
+
+/* tablet: thin the decorative field out */
+@media (max-width: 1024px) {
+  .c-mark[data-shed="md"] {
+    display: none;
+  }
+
+  .c-nav ul {
+    gap: 0.45em;
+  }
+}
+
+/* phone: keep the word and the figure, drop the rest of the noise */
+@media (max-width: 720px) {
+  .c-hero {
+    --fs-word: clamp(3.4rem, 25vw, 9rem);
+  }
+
+  .c-mark[data-shed="md"],
+  .c-mark[data-shed="sm"] {
+    display: none;
+  }
+
+  /* Halve the remaining mid-band density so the word and figure stay
+     legible on a narrow screen — every other mark stands down. */
+  .c-field[data-layer="mid"] .c-mark:nth-child(even) {
+    display: none;
+  }
+
+  .c-field[data-layer="fore"] .c-mark:nth-child(3n) {
+    display: none;
+  }
+
+  .c-figure {
+    width: clamp(130px, 34vw, 190px);
+  }
+
+  .c-motif {
+    display: none;
+  }
+
+  /* single column: identity on top, then statement, nav, controls */
+  .c-ui {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto auto;
+    gap: 1.15rem;
+  }
+
+  .c-ui__tl { grid-area: 1 / 1; }
+  .c-ui__bl { grid-area: 3 / 1; }
+  .c-ui__tr { grid-area: 4 / 1; }
+  .c-ui__br { grid-area: 5 / 1; justify-self: start; }
+
+  .c-nav ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.55em 1.15em;
+  }
+
+  .c-nav__link {
+    font-size: 0.7rem;
+  }
+
+  .c-statement {
+    max-width: 100%;
+    font-size: 0.78rem;
+  }
+
+  .c-focus {
+    ul {
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 0.55em;
+    }
+
+    li { flex: 1 1 0; }
+  }
+
+  .c-focus__legend {
+    text-align: left;
+  }
+
+  .c-focus__btn {
+    width: 100%;
+    grid-template-columns: auto 1fr;
+    gap: 0.45em;
+  }
+
+  .c-focus__bar {
+    transform-origin: left center;
+  }
+
+  .c-focus__label {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
+
+  .c-focus__btn[aria-pressed="true"] .c-focus__label {
+    letter-spacing: 0.12em;
+  }
+}
+
+/* short landscape phones: don't let the furniture crush the artwork */
+@media (max-height: 560px) and (max-width: 900px) {
+  .c-statement { display: none; }
+  .c-figure { width: clamp(80px, 14vh, 120px); }
+}
+
+/* ============================================================
+   Reduced motion — content stays complete, motion does not.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .c-mark__drift,
+  .c-figure__art,
+  .c-hero.is-bursting .c-mark__burst {
+    animation: none !important;
+  }
+
+  .c-mark__draw {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  /* typography becomes a plain crossfade */
+  .c-word__item {
+    transition: opacity 320ms linear !important;
+    filter: none !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  .c-hero:not(.is-ready) .c-word__item[data-state="active"] {
+    filter: none;
+    transform: none;
+  }
+
+  /* no explosive entrance — everything is simply present */
+  .c-hero__ground,
+  .c-mark,
+  .c-figure,
+  .c-ui > * {
+    transition: opacity 260ms linear !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+
+  .c-mark {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .c-hero.is-ready .c-mark {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .c-mark svg {
+    transition: none !important;
+  }
+}

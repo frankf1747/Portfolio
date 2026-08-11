@@ -7,4 +7,5 @@ node_modules/
 out/
 next-env.d.ts
 .next-build/
+.next-preview/
 tsconfig.tsbuildinfo

@@ -1,7 +1,10 @@
 # Frank Fu — portfolio
 
-Personal portfolio. **v2 is in progress — the design direction is not chosen yet.**
-The repo is currently a blank canvas on the v1 toolchain.
+Personal portfolio. **v2 in progress** — a maximalist painted-explosion hero:
+a dark abstract painting erupting around a central figure, with giant
+DATA / PRODUCT / DESIGN typography embedded in the artwork. All marks are
+inline SVG roughened by displacement filters; see `public/assets/README.md`
+for swapping in final painted assets.
 
 ## Versions
 
@@ -42,8 +45,14 @@ build can never clobber a running dev server's chunks.
 
 | Path | Notes |
 |---|---|
-| `app/` | `layout.tsx`, `page.tsx`, `styles/globals.scss` — minimal placeholders. `globals.scss` is a bare reset with no palette, type scale, or motion tokens; v2 defines those. |
-| `data/projects.ts` | Real project content, kept. Some fields are v1-specific (`palette`, `descriptor`, `index`) and were shaped for the gradient and filmstrip. Reshape the type freely for v2. |
+| `components/Hero.tsx` | Hero orchestration: focus rotation, burst, parallax, entrance, reduced-motion. |
+| `components/BrushField.tsx` | Renders the brush-mark layers; supports swapping any mark for a raster asset. |
+| `components/CenterFigure.tsx` | Placeholder central character (REPLACE-ME). |
+| `components/FocusMotifs.tsx` | Per-focus structural motifs (grids/charts, flow blocks, gestures). |
+| `lib/strokes.ts` | The whole painted composition as data: shape library + instance table. |
+| `app/styles/hero.scss` | Layering, typography transitions, burst/drift animation, responsive + reduced-motion. |
+| `data/projects.ts` | Real project content, kept from v1. Reshape the type freely. |
+| `public/assets/` | Drop-in point for final painted artwork (see its README). |
 | `public/work/` | Project images, 16:10. |
 | `docs/v1/` | v1 design spec, for reference only. |
 | `project_raw/` | Source material (decks, PDFs). Gitignored. |

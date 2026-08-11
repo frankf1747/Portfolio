@@ -1,9 +1,54 @@
+@use "./hero";
+
 /* ============================================================
-   v2 — base reset only.
-   Deliberately unopinionated: no palette, no type scale, no motion
-   tokens. The new design decides all of that. Add tokens here once
-   the direction is chosen.
+   v2 — base reset + palette.
+
+   The palette is pulled from the reference artwork: a deep violet-black
+   ground with saturated paint on top. Colour is grouped into three
+   families that the hero swaps between — cool (data), warm (product),
+   hot (design).
    ============================================================ */
+
+:root {
+  /* ground + ink */
+  --c-ink: #0d0618;
+  --c-paper: #f4f0e4;
+  /* Kept high: this text sits over painted chaos, not flat black, so the
+     usual "muted grey" alpha loses contrast fast. */
+  --c-dim: rgba(244, 240, 228, 0.82);
+  --c-faint: rgba(244, 240, 228, 0.55);
+
+  /* cool family — data */
+  --c-cyan: #29e0f5;
+  --c-turquoise: #17d9a6;
+  --c-green: #86f03c;
+  --c-blue: #2f5cf0;
+
+  /* warm family — product */
+  --c-orange: #ff6a1f;
+  --c-amber: #ffa11c;
+  --c-yellow: #f2e13c;
+  --c-red: #ef2f2f;
+
+  /* hot family — design */
+  --c-magenta: #f0269b;
+  --c-pink: #ff5fb0;
+  --c-violet: #7f3ff2;
+
+  /* neutral paper shards */
+  --c-sand: #e8c39a;
+
+  /* dark paint masses — the layer-2 colour fields behind everything */
+  --m-navy: #141c4d;
+  --m-purple: #38105e;
+  --m-green: #0c3527;
+  --m-burgundy: #471028;
+  --m-plum: #2c0f45;
+
+  /* figure */
+  --figure-ink: #06030b;
+  --figure-hi: #f4f0e4;
+}
 
 * {
   box-sizing: border-box;
@@ -16,9 +61,12 @@ html {
 }
 
 body {
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-mono), ui-monospace, monospace;
   line-height: 1.5;
+  background: var(--c-ink);
+  color: var(--c-paper);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 img,
@@ -64,6 +112,21 @@ h4 {
 :focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
+}
+
+/* Visually hidden but read aloud — carries the stable heading text while
+   the visible word cycles. */
+.u-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
