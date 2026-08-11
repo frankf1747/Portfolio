@@ -1,15 +1,36 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import {
+  Sedgwick_Ave_Display,
+  Permanent_Marker,
+  Allerta_Stencil,
+  IBM_Plex_Mono
+} from "next/font/google";
 import "./styles/globals.scss";
 
-/* Archivo carries a width axis, so the display face can be pushed wide and
-   heavy the way the reference lettering is. Plex Mono is the editorial
-   counterweight — technical, small, tracked. Both self-host at build time. */
-const display = Archivo({
+/* Four voices, one wall:
+   Sedgwick Ave Display — the throw-up lettering (drawn after NYC handstyles);
+   Permanent Marker — tags and signatures;
+   Allerta Stencil — sprayed municipal stencils (nav, controls);
+   IBM Plex Mono — the pasted-paper small print. */
+const piece = Sedgwick_Ave_Display({
   subsets: ["latin"],
-  axes: ["wdth"],
+  weight: "400",
   display: "swap",
-  variable: "--font-display"
+  variable: "--font-piece"
+});
+
+const marker = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-marker"
+});
+
+const stencil = Allerta_Stencil({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-stencil"
 });
 
 const mono = IBM_Plex_Mono({
@@ -26,12 +47,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0618"
+  themeColor: "#120d2e"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${piece.variable} ${marker.variable} ${stencil.variable} ${mono.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

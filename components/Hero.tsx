@@ -1,21 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import BrushField from "./BrushField";
-import CenterFigure from "./CenterFigure";
-import FocusMotifs from "./FocusMotifs";
+import GraffitiWall from "./GraffitiWall";
+import GraffitiPiece, { PIECES } from "./GraffitiPiece";
+import SprayCanvas, { type SprayHandle } from "./SprayCanvas";
 
 export type Focus = "data" | "product" | "design";
 
-const FOCUSES: { id: Focus; label: string; index: string }[] = [
-  { id: "data", label: "DATA", index: "01" },
-  { id: "product", label: "PRODUCT", index: "02" },
-  { id: "design", label: "DESIGN", index: "03" }
-];
-
 /* Rotation dwell, jittered per step so the cycle never feels metronomic. */
-const DWELL_MIN = 3500;
-const DWELL_MAX = 4500;
+const DWELL_MIN = 3800;
+const DWELL_MAX = 4800;
 
 const NAV = [
   { href: "/about", label: "ABOUT" },
@@ -24,50 +18,44 @@ const NAV = [
   { href: "/contact", label: "CONTACT" }
 ];
 
+/* Spray-cap colours for the interactive layer. */
+const CAPS = [
+  { id: "acid", label: "Acid green paint", value: "#c6f53c" },
+  { id: "pink", label: "Hot pink paint", value: "#ff4fae" },
+  { id: "cyan", label: "Cyan paint", value: "#2fd8f5" }
+];
+
 export default function Hero() {
   const rootRef = useRef<HTMLElement | null>(null);
   const [focus, setFocusState] = useState<Focus>("data");
   const [leaving, setLeaving] = useState<Focus | null>(null);
   const [reduced, setReduced] = useState(false);
+  const [cap, setCap] = useState(0);
+  const [hinted, setHinted] = useState(false);
 
+  const sprayRef = useRef<SprayHandle | null>(null);
   const timerRef = useRef<number | null>(null);
   const pausedRef = useRef(false);
   const focusRef = useRef<Focus>(focus);
   focusRef.current = focus;
 
-  /* --- burst -------------------------------------------------------- */
-  /* Restarts the stroke-burst animation. The class has to be removed and
-     re-added across a forced reflow, otherwise the animation won't replay. */
-  const animateBrushBurst = useCallback(() => {
-    const el = rootRef.current;
-    if (!el || reduced) return;
-    el.classList.remove("is-bursting");
-    void el.offsetWidth;
-    el.classList.add("is-bursting");
-  }, [reduced]);
+  /* --- focus rotation ------------------------------------------------ */
+  const setFocus = useCallback((next: Focus) => {
+    const current = focusRef.current;
+    if (next === current) return;
+    setLeaving(current);
+    setFocusState(next);
+    window.setTimeout(() => setLeaving((l) => (l === current ? null : l)), 1200);
+  }, []);
 
-  /* --- focus -------------------------------------------------------- */
-  const setFocus = useCallback(
-    (next: Focus) => {
-      const current = focusRef.current;
-      if (next === current) return;
-      setLeaving(current);
-      setFocusState(next);
-      animateBrushBurst();
-      window.setTimeout(() => setLeaving((l) => (l === current ? null : l)), 1300);
-    },
-    [animateBrushBurst]
-  );
-
-  /* --- rotation ----------------------------------------------------- */
   const startFocusRotation = useCallback(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
-    if (reduced) return; // reduced motion: the user drives the hero manually
+    if (reduced) return; // reduced motion: the visitor drives the wall manually
     const dwell = DWELL_MIN + Math.random() * (DWELL_MAX - DWELL_MIN);
     timerRef.current = window.setTimeout(() => {
       if (!pausedRef.current && !document.hidden) {
-        const i = FOCUSES.findIndex((f) => f.id === focusRef.current);
-        setFocus(FOCUSES[(i + 1) % FOCUSES.length].id);
+        const i = PIECES.findIndex((p) => p.id === focusRef.current);
+        setFocus(PIECES[(i + 1) % PIECES.length].id);
       }
       startFocusRotation();
     }, dwell);
@@ -81,8 +69,6 @@ export default function Hero() {
   }, [startFocusRotation]);
 
   /* --- entrance ------------------------------------------------------ */
-  /* One class flips the whole intro on. Every element's own transition-delay
-     does the staggering, so the sequence stays in CSS and lands inside 1.5s. */
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -90,155 +76,70 @@ export default function Hero() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  /* --- reduced motion ----------------------------------------------- */
+  /* --- reduced motion ------------------------------------------------ */
   useEffect(() => {
-    function setupReducedMotion() {
-      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-      const apply = () => setReduced(mq.matches);
-      apply();
-      mq.addEventListener("change", apply);
-      return () => mq.removeEventListener("change", apply);
-    }
-    return setupReducedMotion();
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduced(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
   }, []);
 
-  /* --- parallax ------------------------------------------------------ */
-  useEffect(() => {
-    function setupParallax() {
-      const el = rootRef.current;
-      if (!el) return;
-
-      const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-      if (reduced || !fine.matches) {
-        el.style.setProperty("--px", "0");
-        el.style.setProperty("--py", "0");
-        return;
-      }
-
-      let tx = 0;
-      let ty = 0;
-      let cx = 0;
-      let cy = 0;
-      let raf = 0;
-
-      const onMove = (e: PointerEvent) => {
-        const r = el.getBoundingClientRect();
-        tx = ((e.clientX - r.left) / r.width) * 2 - 1;
-        ty = ((e.clientY - r.top) / r.height) * 2 - 1;
-      };
-      const onLeave = () => {
-        tx = 0;
-        ty = 0;
-      };
-
-      /* Critically-damped-ish follow. 0.075 keeps the field lagging the
-         cursor enough to feel like weight rather than a rigid attachment. */
-      const tick = () => {
-        cx += (tx - cx) * 0.075;
-        cy += (ty - cy) * 0.075;
-        el.style.setProperty("--px", cx.toFixed(4));
-        el.style.setProperty("--py", cy.toFixed(4));
-        raf = requestAnimationFrame(tick);
-      };
-
-      window.addEventListener("pointermove", onMove, { passive: true });
-      el.addEventListener("pointerleave", onLeave);
-      raf = requestAnimationFrame(tick);
-
-      return () => {
-        cancelAnimationFrame(raf);
-        window.removeEventListener("pointermove", onMove);
-        el.removeEventListener("pointerleave", onLeave);
-      };
-    }
-    return setupParallax();
-  }, [reduced]);
-
-  const wordState = (id: Focus) => (id === focus ? "active" : id === leaving ? "leaving" : "idle");
+  const wordState = (id: Focus) =>
+    id === focus ? "active" : id === leaving ? "leaving" : "idle";
 
   return (
     <section
       ref={rootRef}
-      className="c-hero"
+      className="g-hero"
       data-focus={focus}
       data-reduced={reduced ? "true" : "false"}
       aria-labelledby="hero-title"
     >
-      {/* Displacement filters that roughen every brush mark into paint.
-          Defined once; referenced by BrushField as url(#fx-rough-*). */}
-      <svg className="c-defs" aria-hidden="true" focusable="false">
-        <defs>
-          <filter id="fx-rough-s" x="-25%" y="-25%" width="150%" height="150%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.055 0.11" numOctaves="2" seed="11" result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="6" />
-          </filter>
-          <filter id="fx-rough-m" x="-25%" y="-25%" width="150%" height="150%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.032 0.07" numOctaves="3" seed="23" result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="13" />
-          </filter>
-          <filter id="fx-rough-l" x="-30%" y="-30%" width="160%" height="160%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.045" numOctaves="3" seed="5" result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="22" />
-          </filter>
-          <filter id="fx-rough-xl" x="-30%" y="-30%" width="160%" height="160%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.011 0.024" numOctaves="3" seed="41" result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="38" />
-            <feGaussianBlur stdDeviation="1.4" />
-          </filter>
-        </defs>
-      </svg>
+      <GraffitiWall />
 
-      {/* REPLACE-ME: final painted background plate goes here, behind everything
-          (see public/assets/README.md — /assets/background.webp). */}
-      <div className="c-hero__ground" aria-hidden="true" />
+      <div className="g-stage">
+        <GraffitiPiece focus={focus} leaving={leaving} wordState={wordState} />
 
-      <div className="c-layer" data-depth="bg" aria-hidden="true">
-        <BrushField layer="back" />
-        <FocusMotifs />
+        {/* the artist's signature under the piece */}
+        <p className="g-sig" aria-hidden="true">
+          — frank fu <span className="g-sig__year">’26</span>
+        </p>
       </div>
 
-      <div className="c-layer" data-depth="type">
-        <h1 className="c-word" id="hero-title">
-          <span className="u-sr">Frank Fu — data, product, design.</span>
-          <span className="c-word__stack" aria-hidden="true">
-            {FOCUSES.map((f) => (
-              <span key={f.id} className="c-word__item" data-state={wordState(f.id)}>
-                {f.label}
-              </span>
-            ))}
-          </span>
-        </h1>
-      </div>
+      {/* visitors' paint lands above the artwork, below the furniture */}
+      <SprayCanvas
+        color={CAPS[cap].value}
+        onFirstSpray={() => setHinted(true)}
+        handleRef={sprayRef}
+      />
 
-      <div className="c-layer" data-depth="mid" aria-hidden="true">
-        <BrushField layer="mid" />
-      </div>
+      <p className="g-hint" data-done={hinted ? "true" : "false"} aria-hidden="true">
+        psst — press &amp; drag to spray
+      </p>
 
-      <div className="c-layer" data-depth="figure">
-        <div className="c-figure">
-          <CenterFigure />
-        </div>
-      </div>
-
-      <div className="c-layer" data-depth="fore" aria-hidden="true">
-        <BrushField layer="fore" />
-      </div>
-
-      {/* ---------- editorial furniture, pinned to the four corners ---------- */}
-      <div className="c-ui">
-        <div className="c-ui__tl">
-          <a className="c-mark-word" href="/">
-            FRANK&nbsp;FU
+      {/* ---------- furniture ---------- */}
+      <div className="g-ui">
+        <div className="g-ui__tl">
+          <a className="g-name" href="/">
+            {/* the crown every king gets */}
+            <svg className="g-name__crown" viewBox="0 0 80 44" aria-hidden="true">
+              <path
+                d="M8 38 L 12 12 L 26 26 L 40 6 L 54 26 L 68 12 L 72 38 Z"
+                fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round"
+              />
+            </svg>
+            FRANK FU
           </a>
-          <p className="c-kicker">Data · Product · Design</p>
+          <p className="g-kicker">data · product · design — los angeles</p>
         </div>
 
-        <nav className="c-ui__tr c-nav" aria-label="Primary">
+        <nav className="g-ui__tr g-nav" aria-label="Primary">
           <ul>
             {NAV.map((n) => (
               <li key={n.href}>
                 {/* Routes don't exist yet — swap to next/link once they do. */}
-                <a className="c-nav__link" href={n.href}>
+                <a className="g-nav__link" href={n.href}>
                   <span>{n.label}</span>
                 </a>
               </li>
@@ -246,42 +147,79 @@ export default function Hero() {
           </ul>
         </nav>
 
-        <p className="c-ui__bl c-statement">
-          I explore complex systems and turn them into clearer decisions, products, and
-          experiences.
-        </p>
+        {/* wheat-pasted poster carrying the statement */}
+        <div className="g-ui__bl g-poster">
+          <p className="g-poster__head">FRANK FU — PORTFOLIO</p>
+          <p className="g-poster__body">
+            I explore complex systems and turn them into clearer decisions,
+            products, and experiences.
+          </p>
+          <p className="g-poster__foot">
+            EST. LOS ANGELES · SEARCH RELEVANCE · CAUSAL INFERENCE · AI AGENTS
+          </p>
+        </div>
 
-        <div className="c-ui__br c-focus">
-          <p className="c-focus__legend" id="focus-legend">
-            Focus
+        {/* title selector, styled as stencilled crate labels */}
+        <div className="g-ui__br g-focus">
+          <p className="g-focus__legend" id="focus-legend">
+            NOW SHOWING
           </p>
           <ul aria-describedby="focus-legend">
-            {FOCUSES.map((f) => {
-              const active = f.id === focus;
+            {PIECES.map((p) => {
+              const active = p.id === focus;
               return (
-                <li key={f.id}>
+                <li key={p.id}>
                   <button
                     type="button"
-                    className="c-focus__btn"
+                    className="g-focus__btn"
                     aria-pressed={active}
                     onClick={() => {
-                      setFocus(f.id);
-                      startFocusRotation(); // user input resets the dwell
+                      setFocus(p.id);
+                      startFocusRotation();
                     }}
                     onFocus={() => (pausedRef.current = true)}
                     onBlur={() => (pausedRef.current = false)}
                     onMouseEnter={() => (pausedRef.current = true)}
                     onMouseLeave={() => (pausedRef.current = false)}
                   >
-                    <span className="c-focus__idx">{f.index}</span>
-                    <span className="c-focus__label">{f.label}</span>
-                    {/* Non-colour state cue: a bar that fills, plus aria-pressed. */}
-                    <span className="c-focus__bar" aria-hidden="true" />
+                    <span className="g-focus__idx">{p.index}</span>
+                    <span className="g-focus__label">{p.label}</span>
+                    {/* non-colour state cue: the splat behind the active row */}
+                    <svg
+                      className="g-focus__splat"
+                      viewBox="0 0 120 44"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 24 C 8 12, 24 4, 44 6 C 60 2, 84 2, 100 8 C 116 14, 116 30, 102 36 C 84 44, 58 42, 40 40 C 22 42, 14 34, 12 24 Z" />
+                    </svg>
                   </button>
                 </li>
               );
             })}
           </ul>
+
+          {/* the visitor's spray kit */}
+          <div className="g-kit" role="group" aria-label="Spray paint controls">
+            {CAPS.map((c, i) => (
+              <button
+                key={c.id}
+                type="button"
+                className="g-kit__cap"
+                style={{ "--cap": c.value } as React.CSSProperties}
+                aria-label={c.label}
+                aria-pressed={cap === i}
+                onClick={() => setCap(i)}
+              />
+            ))}
+            <button
+              type="button"
+              className="g-kit__buff"
+              onClick={() => sprayRef.current?.clear()}
+            >
+              BUFF
+            </button>
+          </div>
         </div>
       </div>
     </section>

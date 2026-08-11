@@ -1,10 +1,12 @@
 # Frank Fu — portfolio
 
-Personal portfolio. **v2 in progress** — a maximalist painted-explosion hero:
-a dark abstract painting erupting around a central figure, with giant
-DATA / PRODUCT / DESIGN typography embedded in the artwork. All marks are
-inline SVG roughened by displacement filters; see `public/assets/README.md`
-for swapping in final painted assets.
+Personal portfolio. **v2 in progress** — a graffiti-wall hero: a dark
+painted-over brick wall carrying a rotating throw-up (DATA ENTHUSIAST /
+PRODUCT CREATOR / UX DESIGNER), stencilled navigation, a wheat-pasted
+statement poster, faded handstyle tags — and an interactive spray layer:
+visitors click-drag to spray the wall, pick from three caps, and BUFF to
+clear. (The earlier painted-explosion direction lives in git history at
+`22035f4`.)
 
 ## Versions
 
@@ -45,14 +47,13 @@ build can never clobber a running dev server's chunks.
 
 | Path | Notes |
 |---|---|
-| `components/Hero.tsx` | Hero orchestration: focus rotation, burst, parallax, entrance, reduced-motion. |
-| `components/BrushField.tsx` | Renders the brush-mark layers; supports swapping any mark for a raster asset. |
-| `components/CenterFigure.tsx` | Placeholder central character (REPLACE-ME). |
-| `components/FocusMotifs.tsx` | Per-focus structural motifs (grids/charts, flow blocks, gestures). |
-| `lib/strokes.ts` | The whole painted composition as data: shape library + instance table. |
-| `app/styles/hero.scss` | Layering, typography transitions, burst/drift animation, responsive + reduced-motion. |
+| `components/Hero.tsx` | Orchestration: title rotation, entrance, reduced-motion, cap/buff state. |
+| `components/GraffitiPiece.tsx` | The rotating h1 throw-up: halo / 3D block / textured face / drips, per-title colourways. |
+| `components/GraffitiWall.tsx` | The wall: brick + buff patches + faded tags + doodles (all decorative). |
+| `components/SprayCanvas.tsx` | Interactive spray layer — pointer drag paints, linger drips, BUFF clears. |
+| `app/styles/graffiti.scss` | The whole look: wall texture, piece layering, spray-in transition, furniture, responsive + reduced-motion. |
 | `data/projects.ts` | Real project content, kept from v1. Reshape the type freely. |
-| `public/assets/` | Drop-in point for final painted artwork (see its README). |
+| `public/assets/` | Drop-in point for final artwork (see its README). |
 | `public/work/` | Project images, 16:10. |
 | `docs/v1/` | v1 design spec, for reference only. |
 | `project_raw/` | Source material (decks, PDFs). Gitignored. |
