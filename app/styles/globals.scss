@@ -1,84 +1,24 @@
-@use "./graffiti";
+@use "./wireframe";
 
 /* ============================================================
-   v2 — base reset + palette.
-
-   The palette is pulled from the reference artwork: a deep violet-black
-   ground with saturated paint on top. Colour is grouped into three
-   families that the hero swaps between — cool (data), warm (product),
-   hot (design).
+   v3 — minimal reset. The design system itself lives in
+   wireframe.scss; this is only what the reset must own.
    ============================================================ */
 
-:root {
-  /* ground + ink */
-  --c-ink: #0d0618;
-  --c-paper: #f4f0e4;
-  /* Kept high: this text sits over painted chaos, not flat black, so the
-     usual "muted grey" alpha loses contrast fast. */
-  --c-dim: rgba(244, 240, 228, 0.82);
-  --c-faint: rgba(244, 240, 228, 0.55);
-
-  /* cool family — data */
-  --c-cyan: #29e0f5;
-  --c-turquoise: #17d9a6;
-  --c-mint: #4df5b5;
-  --c-green: #86f03c;
-  --c-lime: #c3f531;
-  --c-blue: #2f5cf0;
-
-  /* warm family — product */
-  --c-orange: #ff6a1f;
-  --c-amber: #ffa11c;
-  --c-yellow: #f2e13c;
-  --c-red: #f5321f;
-
-  /* hot family — design */
-  --c-magenta: #f0269b;
-  --c-pink: #ff5fb0;
-  --c-violet: #7f3ff2;
-
-  /* neutral paper shards */
-  --c-sand: #e8c39a;
-
-  /* dark paint masses — the layer-2 colour fields behind everything.
-     All variations on midnight navy / indigo / dark violet / plum, plus
-     one near-black teal for the reference's upper-left field. */
-  --m-navy: #10173f;
-  --m-indigo: #14103d;
-  --m-purple: #2a0d52;
-  --m-plum: #3a0f33;
-  --m-teal: #0a2f33;
-  --m-violetd: #260b4d;
-
-  /* figure */
-  --figure-ink: #06030b;
-  --figure-hi: #f4f0e4;
-}
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  line-height: 1.5;
-  background: var(--c-ink);
-  color: var(--c-paper);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
 img,
 picture,
 video,
-canvas,
-svg {
+canvas {
   display: block;
   max-width: 100%;
 }
@@ -94,33 +34,9 @@ select {
 button {
   background: none;
   border: none;
-  cursor: pointer;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-li {
-  list-style: none;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-size: inherit;
-  font-weight: inherit;
-}
-
-:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-/* Visually hidden but read aloud — carries the stable heading text while
-   the visible word cycles. */
+/* Visually hidden but read aloud. */
 .u-sr {
   position: absolute;
   width: 1px;
@@ -132,15 +48,4 @@ h4 {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }

@@ -1,61 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Sedgwick_Ave_Display,
-  Permanent_Marker,
-  Allerta_Stencil,
-  IBM_Plex_Mono
-} from "next/font/google";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
 import "./styles/globals.scss";
 
-/* Four voices, one wall:
-   Sedgwick Ave Display — the throw-up lettering (drawn after NYC handstyles);
-   Permanent Marker — tags and signatures;
-   Allerta Stencil — sprayed municipal stencils (nav, controls);
-   IBM Plex Mono — the pasted-paper small print. */
-const piece = Sedgwick_Ave_Display({
+/* Two voices, per the wireframe: Archivo (the "grot") for display
+   headings, IBM Plex Mono for everything else — UI text and the giant
+   uppercase statements alike. */
+const grot = Archivo({
   subsets: ["latin"],
-  weight: "400",
+  weight: ["500", "600"],
   display: "swap",
-  variable: "--font-piece"
-});
-
-const marker = Permanent_Marker({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-marker"
-});
-
-const stencil = Allerta_Stencil({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-stencil"
+  variable: "--font-grot"
 });
 
 const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
   variable: "--font-mono"
 });
 
 export const metadata: Metadata = {
-  title: "Frank Fu — Data · Product · Design",
+  title: "Frank Fu — Product designer & design engineer",
   description:
-    "Frank Fu is a hybrid data analyst, product manager, and UX designer in Los Angeles. I explore complex systems and turn them into clearer decisions, products, and experiences."
+    "Frank Fu is a product designer and design engineer. Interfaces drawn first, built right."
 };
 
 export const viewport: Viewport = {
-  themeColor: "#120d2e"
+  themeColor: "#F7F4EC"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${piece.variable} ${marker.variable} ${stencil.variable} ${mono.variable}`}
-    >
+    <html lang="en" className={`${grot.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );
