@@ -1,0 +1,219 @@
+/* ============================================================
+   §1 MEASUREMENT SYSTEM + §2 COLOUR + §3 TYPE
+   1rem = 1 design pixel on a 1440 artboard, at every width.
+   ============================================================ */
+
+:root {
+  --margin: 20rem;
+  --gap: 20rem;
+  /* 12 columns inside the margins. (§1 prints this as
+     `100vw*100/12 - …`, which resolves to 8.3 viewport widths; the
+     intended reading is the standard column formula below.) */
+  --column: calc((100vw - var(--margin) * 2 - var(--gap) * 11) / 12);
+
+  /* §3 metric correction. The literal display sizes assume GT Pressura
+     Mono's ~0.5em advance. IBM Plex Mono is 0.6em, so a 13-character
+     line at 245rem measures 1911rem against a 1584rem frame. 0.80
+     restores the measured LINE WIDTH — which is what the overture
+     geometry, the column spans and the dense-block effect depend on. */
+  --mono-fit: 0.8;
+
+  /* set once by JS at load, in px, and frozen */
+  --start-vh: 100vh;
+
+  --ease: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-wipe: cubic-bezier(0.35, 0.42, 0, 1);
+  --ease-space: cubic-bezier(0.6, 0.14, 0, 1);
+
+  /* §2 — one ground + one mark colour per viewport. Never three. */
+  --paper: #f5f3ec;
+  --accent: #f2247a;
+  --ink: #262048;
+  --yellow: #ffe500;
+  --blue: #7fdcf2;
+
+  --ground: var(--paper);
+  --mark: var(--accent);
+}
+
+html {
+  font-size: calc(100vw / 1440);
+  background: var(--ground);
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--mark);
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+  font-size: 20rem;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* full-section ground inversions — max three in the whole scroll */
+.is-invert-yellow {
+  --ground: var(--yellow);
+  --mark: var(--ink);
+  background: var(--ground);
+  color: var(--mark);
+}
+
+.is-invert-blue {
+  --ground: var(--blue);
+  --mark: var(--ink);
+  background: var(--ground);
+  color: var(--mark);
+}
+
+/* ---------- §3 type scale ---------- */
+
+.super,
+.super-small,
+.h1,
+.small,
+.nav__item {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-transform: uppercase;
+}
+
+.super { font-size: calc(245rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; }
+.super-small { font-size: calc(190rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; }
+.h1 { font-size: calc(95rem * var(--mono-fit)); line-height: 0.7; letter-spacing: -0.04em; }
+.small { font-size: 16rem; line-height: 1.3; letter-spacing: -0.01em; }
+
+.h2 {
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+  font-size: 48rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4rem;
+}
+
+.u-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- §7 underline system ---------- */
+
+/* TYPE A — appears on hover. Navigation gains an underline. */
+.link-a {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 1s var(--ease-wipe);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+  }
+}
+
+/* TYPE B — present at rest, wipes away on hover. Content loses one. */
+.link-b {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1rem;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+    transition: transform 1s var(--ease-wipe);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+}
+
+/* ---------- §5 preloader ---------- */
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 9999999;
+
+  ._bg {
+    position: absolute;
+    inset: 0;
+    background: var(--paper);
+    opacity: 1;
+    transition: opacity 0.8s var(--ease);
+  }
+
+  &.hide {
+    pointer-events: none;
+
+    ._bg {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------- accessibility fallbacks ---------- */
+
+/* §2 contrast note: --accent on --paper is ≈3.6:1. Display type keeps it;
+   small text swaps to --ink when the user asks for more contrast. */
+@media (prefers-contrast: more) {
+  .small,
+  .nav__item,
+  body,
+  .subjects__note,
+  .approach__d,
+  .card .bottom {
+    color: var(--ink);
+  }
+}

@@ -1,40 +1,38 @@
-import { Arrow } from "../SketchFilters";
+import SmartText from "../SmartText";
+
+/* §11 contact + footer. Footer links are Type B (§7): present at rest,
+   wiping away on hover. Navigation gains an underline, content loses one. */
+
+const LINKS = [
+  { label: "LINKEDIN", href: "https://www.linkedin.com/" },
+  { label: "GITHUB", href: "https://github.com/" },
+  { label: "EMAIL", href: "mailto:frankfu1747@gmail.com" }
+];
 
 export default function Contact() {
   return (
-    <section id="contact" className="sk-contact">
-      <hr className="sketch-rule" />
-
-      <p className="sk-contact__big">Say hello</p>
-
-      <div className="sk-contact__ctas">
-        <a href="mailto:hello@frankfu.design?subject=Starting%20a%20project">
-          Start a project
-          <Arrow wob="wob3" />
-        </a>
-        <a href="mailto:hello@frankfu.design?subject=Hello">
-          Just say hi
-          <Arrow wob="wob2" />
-        </a>
+    <section className="contact-section" id="contact">
+      <div className="contact-section__head">
+        <SmartText className="small">07 — CONTACT</SmartText>
+        <SmartText className="small">OPEN TO 2026 ROLES</SmartText>
       </div>
 
-      <p className="sk-contact__email">
-        <a href="mailto:hello@frankfu.design">hello@frankfu.design</a>
-      </p>
+      <SmartText className="super-small contact-section__big">SAY HELLO</SmartText>
 
-      <hr className="sketch-rule" />
+      <a className="contact-section__email" href="mailto:frankfu1747@gmail.com">
+        frankfu1747@gmail.com
+      </a>
 
-      <footer className="sk-foot">
-        <span className="sk-foot__group">
-          <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">LinkedIn</a>
-          <a href="https://github.com/" target="_blank" rel="noreferrer noopener">GitHub</a>
-          <a href="https://www.are.na/" target="_blank" rel="noreferrer noopener">Are.na</a>
+      <footer className="foot">
+        <span className="foot__group">
+          {LINKS.map((l) => (
+            <a className="link-b" key={l.label} href={l.href} target="_blank" rel="noreferrer noopener">
+              {l.label}
+            </a>
+          ))}
         </span>
-        <span>San Francisco, CA — 37.7749°N</span>
-        <span className="sk-foot__group">
-          <span>©2026 Frank Fu</span>
-          <a href="/privacy">Privacy</a>
-        </span>
+        <span>LOS ANGELES, CA</span>
+        <span>©2026 FRANK FU</span>
       </footer>
     </section>
   );

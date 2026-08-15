@@ -1,9 +1,7 @@
-@use "./wireframe";
-
-/* ============================================================
-   v3 — minimal reset. The design system itself lives in
-   wireframe.scss; this is only what the reset must own.
-   ============================================================ */
+@use "tokens";
+@use "smart-text";
+@use "nav";
+@use "sections";
 
 *,
 *::before,
@@ -16,36 +14,9 @@ html {
 }
 
 img,
-picture,
 video,
-canvas {
+canvas,
+svg {
   display: block;
   max-width: 100%;
-}
-
-input,
-button,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
-}
-
-button {
-  background: none;
-  border: none;
-}
-
-/* Visually hidden but read aloud. */
-.u-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
 }

@@ -1,0 +1,271 @@
+/* ============================================================
+   §6 NAV — the centrepiece interaction
+   ============================================================ */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  line-height: 1;
+  z-index: 99999;
+  pointer-events: none;
+  user-select: none;
+  padding: var(--margin);
+  box-sizing: border-box;
+  color: var(--mark);
+  transition: opacity 1s var(--ease), color 1s var(--ease), transform 1s var(--ease);
+}
+
+.nav__items {
+  display: inline-flex;
+  flex-direction: column;
+  row-gap: 2rem;
+  position: relative;
+  pointer-events: auto;
+}
+
+.nav__item {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 9;
+  cursor: pointer;
+  height: 16rem; /* item pitch */
+
+  /* entrance + collapse share this transition */
+  transform: translateY(-125rem);
+  transition: transform 1s var(--ease);
+
+  /* §7 TYPE A underline — the origin swap is the point */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 1s var(--ease-wipe);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+  }
+}
+
+/* the collapsed stack — seven hairlines, tighter pitch than the list */
+.nav__lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rem;
+  pointer-events: none;
+
+  span {
+    display: block;
+    width: 32rem;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 0;
+    transition: transform 1s var(--ease);
+  }
+}
+
+/* ---------- EXPANDED ----------
+   Default is expanded (:not(.is-down)), per §6. The intro entrance is
+   gated on data-loaded so the nav assembles bottom-up over the landing
+   window rather than being present at first paint. */
+
+html[data-loaded="true"] .nav__item {
+  transform: translateY(0);
+}
+
+/* bottom-up: delays DECREASE down the list. Counterintuitive, correct. */
+@each $i, $d in (1: 0.6s, 2: 0.55s, 3: 0.5s, 4: 0.45s, 5: 0.4s, 6: 0.35s, 7: 0.3s) {
+  .nav__item:nth-child(#{$i + 1}) {
+    transition-delay: $d;
+  }
+}
+
+/* lines retract far slower than they draw in — asymmetric on purpose */
+@each $i, $d in (1: 0.8s, 2: 0.75s, 3: 0.7s, 4: 0.65s, 5: 0.6s, 6: 0.55s, 7: 0.5s) {
+  .nav__lines span:nth-child(#{$i}) {
+    transition-delay: $d;
+    transition-duration: 1s;
+  }
+}
+
+/* ---------- COLLAPSED ----------
+   scrolled away from top, and the item stack is not hovered */
+
+html.is-down:not(.is-start) .nav__items:not(:hover) {
+  .nav__item {
+    transform: translateY(-125rem);
+  }
+
+  @each $i, $d in (1: 0.05s, 2: 0.1s, 3: 0.15s, 4: 0.2s, 5: 0.25s, 6: 0.3s, 7: 0.35s) {
+    .nav__item:nth-child(#{$i + 1}) {
+      transition-delay: $d;
+    }
+  }
+
+  .nav__lines span {
+    transform: scaleX(1);
+    transition-duration: 0.3s;
+  }
+
+  @each $i, $d in (1: 0.03s, 2: 0.06s, 3: 0.09s, 4: 0.12s, 5: 0.15s, 6: 0.18s, 7: 0.21s) {
+    .nav__lines span:nth-child(#{$i}) {
+      transition-delay: $d;
+    }
+  }
+}
+
+/* logo + contact collapse with the rest */
+.nav__logo {
+  pointer-events: auto;
+  width: 156rem;
+  height: 54rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    color: currentColor;
+    transform: scale(1) translateY(0);
+    transition: transform 1s var(--ease);
+  }
+}
+
+html.is-down:not(.is-start) .nav__logo svg {
+  transform: scale(0.72) translateY(-100rem);
+}
+
+.nav__contact {
+  pointer-events: auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12rem;
+  /* the sliding text and icon clip cleanly instead of hanging half
+     off the viewport edge */
+  overflow: hidden;
+  padding-right: 2rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  svg {
+    width: 40rem;
+    height: 40rem;
+    flex: none;
+    transition: transform 1s var(--ease);
+  }
+
+  .ring,
+  .arrow {
+    transition: transform 1s var(--ease);
+    transform-origin: 50% 50%;
+  }
+
+  &:hover .ring {
+    transform: scale(1.15);
+  }
+
+  &:hover .arrow {
+    transform: scale(0.8) translate(-5%, -5%);
+  }
+}
+
+.nav__contactBar {
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  width: 32rem;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform 1s var(--ease);
+  transition-delay: 0.5s;
+}
+
+html.is-down:not(.is-start) .nav__contact {
+  .buttonText,
+  svg {
+    transform: translate(100rem);
+  }
+
+  .nav__contactBar {
+    transform: scaleX(1);
+    transition-duration: 0.3s;
+    transition-delay: 0.21s;
+  }
+}
+
+/* ---------- §8 CONTACT BUTTON ----------
+   A solid accent bar sweeps vertically through the masked word over 2s.
+   Slower than anything else on the site — that's why it reads as a
+   flourish. */
+
+.buttonText {
+  display: inline-flex;
+  transition: transform 1s var(--ease);
+}
+
+.textMask {
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+
+  span {
+    display: inline-block;
+    transition: transform 2s var(--ease);
+  }
+
+  span:first-child {
+    transition-delay: 0.1s;
+  }
+
+  span:last-child {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.5em;
+    background: currentColor;
+    transform: translateY(-110%);
+    transition-delay: 0.15s;
+  }
+}
+
+.contact:hover .textMask span:last-child {
+  transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__item,
+  .nav__lines span,
+  .nav__logo svg,
+  .buttonText,
+  .textMask span {
+    transition: none !important;
+  }
+
+  .nav__item {
+    transform: none !important;
+  }
+}

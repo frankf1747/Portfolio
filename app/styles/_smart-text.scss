@@ -1,0 +1,105 @@
+/* ============================================================
+   §4 THE TEXT ENGINE — CSS
+
+   0.73em clip window: shorter than the em box, which is what lets
+   lh 0.65 lines sit on top of each other and still mask cleanly.
+   ============================================================ */
+
+.smart-text {
+  display: block;
+
+  .line {
+    display: block;
+    overflow-y: clip;
+  }
+
+  &:not(.is-body) .line {
+    height: 0.73em;
+  }
+
+  &.mask .line {
+    overflow-x: clip;
+  }
+
+  .line .text {
+    display: inline-block;
+    white-space: nowrap;
+    position: relative;
+    top: -0.02em;
+    will-change: transform;
+
+    /* RISE: 121% of the 0.73em window — glyphs fully clear of the mask */
+    transform: translateY(0.885em);
+    transition: transform 1.4s var(--ease);
+    transition-delay: calc(var(--delay, 0.1s) + var(--line-delay, 0ms));
+  }
+
+  &.is-revealed .line .text {
+    transform: translateY(0);
+  }
+
+  .line .word,
+  .line .letter-inner {
+    display: inline-block;
+  }
+
+  /* SPACE UNPACKING: the line begins as one dense unreadable run of
+     glyphs and unpacks into words as it resolves. Gaps come from the
+     scrambled-space plus the word padding; both collapse while the
+     .scrambled class is on .text. */
+  .line .scrambled-space {
+    display: inline-block;
+    width: 0.25em;
+    transition: width 1s var(--ease-space);
+  }
+
+  .line .text.scrambled .scrambled-space {
+    width: 0;
+  }
+
+  &:not(.is-body) .line .word {
+    transition: padding 1s var(--ease-space);
+  }
+
+  &:not(.is-body) .line .word:not(:last-child).right-space {
+    padding-right: 0.17em;
+  }
+
+  &:not(.is-body) .line .word:not(:first-child).left-space {
+    padding-left: 0.17em;
+  }
+
+  &:not(.is-body) .line .text.scrambled .word {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* body copy keeps normal leading and normal spaces */
+  &.is-body .line .text {
+    white-space: normal;
+  }
+}
+
+/* §5 hero: consecutive lines physically overlap by 0.1em */
+.hero__title .smart-text .line:not(:last-child) {
+  margin-bottom: -0.1em;
+}
+
+/* ---------- reduced motion ----------
+   all transforms off, scramble off (JS), text renders resolved,
+   loader still fades */
+@media (prefers-reduced-motion: reduce) {
+  .smart-text .line .text {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .smart-text .line .scrambled-space {
+    width: 0.25em !important;
+    transition: none !important;
+  }
+
+  .smart-text .line .word {
+    transition: none !important;
+  }
+}

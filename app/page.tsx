@@ -1,32 +1,32 @@
-import SketchFilters from "@/components/SketchFilters";
-import GridOverlay from "@/components/GridOverlay";
-import SiteNav from "@/components/sections/SiteNav";
+import Preloader from "@/components/Preloader";
+import ScrollProvider from "@/components/ScrollProvider";
+import Nav from "@/components/Nav";
 import Hero from "@/components/sections/Hero";
-import Showreel from "@/components/sections/Showreel";
-import Intro from "@/components/sections/Intro";
-import Focus from "@/components/sections/Focus";
-import SelectedWork from "@/components/sections/SelectedWork";
-import Bio from "@/components/sections/Bio";
-import Manifesto from "@/components/sections/Manifesto";
+import Reel from "@/components/sections/Reel";
+import About from "@/components/sections/About";
+import Statement from "@/components/sections/Statement";
+import Capabilities from "@/components/sections/Capabilities";
+import Work from "@/components/sections/Work";
+import Approach from "@/components/sections/Approach";
+import Subjects from "@/components/sections/Subjects";
 import Contact from "@/components/sections/Contact";
 
 export default function Home() {
   return (
     <>
-      <SketchFilters />
-      <div className="grain" aria-hidden="true" />
-      <GridOverlay />
-
-      <SiteNav />
+      <Preloader />
+      <ScrollProvider />
+      <Nav />
 
       <main>
         <Hero />
-        <Showreel />
-        <Intro />
-        <Focus />
-        <SelectedWork />
-        <Bio />
-        <Manifesto />
+        <Reel />
+        <About />
+        <Statement />
+        <Capabilities />
+        <Work />
+        <Approach />
+        <Subjects />
         <Contact />
       </main>
     </>
