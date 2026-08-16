@@ -41,10 +41,25 @@
   justify-content: center;
   text-align: center;
   transform: translateY(0);
-  transition: transform 2.4s var(--ease-lift);
+  /* the launch: creeps for most of 1.6s, then throws half the travel in
+     the last fifth. Starts at 1.9s, clears the top at ~3.5s. */
+  transition: transform 1.6s var(--ease-launch);
 
   &.is-exiting {
     transform: translateY(-100%);
+  }
+}
+
+/* second layer — 60vh of travel on a soft curve against the overture's
+   100vh launch, giving ~1.66× parallax between them */
+.hero__content {
+  position: absolute;
+  inset: 0;
+  transform: translateY(calc(var(--start-vh) - min(450rem, 50vh)));
+  transition: transform 2.4s var(--ease-content);
+
+  &.is-in {
+    transform: translateY(0);
   }
 }
 
@@ -58,18 +73,15 @@
   left: 138rem;
   bottom: 160rem;
   color: var(--mark);
-  /* Starts low AND hidden, then rides up into the space the overture
-     vacates. The hide is load-bearing, not decoration: SmartText resolves
+  /* The hide is load-bearing, not decoration: SmartText resolves
      `trigger="manual"` instances on mount, so this line is fully painted
-     from the first frame and was sitting under the overture for the whole
-     landing. Delaying play() alone does not hide it. */
+     from the first frame. Its own travel now comes from .hero__content;
+     all this does is keep it invisible until its decode starts at 3.4s. */
   opacity: 0;
-  transform: translateY(70rem);
-  transition: opacity 1s var(--ease), transform 1.4s var(--ease);
+  transition: opacity 0.9s var(--ease);
 
   &.is-in {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

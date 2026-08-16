@@ -39,6 +39,7 @@
     overflow-x: clip;
   }
 
+
   .line .text {
     display: inline-block;
     white-space: nowrap;
@@ -55,7 +56,9 @@
 
     /* RISE: 121% of the window — glyphs fully clear of the mask */
     transform: translateY(calc(var(--st-window, 0.73em) * 1.21));
-    transition: transform 1.4s var(--ease);
+    /* 1.5s expo.out, matching RISE_MS in lib/smartText.ts — the JS drives
+       the decode against this number, so the two must stay in step */
+    transition: transform 1.5s var(--ease);
     transition-delay: calc(var(--delay, 0.1s) + var(--line-delay, 0ms));
   }
 

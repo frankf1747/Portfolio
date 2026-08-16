@@ -29,6 +29,13 @@
      a full viewport — it reads as a jump. The overture exit eases in and
      out so the page looks like it is being carried up, not yanked. */
   --ease-lift: cubic-bezier(0.65, 0, 0.35, 1);
+  /* power4.in — the overture's launch. Creeps for most of its duration,
+     then throws roughly half the travel into the last fifth. The spec's
+     p^9 cannot be written as a cubic-bezier; this is the alternative it
+     names, and reads near-identically at 1.6s. */
+  --ease-launch: cubic-bezier(0.895, 0.03, 0.685, 0.22);
+  /* expo.inOut — the content layer, softer at both ends than the launch */
+  --ease-content: cubic-bezier(1, 0, 0, 1);
 
   /* §2 — one ground + one mark colour per viewport. Never three. */
   --paper: #f5f3ec;
@@ -44,6 +51,13 @@
 html {
   font-size: calc(100vw / 1440);
   background: var(--ground);
+}
+
+/* native backstop for the intro scroll lock — Lenis is stopped in JS, but
+   a keyboard or trackpad scroll would still move the document without this */
+html[data-locked="true"],
+html[data-locked="true"] body {
+  overflow: hidden;
 }
 
 body {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import SmartText, { type SmartTextHandle } from "./SmartText";
+import { scrambleText } from "@/lib/smartText";
 
 /* §6 — the centrepiece interaction.
 
@@ -36,6 +37,8 @@ const ITEMS = [
 
 export default function Nav() {
   const handles = useRef<(SmartTextHandle | null)[]>([]);
+  const ctaA = useRef<HTMLSpanElement | null>(null);
+  const ctaB = useRef<HTMLSpanElement | null>(null);
 
   /* Re-decode every label — but ONLY when the whole stack is expanding.
 
@@ -83,6 +86,16 @@ export default function Nav() {
     handles.current[i]?.play({ scrambleOnly: true });
   }, []);
 
+  /* The CTA decodes on hover too. It uses scrambleText, not the full
+     engine: the label is a rotated two-column run, and the engine's
+     .line/.text boxes resolve to zero size in that context. Same pool and
+     duration, no DOM rewrite. Both columns fire together so they read as
+     one word resolving, not two labels. */
+  const onContactEnter = useCallback(() => {
+    if (ctaA.current) scrambleText(ctaA.current);
+    if (ctaB.current) scrambleText(ctaB.current);
+  }, []);
+
   return (
     <nav className="nav" aria-label="Primary">
       <div className="nav__items" onMouseEnter={onEnter}>
@@ -122,14 +135,14 @@ export default function Nav() {
 
       {/* Two masks, not one: the reference sets the label as two vertical
           columns, and each needs its own sweep bar. */}
-      <a className="nav__contact contact" href="#contact">
+      <a className="nav__contact contact" href="#contact" onMouseEnter={onContactEnter}>
         <span className="buttonText">
           <span className="textMask">
-            <span>GET IN</span>
+            <span ref={ctaA}>GET IN</span>
             <span aria-hidden="true" />
           </span>
           <span className="textMask">
-            <span>TOUCH</span>
+            <span ref={ctaB}>TOUCH</span>
             <span aria-hidden="true" />
           </span>
         </span>

@@ -28,14 +28,36 @@ export default function ScrollProvider() {
     let lenis: Lenis | null = null;
     let raf = 0;
 
+    /* Nothing scrolls during the intro — the landing is all transforms, and
+       a scroll mid-launch would fight the two layers travelling at
+       different rates. Unlocked by Hero at T+4.6.
+
+       The safety timer is not optional: if Hero throws or never mounts,
+       the event never fires and the page would be permanently unscrollable.
+       Whatever happens, scrolling is restored. */
+    let unlocked = false;
+    const unlock = () => {
+      if (unlocked) return;
+      unlocked = true;
+      lenis?.start();
+      document.documentElement.removeAttribute("data-locked");
+    };
+
     if (!reduced) {
       lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+      lenis.stop();
+      html.dataset.locked = "true";
       const tick = (t: number) => {
         lenis?.raf(t);
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
+    } else {
+      unlocked = true;
     }
+
+    window.addEventListener("site:intro-end", unlock, { once: true });
+    const failsafe = window.setTimeout(unlock, 9000);
 
     /* §6 nav state is DIRECTION, not depth — scrolling up re-expands the
        nav wherever you are, rather than only at the top.
@@ -66,6 +88,9 @@ export default function ScrollProvider() {
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(failsafe);
+      window.removeEventListener("site:intro-end", unlock);
+      html.removeAttribute("data-locked");
       if (lenis) {
         lenis.off("scroll", onScroll);
         lenis.destroy();

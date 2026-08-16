@@ -11,9 +11,9 @@
                └ .scrambled-space
 
    Two motions run concurrently per line:
-     RISE      translateY(0.885em) → 0, 1.4s, --ease, 100ms/line
-     SCRAMBLE  0.95s — deliberately shorter, so the word resolves at
-               ~68% of its travel and finishes rising already legible.
+     RISE      translateY(0.885em) → 0, 1.5s, --ease, 120ms/line
+     SCRAMBLE  1.5s — in lockstep with the rise, so each line resolves at
+               the same instant it stops travelling.
 
    The line starts as one dense unreadable run of glyphs (word gaps
    collapsed to zero) and unpacks into words as it resolves.
@@ -24,9 +24,15 @@
    ============================================================ */
 
 const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const RISE_MS = 1400;
-const SCRAMBLE_MS = 950;
-const LINE_STAGGER_MS = 100;
+/* Landing spec: the reveal and the decode run in LOCKSTEP — each line
+   settles at the same instant it finishes travelling, at 1.5s, stagger
+   0.12s. This replaces the earlier deliberate offset, where the scramble
+   finished at ~68% of the travel so the word was already legible while
+   still rising. Both are defensible; the lockstep one is what was asked
+   for, and it makes the resolve land on the stop rather than before it. */
+const RISE_MS = 1500;
+const SCRAMBLE_MS = 1500;
+const LINE_STAGGER_MS = 120;
 const GLYPH_SWAP_MS = 55;
 
 export type SmartTextInstance = {
@@ -44,6 +50,59 @@ type Letter = { el: HTMLElement; final: string; resolveAt: number; done: boolean
 const prefersReduced = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Decode a plain element's text in place — no line splitting, no clip
+   window, no rise.
+
+   The full engine cannot be used everywhere it would be nice to have. It
+   rewrites its host into .line > .text > .word boxes whose sizing assumes
+   horizontal flow and a fixed-height mask; drop that into a rotated or
+   shrink-to-fit context and the boxes resolve to zero. Anything that wants
+   only the scramble — the vertical contact button, for one — takes this
+   instead. Same pool, same left-to-right resolve, same duration.
+
+   Monospace hosts keep their width for free; the caller is responsible for
+   reserving space if the face is proportional. */
+export function scrambleText(el: HTMLElement, opts: { duration?: number } = {}) {
+  const final = (el.dataset.scrambleSource ??= el.textContent || "");
+  const ms = opts.duration ?? SCRAMBLE_MS;
+  if (prefersReduced()) {
+    el.textContent = final;
+    return () => {};
+  }
+
+  const chars = [...final];
+  const n = Math.max(1, chars.length - 1);
+  const resolveAt = chars.map((_, i) => ms * (0.2 + 0.8 * (i / n)));
+  const started = performance.now();
+  let raf = 0;
+  let lastSwap = 0;
+
+  const tick = (now: number) => {
+    const t = now - started;
+    const swap = now - lastSwap > GLYPH_SWAP_MS;
+    if (swap) lastSwap = now;
+
+    let remaining = 0;
+    const out = chars.map((ch, i) => {
+      if (t >= resolveAt[i]) return ch;
+      remaining++;
+      /* whitespace and punctuation never scramble */
+      if (!/[A-Za-z0-9]/.test(ch)) return ch;
+      return swap ? POOL[(Math.random() * POOL.length) | 0] : el.textContent?.[i] || ch;
+    });
+    el.textContent = out.join("");
+
+    if (remaining > 0) raf = requestAnimationFrame(tick);
+    else el.textContent = final;
+  };
+  raf = requestAnimationFrame(tick);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    el.textContent = final;
+  };
+}
 
 export function smartText(root: HTMLElement): SmartTextInstance {
   const source = (root.dataset.stSource ??= (root.textContent || "").trim());

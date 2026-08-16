@@ -28,8 +28,16 @@ import SmartText, { type SmartTextHandle } from "../SmartText";
            having been sitting there the whole time.
      6.50  subtitle settled                                        */
 
-const EXIT_AT = 2600;
-const SUB_AT = 5000;
+/* The landing timeline. T = 0 is the moment the curtain begins to fade.
+   Two layers travel different distances on different curves and are never
+   parented to each other — that difference IS the effect. The overture
+   covers a full viewport height on a launch curve; the content covers
+   ~60vh on a soft one, so the headline visibly outruns it. */
+const EXIT_AT = 1900; //  overture launches   — 1.6s ease-launch, clears at 3.5
+const CONTENT_AT = 2200; //  content rides up — 2.4s ease-content
+const SUB_AT = 3400; //  subtitle decodes    — 1.5s rise
+const NAV_AT = 3500; //  nav, wordmark, CTA  — 0.9s fade
+const END_AT = 4600; //  timeline over, scroll unlocked
 
 /* §5 hero copy constraint: three lines, two words, 11–13 chars,
    roughly equal — equal lengths are what make the dense scramble
@@ -38,6 +46,7 @@ const LINES = ["DENSE SIGNALS", "CLEAR CHOICES", "SHIPPED WORK"];
 
 export default function Hero() {
   const [exiting, setExiting] = useState(false);
+  const [contentIn, setContentIn] = useState(false);
   const [subIn, setSubIn] = useState(false);
   const heroRefs = useRef<(SmartTextHandle | null)[]>([]);
   const subRef = useRef<SmartTextHandle | null>(null);
@@ -50,20 +59,35 @@ export default function Hero() {
 
       heroRefs.current.forEach((h, i) => h?.play({ delay: i * 100 }));
 
+      /* reduced motion: straight to the resting state. The curtain fade is
+         the only thing that still plays. */
       if (reduced) {
         subRef.current?.resolve();
         setExiting(true);
+        setContentIn(true);
         setSubIn(true);
+        document.documentElement.dataset.nav = "in";
+        window.dispatchEvent(new Event("site:intro-end"));
         return;
       }
 
       timers.push(window.setTimeout(() => setExiting(true), EXIT_AT));
+      timers.push(window.setTimeout(() => setContentIn(true), CONTENT_AT));
       timers.push(
         window.setTimeout(() => {
           setSubIn(true);
           subRef.current?.play();
         }, SUB_AT)
       );
+      timers.push(
+        window.setTimeout(() => {
+          document.documentElement.dataset.nav = "in";
+        }, NAV_AT)
+      );
+      /* separate attribute from data-nav on purpose — one flips at 3.5s and
+         must STAY flipped, the other at 4.6s. Reusing a single attribute
+         would unset the nav's own selector when the second write lands. */
+      timers.push(window.setTimeout(() => window.dispatchEvent(new Event("site:intro-end")), END_AT));
     };
 
     window.addEventListener("site:reveal", start, { once: true });
@@ -99,16 +123,21 @@ export default function Hero() {
         Frank Fu — data-led product design. Dense signals, clear choices, shipped work.
       </h1>
 
-      <div className={`hero__sub${subIn ? " is-in" : ""}`}>
-        <SmartText trigger="manual" instanceRef={subRef} className="h1">
-          — DATA-LED PRODUCT DESIGN
-        </SmartText>
-      </div>
+      {/* the second layer — travels ~60vh against the overture's 100vh, on a
+          softer curve, so the headline outruns it rather than the two
+          sliding as one sheet. Never parent these to each other. */}
+      <div className={`hero__content${contentIn ? " is-in" : ""}`}>
+        <div className={`hero__sub${subIn ? " is-in" : ""}`}>
+          <SmartText trigger="manual" instanceRef={subRef} className="h1">
+            — DATA-LED PRODUCT DESIGN
+          </SmartText>
+        </div>
 
-      <div className="hero__meta">
-        <span>SEARCH · CAUSAL INFERENCE · AGENTS</span>
-        <span className="hero__cue">SCROLL</span>
-        <span>©2026</span>
+        <div className="hero__meta">
+          <span>SEARCH · CAUSAL INFERENCE · AGENTS</span>
+          <span className="hero__cue">SCROLL TO VIEW MORE ↓</span>
+          <span>©2026</span>
+        </div>
       </div>
     </section>
   );

@@ -30,7 +30,7 @@
 
 .nav__item {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 14rem;
+  font-size: 12rem;
   line-height: 1;
   --st-window: 1em; /* §4 mask must clear the line box — see _smart-text */
   letter-spacing: 0.02em;
@@ -38,7 +38,7 @@
   position: relative;
   z-index: 9;
   cursor: pointer;
-  height: 16rem; /* item pitch */
+  height: 14rem; /* item pitch — tracks font-size, keeps the 2rem row gap */
 
   /* entrance + collapse share this transition */
   transform: translateY(-125rem);
@@ -88,12 +88,22 @@
   }
 }
 
-/* ---------- EXPANDED ----------
-   Default is expanded (:not(.is-down)), per §6. The intro entrance is
-   gated on data-loaded so the nav assembles bottom-up over the landing
-   window rather than being present at first paint. */
+/* The nav is absent for the whole overture and arrives at T+3.5, after the
+   headline has launched — it is not part of the title card. */
+.nav {
+  opacity: 0;
+}
 
-html[data-loaded="true"] .nav__item {
+html[data-nav="in"] .nav {
+  opacity: 1;
+}
+
+/* ---------- EXPANDED ----------
+   Default is expanded (:not(.is-down)), per §6. The entrance is gated on
+   data-nav so the stack assembles bottom-up as it fades in, rather than
+   having already assembled behind an invisible nav. */
+
+html[data-nav="in"] .nav__item {
   transform: translateY(0);
 }
 
@@ -188,15 +198,15 @@ html.is-down:not(.is-start) .nav__logoText {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* right-aligned, not centred: the ring hangs off the same edge the text
-     runs down, so the two read as one mark instead of two stacked pieces */
-  align-items: flex-end;
-  gap: 10rem;
+  /* centred on the text block's axis, and tight to it — edge-aligning the
+     ring left it reading as a second object parked underneath */
+  align-items: center;
+  gap: 6rem;
   /* distance the ring rises when the label folds — set from the measured
      text run plus the gap, so the ring lands exactly where the text began
      rather than at an arbitrary offset. Verified in-browser after any
      change to the label, its size, or the gap. */
-  --contact-fold: 62rem;
+  --contact-fold: 58rem;
   /* NO overflow:hidden here. It clipped the ring's :hover scale — and so
      did the 40×40 viewBox, where an r=18 circle with a 2-wide stroke
      already reaches 19 of the 20 available. The clip is now scoped to
@@ -209,8 +219,8 @@ html.is-down:not(.is-start) .nav__logoText {
   text-transform: uppercase;
 
   svg {
-    width: 40rem;
-    height: 40rem;
+    width: 28rem;
+    height: 28rem;
     flex: none;
     overflow: visible;
     transition: transform 1s var(--ease);
@@ -264,7 +274,10 @@ html.is-down:not(.is-start) .nav__contact:not(:hover) {
      and because the block direction is right-to-left, "GET IN" lands to
      the right of "TOUCH", which is the reference's order. */
   flex-direction: column;
-  gap: 4rem;
+  /* leading between the two vertical columns — this is the "line spacing"
+     of a rotated run, not line-height */
+  gap: 1rem;
+  line-height: 1;
   writing-mode: vertical-rl;
   transition: transform 1s var(--ease);
 }
