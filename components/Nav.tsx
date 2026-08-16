@@ -48,12 +48,12 @@ export default function Nav() {
      belongs to the expansion event: hovering the folded stack, or
      scrolling back up.
 
-     Delays match the CSS ladder (0.6s → 0.3s, bottom-up) so each label
-     decodes as it arrives. Fired at t=0 the 0.95s scramble would finish
-     before the words were back on screen. */
+     Delays mirror the CSS ladder in _nav.scss (0.30s → 0.12s, bottom-up)
+     so each label decodes as it arrives. Fired at t=0 the scramble would
+     finish before the words were back on screen. */
   const replay = useCallback(() => {
     handles.current.forEach((h, i) =>
-      h?.play({ delay: 600 - i * 50, scrambleOnly: true })
+      h?.play({ delay: 300 - i * 30, scrambleOnly: true })
     );
   }, []);
 
