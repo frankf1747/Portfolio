@@ -140,6 +140,12 @@
     transition-timing-function: var(--ease-content);
   }
 
+  /* OVERTURE — the rise stretched to match the longer decode, so the line
+     is still arriving as the last characters lock rather than parking. */
+  &.is-overture .line .text {
+    transition-duration: 2.4s;
+  }
+
   /* body copy keeps normal leading and normal spaces */
   &.is-body .line .text {
     white-space: normal;

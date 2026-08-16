@@ -44,11 +44,18 @@ const LINE_STAGGER_MS = 120;
    enters frame and never appears to park and then perform. That needs a
    later lock-start and a longer tail — the length is what sells it as
    scroll-linked rather than as a canned animation. */
-export type ScramblePace = "landing" | "scroll";
+export type ScramblePace = "landing" | "scroll" | "overture";
 
 const PACE: Record<ScramblePace, { scrambleMs: number; lockStartMs: number; staggerMs: number }> = {
   landing: { scrambleMs: SCRAMBLE_MS, lockStartMs: 300, staggerMs: LINE_STAGGER_MS },
-  scroll: { scrambleMs: 1400, lockStartMs: 650, staggerMs: 110 }
+  scroll: { scrambleMs: 1400, lockStartMs: 650, staggerMs: 110 },
+  /* The overture is the one block the viewer is guaranteed to be watching
+     from its first frame, and it has the longest runway: the launch does
+     not become perceptible until ~2.8s. At the landing pace the decode
+     finished at 1.74s and the finished headline then sat still for a full
+     second before being carried off. Running to ~2.9s means the last
+     character locks just as the launch takes hold. */
+  overture: { scrambleMs: 2600, lockStartMs: 500, staggerMs: 160 }
 };
 const GLYPH_SWAP_MS = 55;
 
@@ -62,7 +69,14 @@ export type SmartTextInstance = {
   destroy: () => void;
 };
 
-type Letter = { el: HTMLElement; final: string; resolveAt: number; done: boolean };
+/* `w` is the glyph's own final width, used to pin the slot while that
+   letter is still cycling. In a MONOSPACE face this is a no-op — every
+   advance is identical, so the slab already measures the same as the
+   finished line. In a PROPORTIONAL face it is essential: a random W
+   standing in for an i changes the line width every 55ms, which measured
+   as an 88px (16.9%) swing on the Approach titles and flipped the About
+   paragraph between one and two rendered rows mid-scramble. */
+type Letter = { el: HTMLElement; final: string; resolveAt: number; done: boolean; w: number };
 
 /* A word box or the space span after it, plus the moment the lock front
    reaches it. Opening these progressively is what makes the slab WIDEN
@@ -216,11 +230,14 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
       /* The RESOLVED COUNT rises on an ease-out, so per-character the lock
          time is that curve inverted: a burst of letters settles early and
          the tail draws out. A linear ramp reads mechanical. */
+      /* measured here, while the letters still hold their real glyphs and
+         a layout pass is already being taken for the line grouping */
       const lineLetters: Letter[] = ls.map((el, i) => ({
         el,
         final: el.textContent || "",
         resolveAt: lockStartMs + (scrambleMs - lockStartMs) * (1 - Math.sqrt(1 - i / n)),
-        done: false
+        done: false,
+        w: el.getBoundingClientRect().width
       }));
       letters.push(lineLetters);
 
@@ -259,6 +276,10 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
     text?.classList.add("scrambled");
     set.forEach((l) => {
       l.done = false;
+      /* pin the slot for the duration of the cycling; released the moment
+         the letter locks, so the settled run keeps its natural kerning */
+      l.el.style.width = `${l.w}px`;
+      l.el.style.textAlign = "center";
     });
     lineGaps.forEach((g) => {
       g.open = false;
@@ -278,6 +299,8 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
         if (l.done) continue;
         if (t >= l.resolveAt) {
           l.el.textContent = l.final;
+          l.el.style.width = "";
+          l.el.style.textAlign = "";
           l.done = true;
           continue;
         }
@@ -337,6 +360,8 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
       text?.classList.remove("scrambled");
       set.forEach((l) => {
         l.el.textContent = l.final;
+        l.el.style.width = "";
+        l.el.style.textAlign = "";
         l.done = true;
       });
     });

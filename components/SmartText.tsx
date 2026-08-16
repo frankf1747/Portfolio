@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { smartText, type SmartTextInstance } from "@/lib/smartText";
+import { smartText, type ScramblePace, type SmartTextInstance } from "@/lib/smartText";
 
 /* React wrapper around the §4 engine.
 
@@ -20,6 +20,7 @@ export default function SmartText({
   isBody = false,
   delay = 0,
   trigger = "view",
+  pace,
   instanceRef,
   style
 }: {
@@ -30,6 +31,8 @@ export default function SmartText({
   isBody?: boolean;
   delay?: number;
   trigger?: "mount" | "view" | "manual";
+  /** overrides the pace implied by `trigger` — see PACE in lib/smartText */
+  pace?: ScramblePace;
   instanceRef?: React.MutableRefObject<SmartTextHandle | null>;
   style?: React.CSSProperties;
 }) {
@@ -40,7 +43,8 @@ export default function SmartText({
     const el = ref.current;
     if (!el) return;
 
-    const instance = smartText(el, trigger === "view" ? "scroll" : "landing");
+    const resolvedPace: ScramblePace = pace ?? (trigger === "view" ? "scroll" : "landing");
+    const instance = smartText(el, resolvedPace);
     inst.current = instance;
     if (instanceRef) instanceRef.current = instance;
 
@@ -97,13 +101,14 @@ export default function SmartText({
       instance.destroy();
       if (instanceRef) instanceRef.current = null;
     };
-  }, [delay, trigger, instanceRef]);
+  }, [delay, trigger, pace, instanceRef]);
 
   const cls = [
     "smart-text",
     mask ? "mask" : "",
     isBody ? "is-body" : "",
     trigger === "view" ? "is-scroll" : "",
+    pace === "overture" ? "is-overture" : "",
     className
   ]
     .filter(Boolean)

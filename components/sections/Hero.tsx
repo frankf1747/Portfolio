@@ -111,7 +111,7 @@ export default function Hero() {
       <div className={`hero__overture${exiting ? " is-exiting" : ""}`} aria-hidden="true">
         <h1 className="hero__title">
           {LINES.map((l, i) => (
-            <SmartText key={l} trigger="manual" instanceRef={bind(i)} className="super">
+            <SmartText key={l} trigger="manual" pace="overture" instanceRef={bind(i)} className="super">
               {l}
             </SmartText>
           ))}
