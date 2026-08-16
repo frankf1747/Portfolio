@@ -29,11 +29,15 @@
      a full viewport — it reads as a jump. The overture exit eases in and
      out so the page looks like it is being carried up, not yanked. */
   --ease-lift: cubic-bezier(0.65, 0, 0.35, 1);
-  /* power4.in — the overture's launch. Creeps for most of its duration,
-     then throws roughly half the travel into the last fifth. The spec's
-     p^9 cannot be written as a cubic-bezier; this is the alternative it
-     names, and reads near-identically at 1.6s. */
-  --ease-launch: cubic-bezier(0.895, 0.03, 0.685, 0.22);
+  /* The overture's launch — easeInExpo, the closest cubic-bezier to the
+     spec's p^9. At the halfway point p^9 has moved 0.2%, expo 3%, and
+     power4 6%, so expo is much the better stand-in.
+
+     The CREEP MUST OVERLAP THE SCRAMBLE. Started after the text settles,
+     the near-zero opening reads as the animation having stalled — measured
+     at ~40px of travel across a full second. Started at 0.5s it hides
+     under the decode, and motion is continuous from there on. */
+  --ease-launch: cubic-bezier(0.95, 0.05, 0.795, 0.035);
   /* expo.inOut — the content layer, softer at both ends than the launch */
   --ease-content: cubic-bezier(1, 0, 0, 1);
 

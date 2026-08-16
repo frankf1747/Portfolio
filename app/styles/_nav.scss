@@ -206,7 +206,7 @@ html.is-down:not(.is-start) .nav__logoText {
      text run plus the gap, so the ring lands exactly where the text began
      rather than at an arbitrary offset. Verified in-browser after any
      change to the label, its size, or the gap. */
-  --contact-fold: 58rem;
+  --contact-fold: 69rem;
   /* NO overflow:hidden here. It clipped the ring's :hover scale — and so
      did the 40×40 viewBox, where an r=18 circle with a 2-wide stroke
      already reaches 19 of the 20 available. The clip is now scoped to
@@ -214,13 +214,13 @@ html.is-down:not(.is-start) .nav__logoText {
      viewport so the ring has somewhere to grow. */
   padding-right: 2rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 14rem;
+  font-size: 17rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 
   svg {
-    width: 28rem;
-    height: 28rem;
+    width: 34rem;
+    height: 34rem;
     flex: none;
     overflow: visible;
     transition: transform 1s var(--ease);

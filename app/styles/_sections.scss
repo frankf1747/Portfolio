@@ -41,9 +41,11 @@
   justify-content: center;
   text-align: center;
   transform: translateY(0);
-  /* the launch: creeps for most of 1.6s, then throws half the travel in
-     the last fifth. Starts at 1.9s, clears the top at ~3.5s. */
-  transition: transform 1.6s var(--ease-launch);
+  /* The launch: creeps for most of its 3s, then throws roughly half the
+     travel into the last 0.3s. Starts at 0.5s — while the lines are still
+     decoding — so the creep is covered and never reads as a stall. Clears
+     the top at ~3.5s. */
+  transition: transform 3s var(--ease-launch);
 
   &.is-exiting {
     transform: translateY(-100%);

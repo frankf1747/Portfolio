@@ -33,7 +33,7 @@ import SmartText, { type SmartTextHandle } from "../SmartText";
    parented to each other — that difference IS the effect. The overture
    covers a full viewport height on a launch curve; the content covers
    ~60vh on a soft one, so the headline visibly outruns it. */
-const EXIT_AT = 1900; //  overture launches   — 1.6s ease-launch, clears at 3.5
+const EXIT_AT = 500; //  overture launches    — 3.0s ease-launch, clears at 3.5
 const CONTENT_AT = 2200; //  content rides up — 2.4s ease-content
 const SUB_AT = 3400; //  subtitle decodes    — 1.5s rise
 const NAV_AT = 3500; //  nav, wordmark, CTA  — 0.9s fade
