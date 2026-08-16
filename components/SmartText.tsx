@@ -40,13 +40,22 @@ export default function SmartText({
     const el = ref.current;
     if (!el) return;
 
-    const instance = smartText(el);
+    const instance = smartText(el, trigger === "view" ? "scroll" : "landing");
     inst.current = instance;
     if (instanceRef) instanceRef.current = instance;
 
     let ro: ResizeObserver | null = null;
     let io: IntersectionObserver | null = null;
+    let cancelled = false;
     let width = el.clientWidth;
+
+    /* The slab is measured in the display face. Split before the webfont
+       lands and every line break is wrong, so re-split once fonts settle.
+       The ResizeObserver below only fires on WIDTH change and would never
+       catch this. */
+    document.fonts?.ready.then(() => {
+      if (!cancelled) instance.resplit();
+    });
 
     if (trigger === "mount") {
       instance.play({ delay });
@@ -61,7 +70,12 @@ export default function SmartText({
             }
           }
         },
-        { threshold: 0.25 }
+        /* threshold 0, no rootMargin: fires the instant the top edge crosses
+           the viewport bottom — BEFORE a single pixel is visible. That early
+           start is the whole trick. At 0.25 the block was already a quarter
+           on screen when it began, so you watched it sit still and then
+           perform. Once only; never reverse, never replay on scroll-up. */
+        { threshold: 0 }
       );
       io.observe(el);
     } else {
@@ -77,6 +91,7 @@ export default function SmartText({
     ro.observe(el);
 
     return () => {
+      cancelled = true;
       ro?.disconnect();
       io?.disconnect();
       instance.destroy();
@@ -88,6 +103,7 @@ export default function SmartText({
     "smart-text",
     mask ? "mask" : "",
     isBody ? "is-body" : "",
+    trigger === "view" ? "is-scroll" : "",
     className
   ]
     .filter(Boolean)

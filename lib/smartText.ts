@@ -33,6 +33,23 @@ const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const RISE_MS = 1500;
 const SCRAMBLE_MS = 1500;
 const LINE_STAGGER_MS = 120;
+
+/* Two paces, because the two contexts are not the same problem.
+
+   "landing" is the overture: the viewer is already looking at it, so the
+   decode starts immediately and finishes with the rise.
+
+   "scroll" is everything below the fold. The block is triggered before a
+   single pixel of it is visible, so it is ALREADY mid-scramble when it
+   enters frame and never appears to park and then perform. That needs a
+   later lock-start and a longer tail — the length is what sells it as
+   scroll-linked rather than as a canned animation. */
+export type ScramblePace = "landing" | "scroll";
+
+const PACE: Record<ScramblePace, { scrambleMs: number; lockStartMs: number; staggerMs: number }> = {
+  landing: { scrambleMs: SCRAMBLE_MS, lockStartMs: 300, staggerMs: LINE_STAGGER_MS },
+  scroll: { scrambleMs: 1400, lockStartMs: 650, staggerMs: 110 }
+};
 const GLYPH_SWAP_MS = 55;
 
 export type SmartTextInstance = {
@@ -46,6 +63,11 @@ export type SmartTextInstance = {
 };
 
 type Letter = { el: HTMLElement; final: string; resolveAt: number; done: boolean };
+
+/* A word box or the space span after it, plus the moment the lock front
+   reaches it. Opening these progressively is what makes the slab WIDEN
+   left-to-right instead of springing apart all at once at the end. */
+type Gap = { el: HTMLElement; at: number; open: boolean };
 
 const prefersReduced = () =>
   typeof window !== "undefined" &&
@@ -104,11 +126,13 @@ export function scrambleText(el: HTMLElement, opts: { duration?: number } = {}) 
   };
 }
 
-export function smartText(root: HTMLElement): SmartTextInstance {
+export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): SmartTextInstance {
   const source = (root.dataset.stSource ??= (root.textContent || "").trim());
+  const { scrambleMs, lockStartMs, staggerMs } = PACE[pace];
 
   let lines: HTMLElement[] = [];
   let letters: Letter[][] = [];
+  let gaps: Gap[][] = [];
   let raf = 0;
   let timers: number[] = [];
 
@@ -162,6 +186,7 @@ export function smartText(root: HTMLElement): SmartTextInstance {
     root.textContent = "";
     lines = [];
     letters = [];
+    gaps = [];
 
     groups.forEach((group, gi) => {
       const line = document.createElement("span");
@@ -182,21 +207,38 @@ export function smartText(root: HTMLElement): SmartTextInstance {
         text.appendChild(w);
       });
 
-      line.style.setProperty("--line-delay", `${gi * LINE_STAGGER_MS}ms`);
+      line.style.setProperty("--line-delay", `${gi * staggerMs}ms`);
       root.appendChild(line);
       lines.push(line);
 
       const ls = Array.from(text.querySelectorAll<HTMLElement>(".letter-inner"));
       const n = Math.max(1, ls.length - 1);
-      letters.push(
-        ls.map((el, i) => ({
-          el,
-          final: el.textContent || "",
-          /* resolve left-to-right across the line, last letter at t=1 */
-          resolveAt: SCRAMBLE_MS * (0.2 + 0.8 * (i / n)),
-          done: false
-        }))
-      );
+      /* The RESOLVED COUNT rises on an ease-out, so per-character the lock
+         time is that curve inverted: a burst of letters settles early and
+         the tail draws out. A linear ramp reads mechanical. */
+      const lineLetters: Letter[] = ls.map((el, i) => ({
+        el,
+        final: el.textContent || "",
+        resolveAt: lockStartMs + (scrambleMs - lockStartMs) * (1 - Math.sqrt(1 - i / n)),
+        done: false
+      }));
+      letters.push(lineLetters);
+
+      /* Each word, and the space that follows it, opens as the lock front
+         clears that word's last letter. */
+      const wordEls = Array.from(text.querySelectorAll<HTMLElement>(".word"));
+      const spaceEls = Array.from(text.querySelectorAll<HTMLElement>(".scrambled-space"));
+      const lineGaps: Gap[] = [];
+      let cursor = 0;
+      wordEls.forEach((w, wi) => {
+        cursor += w.querySelectorAll(".letter-inner").length;
+        const at = lineLetters[cursor - 1]?.resolveAt ?? 0;
+        lineGaps.push({ el: w, at, open: false });
+        /* spaceEls[wi] is the span appended before word wi+1 — i.e. the one
+           immediately after word wi */
+        if (spaceEls[wi]) lineGaps.push({ el: spaceEls[wi], at, open: false });
+      });
+      gaps.push(lineGaps);
     });
   }
 
@@ -213,9 +255,14 @@ export function smartText(root: HTMLElement): SmartTextInstance {
     const set = letters[li];
     if (!set || !set.length) return;
     const text = lines[li].querySelector<HTMLElement>(".text");
+    const lineGaps = gaps[li] ?? [];
     text?.classList.add("scrambled");
     set.forEach((l) => {
       l.done = false;
+    });
+    lineGaps.forEach((g) => {
+      g.open = false;
+      g.el.classList.remove("is-open");
     });
 
     const started = performance.now();
@@ -241,10 +288,19 @@ export function smartText(root: HTMLElement): SmartTextInstance {
         }
       }
 
+      /* the lock front, trailing one word behind the letters — the locked
+         region carries real spacing while the tail stays a solid slab */
+      for (const g of lineGaps) {
+        if (!g.open && t >= g.at) {
+          g.el.classList.add("is-open");
+          g.open = true;
+        }
+      }
+
       if (remaining > 0) {
         raf = requestAnimationFrame(tick);
       } else {
-        /* resolved: word gaps unpack over 1s (--ease-space) */
+        /* fully resolved — drop back to the default spacing rules */
         text?.classList.remove("scrambled");
       }
     };
@@ -268,13 +324,14 @@ export function smartText(root: HTMLElement): SmartTextInstance {
     }
 
     lines.forEach((_, li) => {
-      const at = base + li * LINE_STAGGER_MS;
+      const at = base + li * staggerMs;
       timers.push(window.setTimeout(() => scrambleLine(li), at));
     });
   }
 
   function resolve() {
     clearTimers();
+    gaps.forEach((set) => set.forEach((g) => { g.open = false; g.el.classList.remove("is-open"); }));
     letters.forEach((set, li) => {
       const text = lines[li].querySelector<HTMLElement>(".text");
       text?.classList.remove("scrambled");

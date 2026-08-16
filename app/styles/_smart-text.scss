@@ -86,15 +86,22 @@
   .scrambled-space {
     display: inline-block;
     width: 0.25em;
-    transition: width 1s var(--ease-space);
+    /* short, because these now open one at a time behind the lock front.
+       At 1s each the separation lagged so far behind the letters that the
+       line still read as a slab well after it had resolved. */
+    transition: width 0.35s var(--ease-space);
   }
 
   .text.scrambled .scrambled-space {
     width: 0;
   }
 
+  .text.scrambled .scrambled-space.is-open {
+    width: 0.25em;
+  }
+
   &:not(.is-body) .word {
-    transition: padding 1s var(--ease-space);
+    transition: padding 0.35s var(--ease-space);
   }
 
   &:not(.is-body) .word:not(:last-child).right-space {
@@ -108,6 +115,24 @@
   &:not(.is-body) .text.scrambled .word {
     padding-left: 0;
     padding-right: 0;
+  }
+
+  /* …and reopens word by word as the lock front clears it */
+  &:not(.is-body) .text.scrambled .word.is-open:not(:last-child).right-space {
+    padding-right: 0.17em;
+  }
+
+  &:not(.is-body) .text.scrambled .word.is-open:not(:first-child).left-space {
+    padding-left: 0.17em;
+  }
+
+  /* SCROLL PACE — the spec's longer reveal for anything triggered below the
+     fold: 1.9s expo.inOut against the landing's 1.5s expo.out. The slower
+     in-out start keeps the line under the mask while it is already
+     scrambling, so it materialises rather than arriving and then playing. */
+  &.is-scroll .line .text {
+    transition-duration: 1.9s;
+    transition-timing-function: var(--ease-content);
   }
 
   /* body copy keeps normal leading and normal spaces */
