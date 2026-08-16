@@ -4,7 +4,7 @@ export default function About() {
   return (
     <section className="about" id="about">
       <div className="about__head">
-        <SmartText className="small">02 — ABOUT</SmartText>
+        <SmartText className="small index">01 — ABOUT</SmartText>
         <SmartText className="small">LOS ANGELES, CA</SmartText>
       </div>
       <div className="about__body">

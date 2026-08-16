@@ -18,7 +18,7 @@ export default function Subjects() {
   return (
     <section className="subjects" id="subjects">
       <div className="subjects__head">
-        <SmartText className="small">06 — CASE SUBJECTS</SmartText>
+        <SmartText className="small index">05 — SUBJECTS</SmartText>
         <SmartText className="small">ANALYSES, NOT ENGAGEMENTS</SmartText>
       </div>
       <div className="subjects__strip" role="list">

@@ -13,7 +13,7 @@ export default function Contact() {
   return (
     <section className="contact-section" id="contact">
       <div className="contact-section__head">
-        <SmartText className="small">07 — CONTACT</SmartText>
+        <SmartText className="small index">06 — CONTACT</SmartText>
         <SmartText className="small">OPEN TO 2026 ROLES</SmartText>
       </div>
 

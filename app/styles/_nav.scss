@@ -32,6 +32,7 @@
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 14rem;
   line-height: 1;
+  --st-window: 1em; /* §4 mask must clear the line box — see _smart-text */
   letter-spacing: 0.02em;
   text-transform: uppercase;
   position: relative;
@@ -42,6 +43,7 @@
   /* entrance + collapse share this transition */
   transform: translateY(-125rem);
   transition: transform 1s var(--ease);
+  will-change: transform;
 
   /* §7 TYPE A underline — the origin swap is the point */
   &::after {
@@ -82,6 +84,7 @@
     transform: scaleX(0);
     transform-origin: 0 0;
     transition: transform 1s var(--ease);
+    will-change: transform;
   }
 }
 
@@ -101,68 +104,97 @@ html[data-loaded="true"] .nav__item {
   }
 }
 
-/* lines retract far slower than they draw in — asymmetric on purpose */
-@each $i, $d in (1: 0.8s, 2: 0.75s, 3: 0.7s, 4: 0.65s, 5: 0.6s, 6: 0.55s, 7: 0.5s) {
+/* LEAVING is quick and top-down; ARRIVING is slow and bottom-up. Never
+   symmetrical — see the collapsed block for the other half of the pair.
+   Each direction's delays live on ITS OWN selector, so the ladder flips
+   with the class instead of a shared list bleeding the wrong lead-in
+   into the reverse transition. */
+@each $i, $d in (1: 0.03s, 2: 0.06s, 3: 0.09s, 4: 0.12s, 5: 0.15s, 6: 0.18s, 7: 0.21s) {
   .nav__lines span:nth-child(#{$i}) {
     transition-delay: $d;
-    transition-duration: 1s;
+    transition-duration: 0.3s;
   }
 }
 
 /* ---------- COLLAPSED ----------
-   scrolled away from top, and the item stack is not hovered */
+   scrolled away from top, and the item stack is not hovered.
 
-html.is-down:not(.is-start) .nav__items:not(:hover) {
+   Gated on (hover: hover): the ONLY way out of the collapsed state is
+   hovering the stack, which a touch device cannot do. Ungated, a phone
+   scrolls once and is left with seven hairlines, no affordance, and
+   seven invisible-but-tappable links — recoverable only by scrolling
+   back to the very top. Touch keeps the labels. */
+
+@media (hover: hover) {
+
+html.is-down:not(.is-start) .nav__items:not(:hover):not(:focus-within) {
   .nav__item {
     transform: translateY(-125rem);
   }
 
+  /* words exit TOP-DOWN */
   @each $i, $d in (1: 0.05s, 2: 0.1s, 3: 0.15s, 4: 0.2s, 5: 0.25s, 6: 0.3s, 7: 0.35s) {
     .nav__item:nth-child(#{$i + 1}) {
       transition-delay: $d;
     }
   }
 
+  /* rules ARRIVE — slow (1s) and bottom-up, trailing the words out by
+     half a second. That lead is what leaves the corner briefly almost
+     empty before the rules resolve; it is the point, not a gap to close. */
   .nav__lines span {
     transform: scaleX(1);
-    transition-duration: 0.3s;
+    transition-duration: 1s;
   }
 
-  @each $i, $d in (1: 0.03s, 2: 0.06s, 3: 0.09s, 4: 0.12s, 5: 0.15s, 6: 0.18s, 7: 0.21s) {
+  @each $i, $d in (1: 0.8s, 2: 0.75s, 3: 0.7s, 4: 0.65s, 5: 0.6s, 6: 0.55s, 7: 0.5s) {
     .nav__lines span:nth-child(#{$i}) {
       transition-delay: $d;
     }
   }
 }
 
+} /* @media (hover: hover) */
+
 /* logo + contact collapse with the rest */
 .nav__logo {
   pointer-events: auto;
-  width: 156rem;
-  height: 54rem;
-
-  svg {
-    width: 100%;
-    height: 100%;
-    color: currentColor;
-    transform: scale(1) translateY(0);
-    transition: transform 1s var(--ease);
-  }
+  color: var(--mark);
 }
 
-html.is-down:not(.is-start) .nav__logo svg {
+.nav__logoText {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 34rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  transform-origin: 50% 0;
+  transform: scale(1) translateY(0);
+  transition: transform 1s var(--ease);
+}
+
+html.is-down:not(.is-start) .nav__logoText {
   transform: scale(0.72) translateY(-100rem);
 }
 
 .nav__contact {
   pointer-events: auto;
   position: relative;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12rem;
-  /* the sliding text and icon clip cleanly instead of hanging half
-     off the viewport edge */
-  overflow: hidden;
+  gap: 16rem;
+  /* distance the ring rises when the label folds — measured as the text
+     run's height plus the gap (120.2rem at 1440), so the ring lands
+     exactly where the text began rather than at an arbitrary offset */
+  --contact-fold: 120rem;
+  /* NO overflow:hidden here. It clipped the ring's :hover scale — and so
+     did the 40×40 viewBox, where an r=18 circle with a 2-wide stroke
+     already reaches 19 of the 20 available. The clip is now scoped to
+     the text alone (.textMask), and the svg is allowed to paint past its
+     viewport so the ring has somewhere to grow. */
   padding-right: 2rem;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 14rem;
@@ -173,6 +205,7 @@ html.is-down:not(.is-start) .nav__logo svg {
     width: 40rem;
     height: 40rem;
     flex: none;
+    overflow: visible;
     transition: transform 1s var(--ease);
   }
 
@@ -191,29 +224,19 @@ html.is-down:not(.is-start) .nav__logo svg {
   }
 }
 
-.nav__contactBar {
-  position: absolute;
-  top: 50%;
-  right: 2rem;
-  width: 32rem;
-  height: 2px;
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: 100% 50%;
-  transition: transform 1s var(--ease);
-  transition-delay: 0.5s;
-}
-
-html.is-down:not(.is-start) .nav__contact {
-  .buttonText,
-  svg {
-    transform: translate(100rem);
+/* Scrolled down, the label folds up into its own mask, the ring rises into
+   the freed space and turns a quarter. The circle IS the collapsed state,
+   so there is no hairline stand-in any more. Hovering the button brings
+   the label back. */
+html.is-down:not(.is-start) .nav__contact:not(:hover) {
+  .textMask > span:first-child {
+    transform: translateY(-110%);
+    transition-duration: 1s;
+    transition-delay: 0s;
   }
 
-  .nav__contactBar {
-    transform: scaleX(1);
-    transition-duration: 0.3s;
-    transition-delay: 0.21s;
+  svg {
+    transform: translateY(calc(var(--contact-fold) * -1)) rotate(-90deg);
   }
 }
 
@@ -222,8 +245,13 @@ html.is-down:not(.is-start) .nav__contact {
    Slower than anything else on the site — that's why it reads as a
    flourish. */
 
+/* Vertical run. writing-mode rotates Latin glyphs 90° CLOCKWISE, which puts
+   the bottom of each letter toward the LEFT — the mirror of the reference,
+   which is what was asked for. Do NOT add rotate(180deg); that flips it
+   back to the reference's orientation. */
 .buttonText {
   display: inline-flex;
+  writing-mode: vertical-rl;
   transition: transform 1s var(--ease);
 }
 
@@ -241,13 +269,16 @@ html.is-down:not(.is-start) .nav__contact {
     transition-delay: 0.1s;
   }
 
+  /* Sized to the mask, not to a line. At 1.5em tall a translateY(-110%)
+     only cleared the box while the word ran horizontally and the mask was
+     one line high; standing the label up made the mask ~120rem tall, so
+     the bar parked 1.65em up and sat visible across the text. Matching the
+     mask makes the sweep correct in either writing mode. */
   span:last-child {
     position: absolute;
-    left: 0;
-    width: 100%;
-    height: 1.5em;
+    inset: 0;
     background: currentColor;
-    transform: translateY(-110%);
+    transform: translateY(-100%);
     transition-delay: 0.15s;
   }
 }
@@ -259,7 +290,7 @@ html.is-down:not(.is-start) .nav__contact {
 @media (prefers-reduced-motion: reduce) {
   .nav__item,
   .nav__lines span,
-  .nav__logo svg,
+  .nav__logoText,
   .buttonText,
   .textMask span {
     transition: none !important;

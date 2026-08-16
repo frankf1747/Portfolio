@@ -12,14 +12,14 @@ import "./styles/globals.scss";
    literal size. --mono-fit in _tokens.scss corrects for that; see there. */
 const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "700"],
   display: "swap",
   variable: "--font-mono"
 });
 
 const body = Archivo({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "700"],
   display: "swap",
   variable: "--font-body"
 });

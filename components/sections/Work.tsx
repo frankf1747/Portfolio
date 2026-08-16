@@ -23,15 +23,17 @@ type Card = {
   h: number;
   /** scroll parallax offset in design px */
   p: number;
+  /** cursor parallax depth, 0 = pinned, 1 = full travel */
+  d: number;
   services: string[];
 };
 
 const CARDS: Card[] = [
-  { n: "01", client: "STARBUCKS", descriptor: "SEARCH RELEVANCE — RANKING", href: "/work/starbucks-search", x: 50, w: 510, h: 400, p: -120, services: ["QUERY UNDERSTANDING", "RANKING MODEL", "OFFLINE EVALUATION", "ERROR TAXONOMY"] },
-  { n: "02", client: "DOORDASH", descriptor: "CAUSAL INFERENCE — RDD", href: "/work/doordash-rdd", x: 780, w: 400, h: 314, p: 0, services: ["IDENTIFICATION", "ROBUSTNESS SUITE", "DECISION MEMO"] },
-  { n: "03", client: "MULTI-AGENT RAG", descriptor: "RETRIEVAL — ACTIVATION", href: "/work/multi-agent-rag", x: 170, w: 510, h: 401, p: 8, services: ["AGENT PIPELINE", "VECTOR STORE", "TEST SUITE"] },
-  { n: "04", client: "AI JOKE FACTORY", descriptor: "PRODUCT DESIGN — IDENTITY", href: "/work/ai-joke-factory", x: 910, w: 510, h: 401, p: 0, services: ["USER FLOWS", "BACKEND SPEC", "V2 REDESIGN"] },
-  { n: "05", client: "DELL", descriptor: "M&A STRATEGY — VALUATION", href: "/work/dell-ma", x: 750, w: 310, h: 227, p: 53, services: ["VALUATION", "MARKET ANALYSIS"] }
+  { n: "01", client: "STARBUCKS", descriptor: "SEARCH RELEVANCE — RANKING", href: "/work/starbucks-search", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["QUERY UNDERSTANDING", "RANKING MODEL", "OFFLINE EVALUATION", "ERROR TAXONOMY"] },
+  { n: "02", client: "DOORDASH", descriptor: "CAUSAL INFERENCE — RDD", href: "/work/doordash-rdd", x: 800, w: 400, h: 314, p: 0, d: 0.45, services: ["IDENTIFICATION", "ROBUSTNESS SUITE", "DECISION MEMO"] },
+  { n: "03", client: "MULTI-AGENT RAG", descriptor: "RETRIEVAL — ACTIVATION", href: "/work/multi-agent-rag", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["AGENT PIPELINE", "VECTOR STORE", "TEST SUITE"] },
+  { n: "04", client: "AI JOKE FACTORY", descriptor: "PRODUCT DESIGN — IDENTITY", href: "/work/ai-joke-factory", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["USER FLOWS", "BACKEND SPEC", "V2 REDESIGN"] },
+  { n: "05", client: "DELL", descriptor: "M&A STRATEGY — VALUATION", href: "/work/dell-ma", x: 300, w: 310, h: 227, p: 53, d: 0.3, services: ["VALUATION", "MARKET ANALYSIS"] }
 ];
 
 export default function Work() {
@@ -55,38 +57,73 @@ export default function Work() {
 
     if (reduced) return () => io.disconnect();
 
+    /* MAX_SHIFT is in design px, so it scales with the rem trick like
+       everything else. 26 is roughly 5% of the widest frame — enough to
+       register as motion, small enough that the scatter never reads as
+       unstable. */
+    const MAX_SHIFT = 26;
+    const LERP = 0.08;
+
+    let targetX = 0;
+    let targetY = 0;
+    let curX = 0;
+    let curY = 0;
     let raf = 0;
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = wrap.getBoundingClientRect();
-        /* -1 → 1 as the block travels through the viewport */
-        const progress = 1 - (r.top + r.height / 2) / (window.innerHeight / 2 + r.height / 2);
-        posRefs.current.forEach((el, i) => {
-          if (!el) return;
-          el.style.setProperty("--py", `${CARDS[i].p * progress}rem`);
-        });
+
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = wrap.getBoundingClientRect();
+      /* -1 → 1 across the block in both axes */
+      targetX = ((e.clientX - r.left) / r.width) * 2 - 1;
+      targetY = ((e.clientY - r.top) / r.height) * 2 - 1;
+    };
+
+    const onLeave = () => {
+      targetX = 0;
+      targetY = 0;
+    };
+
+    const frame = () => {
+      raf = requestAnimationFrame(frame);
+
+      curX += (targetX - curX) * LERP;
+      curY += (targetY - curY) * LERP;
+
+      const r = wrap.getBoundingClientRect();
+      /* -1 → 1 as the block travels through the viewport */
+      const progress =
+        1 - (r.top + r.height / 2) / (window.innerHeight / 2 + r.height / 2);
+
+      posRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const c = CARDS[i];
+        el.style.setProperty("--py", `${c.p * progress + curY * MAX_SHIFT * c.d}rem`);
+        el.style.setProperty("--px", `${curX * MAX_SHIFT * c.d}rem`);
       });
     };
 
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    raf = requestAnimationFrame(frame);
+    wrap.addEventListener("pointermove", onMove);
+    wrap.addEventListener("pointerleave", onLeave);
+
     return () => {
       io.disconnect();
       cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      wrap.removeEventListener("pointermove", onMove);
+      wrap.removeEventListener("pointerleave", onLeave);
     };
   }, []);
 
   return (
     <section className="work" id="work">
       <div className="work__head">
-        <SmartText className="small">04 — SELECTED WORK</SmartText>
-        <SmartText className="small">( 5 )</SmartText>
+        <SmartText className="small index">03 — PROJECTS</SmartText>
       </div>
+
+      <h2 className="work__title">
+        <SmartText as="span" className="h1">PROJECTS</SmartText>
+        <span className="work__count" aria-hidden="true">({CARDS.length})</span>
+      </h2>
 
       <div className="cards" ref={wrapRef}>
         {CARDS.map((c, i) => (
@@ -107,12 +144,13 @@ export default function Work() {
           >
             {/* Routes don't exist yet — swap to next/link once they do. */}
             <a className="card" href={c.href}>
-              <span className="card__media" aria-hidden="true">
-                <span className="card__n">{c.n}</span>
-              </span>
+              <span className="card__media" aria-hidden="true" />
               <span className="bottom">
+                <span className="card__title">
+                  <span className="card__n">({c.n})</span>
+                  <span className="card__client">{c.client}</span>
+                </span>
                 <span className="subtitle">{c.descriptor}</span>
-                <span className="card__client">{c.client}</span>
                 <span className="services">
                   {c.services.map((s, si) => (
                     <span key={s} style={{ "--i": si } as React.CSSProperties}>

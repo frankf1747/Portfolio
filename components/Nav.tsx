@@ -1,40 +1,82 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import SmartText, { type SmartTextHandle } from "./SmartText";
 
 /* §6 — the centrepiece interaction.
 
-   Collapsed (scrolled, not hovered): the seven labels slide up out of
-   frame and seven accent hairlines draw in, top-down. Expanding runs the
-   reverse bottom-up, and REPLAYS THE SCRAMBLE on every label — that's the
-   moment the site shows off. Lines draw in at 0.3s but retract at 1s;
-   the asymmetry is deliberate.
+   Collapsed (last scroll was DOWNWARD, and the stack is not hovered or
+   focused): the labels slide up out of frame top-down, and one hairline
+   per label draws in bottom-up behind them. Expanding reverses it and
+   REPLAYS THE SCRAMBLE on every label — that's the moment the site shows
+   off.
 
-   Item pitch 16rem, line pitch 11.55rem — the collapsed stack is tighter
-   than the expanded list. */
+   The pairing is deliberately asymmetric in both axes: leaving is quick
+   and top-down, arriving is slow and bottom-up. Rules retract in 0.3s but
+   draw in over 1s, trailing the departing words by half a second, so the
+   corner is never blank-then-populated — always mid-transformation.
 
+   State is DIRECTION, not depth: scrolling up re-expands the nav wherever
+   you are on the page. Item pitch 16rem, line pitch 11.55rem — the folded
+   stack is tighter than the expanded list. */
+
+/* One entry per section, in scroll order. Contact is deliberately absent —
+   it has its own GET IN TOUCH control on the right of the bar.
+
+   Labels are one word each and 5–9 characters, so the folded hairlines
+   read as a set rather than a ragged column. The earlier mix ran WORK (4)
+   against CASE SUBJECTS (13), which made the stack look accidental. */
 const ITEMS = [
-  { label: "WORK", href: "#work" },
   { label: "ABOUT", href: "#about" },
-  { label: "CAPABILITIES", href: "#capabilities" },
+  { label: "EXPERTISE", href: "#capabilities" },
+  { label: "PROJECTS", href: "#work" },
   { label: "APPROACH", href: "#approach" },
-  { label: "SUBJECTS", href: "#subjects" },
-  { label: "WRITING", href: "#writing" },
-  { label: "CONTACT", href: "#contact" }
+  { label: "SUBJECTS", href: "#subjects" }
 ];
 
 export default function Nav() {
   const handles = useRef<(SmartTextHandle | null)[]>([]);
 
-  /* every expansion re-decodes all seven labels */
+  /* Re-decode every label — but ONLY when the whole stack is expanding.
+
+     Hovering a single link must not scramble its five neighbours; that
+     reads as the nav malfunctioning rather than responding. Individual
+     hover is the underline in _nav.scss and nothing else. The scramble
+     belongs to the expansion event: hovering the folded stack, or
+     scrolling back up.
+
+     Delays match the CSS ladder (0.6s → 0.3s, bottom-up) so each label
+     decodes as it arrives. Fired at t=0 the 0.95s scramble would finish
+     before the words were back on screen. */
   const replay = useCallback(() => {
-    handles.current.forEach((h, i) => h?.play({ delay: i * 40, scrambleOnly: true }));
+    handles.current.forEach((h, i) =>
+      h?.play({ delay: 600 - i * 50, scrambleOnly: true })
+    );
   }, []);
+
+  /* Expansion has two triggers and they must behave identically. Hover is
+     handled below; this catches the scroll-up case by watching the class
+     the scroll layer toggles. */
+  useEffect(() => {
+    const html = document.documentElement;
+    let wasCollapsed = html.classList.contains("is-down");
+    const mo = new MutationObserver(() => {
+      const collapsed = html.classList.contains("is-down");
+      if (wasCollapsed && !collapsed) replay();
+      wasCollapsed = collapsed;
+    });
+    mo.observe(html, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
+  }, [replay]);
+
+  /* Only scramble on hover if the hover is what is doing the expanding. */
+  const onEnter = useCallback(() => {
+    if (document.documentElement.classList.contains("is-down")) replay();
+  }, [replay]);
 
   return (
     <nav className="nav" aria-label="Primary">
-      <div className="nav__items" onMouseEnter={replay}>
+      <div className="nav__items" onMouseEnter={onEnter}>
         <div className="nav__lines" aria-hidden="true">
           {ITEMS.map((it) => (
             <span key={it.label} />
@@ -60,20 +102,8 @@ export default function Nav() {
         ))}
       </div>
 
-      <a className="nav__logo" href="#top" aria-label="Frank Fu — home">
-        <svg viewBox="0 0 156 54" aria-hidden="true">
-          <text
-            x="0"
-            y="40"
-            fontFamily="var(--font-mono)"
-            fontSize="38"
-            letterSpacing="-1.5"
-            fill="currentColor"
-          >
-            FF
-          </text>
-          <circle cx="132" cy="27" r="10" fill="none" stroke="currentColor" strokeWidth="3" />
-        </svg>
+      <a className="nav__logo" href="#top">
+        <span className="nav__logoText">Frank Fu</span>
       </a>
 
       <a className="nav__contact contact" href="#contact">
@@ -87,9 +117,6 @@ export default function Nav() {
           <circle className="ring" cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
           <path className="arrow" d="M14 26 L26 14 M17 14 H26 V23" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
-        {/* collapsed state leaves exactly one short bar, mirroring the
-            seven hairlines on the left */}
-        <span className="nav__contactBar" aria-hidden="true" />
       </a>
     </nav>
   );

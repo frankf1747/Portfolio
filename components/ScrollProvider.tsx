@@ -37,10 +37,23 @@ export default function ScrollProvider() {
       raf = requestAnimationFrame(tick);
     }
 
+    /* §6 nav state is DIRECTION, not depth — scrolling up re-expands the
+       nav wherever you are, rather than only at the top.
+
+       The 4px deadband is load-bearing: without it trackpad micro-jitter
+       flips the class every frame and the nav shimmers. Much above ~8px
+       and deliberate short flicks stop registering. */
+    let last = 0;
+    let dir: "up" | "down" = "up";
+
     const applyState = (y: number) => {
-      const atTop = y <= 4;
-      html.classList.toggle("is-start", atTop);
-      html.classList.toggle("is-down", !atTop);
+      const d = y - last;
+      if (Math.abs(d) > 4) {
+        dir = d > 0 ? "down" : "up";
+        last = y;
+      }
+      html.classList.toggle("is-start", y <= 2);
+      html.classList.toggle("is-down", dir === "down" && y > 2);
     };
 
     applyState(window.scrollY);

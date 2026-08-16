@@ -3,18 +3,36 @@
 
    0.73em clip window: shorter than the em box, which is what lets
    lh 0.65 lines sit on top of each other and still mask cleanly.
+
+   That 0.73 is sized for the DISPLAY scale (lh 0.65–0.7), where the
+   line box is shorter than the window and the glyphs sit inside it.
+   Anything set with normal leading — .small at 1.3, .nav__item and .h2
+   at 1 — has a line box TALLER than the window, so the mask cuts the
+   bottom off the letterforms. The window therefore travels with the
+   leading via --st-window, and the rise keeps its documented 121%
+   relationship to whatever the window turns out to be.
    ============================================================ */
 
 .smart-text {
   display: block;
+
+  /* As a grid/flex child the default min-width:auto lets the box grow to
+     its own min-content, which here is a nowrap .line — so the element
+     widens, split() then measures the widened box, and the line never
+     gets a reason to break. Pin it to the track instead. */
+  min-width: 0;
 
   .line {
     display: block;
     overflow-y: clip;
   }
 
+  /* 0.73em is the DEFAULT, not a declaration on .smart-text — the type
+     classes (.small, .h2) land on this same element at equal
+     specificity, and .nav__item sets it on the parent, so an actual
+     declaration here would shadow every override. */
   &:not(.is-body) .line {
-    height: 0.73em;
+    height: var(--st-window, 0.73em);
   }
 
   &.mask .line {
@@ -25,11 +43,18 @@
     display: inline-block;
     white-space: nowrap;
     position: relative;
-    top: -0.02em;
     will-change: transform;
 
-    /* RISE: 121% of the 0.73em window — glyphs fully clear of the mask */
-    transform: translateY(0.885em);
+    /* Vertical seat of the glyphs inside the clip window. At lh < 1 the
+       half-leading is NEGATIVE, so the ink sits higher than the text box
+       and the window shaves the caps: .super lost 5.9px off the top of
+       every capital at 196px. The window is only ~1.5px taller than the
+       ink at display sizes, so this has to be set per leading — there is
+       no single value that seats 0.65, 0.7 and 1.0 at once. */
+    top: var(--st-shift, -0.02em);
+
+    /* RISE: 121% of the window — glyphs fully clear of the mask */
+    transform: translateY(calc(var(--st-window, 0.73em) * 1.21));
     transition: transform 1.4s var(--ease);
     transition-delay: calc(var(--delay, 0.1s) + var(--line-delay, 0ms));
   }
@@ -38,8 +63,16 @@
     transform: translateY(0);
   }
 
-  .line .word,
-  .line .letter-inner {
+  /* ⚠ These box rules must NOT be scoped under .line.
+     §4's split() lays the words out FLAT inside .smart-text to ask the
+     browser where the line breaks fall, and only then wraps each group
+     in .line > .text. If the gap metrics only existed under .line, that
+     measuring pass would size every word at zero-gap width — narrower
+     than the text it is measuring for — and under-break the line, so
+     the finished .line overflows its container. Keep the measured box
+     and the rendered box identical. */
+  .word,
+  .letter-inner {
     display: inline-block;
   }
 
@@ -47,29 +80,29 @@
      glyphs and unpacks into words as it resolves. Gaps come from the
      scrambled-space plus the word padding; both collapse while the
      .scrambled class is on .text. */
-  .line .scrambled-space {
+  .scrambled-space {
     display: inline-block;
     width: 0.25em;
     transition: width 1s var(--ease-space);
   }
 
-  .line .text.scrambled .scrambled-space {
+  .text.scrambled .scrambled-space {
     width: 0;
   }
 
-  &:not(.is-body) .line .word {
+  &:not(.is-body) .word {
     transition: padding 1s var(--ease-space);
   }
 
-  &:not(.is-body) .line .word:not(:last-child).right-space {
+  &:not(.is-body) .word:not(:last-child).right-space {
     padding-right: 0.17em;
   }
 
-  &:not(.is-body) .line .word:not(:first-child).left-space {
+  &:not(.is-body) .word:not(:first-child).left-space {
     padding-left: 0.17em;
   }
 
-  &:not(.is-body) .line .text.scrambled .word {
+  &:not(.is-body) .text.scrambled .word {
     padding-left: 0;
     padding-right: 0;
   }
@@ -94,12 +127,12 @@
     transition: none !important;
   }
 
-  .smart-text .line .scrambled-space {
+  .smart-text .scrambled-space {
     width: 0.25em !important;
     transition: none !important;
   }
 
-  .smart-text .line .word {
+  .smart-text .word {
     transition: none !important;
   }
 }

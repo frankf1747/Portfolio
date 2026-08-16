@@ -18,7 +18,7 @@ export default function Capabilities() {
   return (
     <section className="caps" id="capabilities">
       <div className="caps__head">
-        <SmartText className="small">03 — CAPABILITIES</SmartText>
+        <SmartText className="small index">02 — EXPERTISE</SmartText>
         <SmartText className="small">WHAT I DO</SmartText>
       </div>
       <div className="caps__strip" role="list">

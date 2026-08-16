@@ -41,7 +41,7 @@
   justify-content: center;
   text-align: center;
   transform: translateY(0);
-  transition: transform 2.21s var(--ease);
+  transition: transform 2.4s var(--ease-lift);
 
   &.is-exiting {
     transform: translateY(-100%);
@@ -160,7 +160,9 @@
 /* ---------- STATEMENT (yellow inversion) ---------- */
 
 .statement {
-  padding: 200rem var(--margin) 220rem;
+  /* was 200/220 with a 100 gutter between the two lines — 806rem tall at
+     1440, most of it empty yellow. Tightened ~15%. */
+  padding: 150rem var(--margin) 170rem;
 
   &__a {
     width: calc(var(--column) * 8 + var(--gap) * 7);
@@ -168,7 +170,7 @@
 
   &__b {
     width: calc(var(--column) * 7 + var(--gap) * 6);
-    margin-top: 100rem;
+    margin-top: 80rem;
     margin-left: auto;
     text-align: right;
   }
@@ -220,13 +222,33 @@
   &__head {
     display: flex;
     justify-content: space-between;
+    margin: 0 var(--margin) 24rem;
+  }
+
+  /* image 7: the section name at display size with the count set as a
+     superscript beside it, not as a second column */
+  &__title {
+    display: flex;
+    align-items: flex-start;
+    gap: 10rem;
     margin: 0 var(--margin) 80rem;
+    font-weight: 700;
+  }
+
+  &__count {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 16rem;
+    line-height: 1;
+    padding-top: 6rem;
+    letter-spacing: -0.01em;
   }
 }
 
 .cards {
   position: relative;
-  height: 1900rem;
+  /* tightened from 1900rem — the reference clusters the frames into a
+     readable two-column rhythm rather than a long sparse column */
+  height: 1500rem;
   margin: 0 var(--margin);
 }
 
@@ -234,15 +256,17 @@
   position: absolute;
   left: var(--x);
   width: var(--w);
-  transform: translateY(var(--py, 0rem));
+  /* translate3d keeps each frame on its own compositor layer, which now
+     matters: --px/--py are rewritten every frame, not only on scroll */
+  transform: translate3d(var(--px, 0rem), var(--py, 0rem), 0);
 }
 
 /* stacked tops, matching the reference's scatter */
 .card__pos:nth-child(1) { top: 0; }
-.card__pos:nth-child(2) { top: 250rem; }
-.card__pos:nth-child(3) { top: 620rem; }
-.card__pos:nth-child(4) { top: 980rem; }
-.card__pos:nth-child(5) { top: 1480rem; }
+.card__pos:nth-child(2) { top: 180rem; }
+.card__pos:nth-child(3) { top: 520rem; }
+.card__pos:nth-child(4) { top: 800rem; }
+.card__pos:nth-child(5) { top: 1160rem; }
 
 .card {
   display: block;
@@ -267,18 +291,8 @@
 
 .card__media {
   display: block;
-  position: relative;
   height: var(--h);
   background: #d9d5cb;
-}
-
-.card__n {
-  position: absolute;
-  top: 16rem;
-  left: 18rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 16rem;
-  color: var(--paper);
 }
 
 .card .bottom {
@@ -289,9 +303,15 @@
   text-transform: uppercase;
 }
 
+/* image 1: "(1) RIO LIFE" — index and name on one line, under the frame */
+.card__title {
+  display: flex;
+  gap: 8rem;
+}
+
+.card__n,
 .card__client {
   display: block;
-  padding-top: 4rem;
 }
 
 .card .subtitle,
@@ -317,10 +337,13 @@
   transition-delay: calc(0.1s + var(--i) * 0.1s);
 }
 
-/* suppression is blur + scale only — opacity NEVER changes.
-   Reset is bound to .cards, so moving between two cards never passes
-   through a neutral frame. */
-html[data-touch="false"] .cards:hover .card__pos:not(:has(.card:hover)) .card {
+/* Suppression is blur + scale only — opacity NEVER changes — and it fires
+   only when a card is genuinely hovered. Keyed off `.cards:hover` it also
+   matched the empty space between the scattered frames, so pointing at a
+   gap blurred all five with nothing in focus. The reset stays bound to
+   .cards, so moving between two cards never passes through a neutral
+   frame. */
+html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover)) .card {
   filter: blur(17rem);
   transform: scale(0.8);
 }
@@ -467,6 +490,17 @@ html[data-touch="false"] .cards:hover .card__pos:not(:has(.card:hover)) .card {
     font-size: clamp(0.72px, 100vw / 1024, 1px);
   }
 
+  /* The display sizes are literal §3 values measured against the 1440
+     artboard, where an 8-column statement is wide enough to carry them.
+     Re-based below 1024 the columns shrink faster than the type does,
+     so a single unbreakable word ("FIRST.") runs past its column with
+     no line break available to save it. Cap on the viewport instead. */
+  .super { font-size: min(calc(245rem * var(--mono-fit)), 16vw); }
+
+  /* the overture carries the longest measure — 13 characters inside the
+     110% frame — so it needs a tighter ceiling than the shared one */
+  .hero__title .smart-text.super { font-size: min(calc(245rem * var(--mono-fit)), 13.5vw); }
+
   .block,
   .about__body,
   .approach__list {
@@ -509,10 +543,20 @@ html[data-touch="false"] .cards:hover .card__pos:not(:has(.card:hover)) .card {
     font-size: clamp(0.62px, 100vw / 560, 0.9px);
   }
 
-  .super { font-size: 150rem; }
-  .super-small { font-size: 120rem; }
+  /* Below ~520px the rem clamp floors out, so a fixed rem size stops
+     shrinking with the screen and the longest word runs off the edge.
+     The vw term takes over there and keeps the measure inside the
+     margins; on larger phones the rem value still wins. */
+  .super { font-size: min(150rem, 26vw); }
+  .super-small { font-size: min(120rem, 21vw); }
   .h1 { font-size: 64rem; }
   .h2 { font-size: 34rem; }
+
+  /* §5 the overture is the one block with a hard fit constraint: three
+     13-character lines have to sit inside the 110% frame whole. It is
+     the longest measure on the page, so it needs its own ceiling
+     rather than the shared .super one. */
+  .hero__title .smart-text.super { font-size: min(150rem, 12vw); }
 
   .nav {
     padding: 14rem var(--margin);

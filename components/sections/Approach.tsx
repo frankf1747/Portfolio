@@ -15,7 +15,7 @@ export default function Approach() {
   return (
     <section className="approach is-invert-blue" id="approach">
       <div className="approach__head">
-        <SmartText className="small">05 — HOW I WORK</SmartText>
+        <SmartText className="small index">04 — APPROACH</SmartText>
         <SmartText className="small">FIVE RULES</SmartText>
       </div>
       <ol className="approach__list">

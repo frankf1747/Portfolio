@@ -24,6 +24,11 @@
   --ease: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-wipe: cubic-bezier(0.35, 0.42, 0, 1);
   --ease-space: cubic-bezier(0.6, 0.14, 0, 1);
+  /* --ease is expo-out: almost all of its travel happens in the first
+     third. Right for a 14px label snapping into place, wrong for lifting
+     a full viewport — it reads as a jump. The overture exit eases in and
+     out so the page looks like it is being carried up, not yanked. */
+  --ease-lift: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* §2 — one ground + one mark colour per viewport. Never three. */
   --paper: #f5f3ec;
@@ -78,16 +83,31 @@ body {
   text-transform: uppercase;
 }
 
-.super { font-size: calc(245rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; }
-.super-small { font-size: calc(190rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; }
-.h1 { font-size: calc(95rem * var(--mono-fit)); line-height: 0.7; letter-spacing: -0.04em; }
-.small { font-size: 16rem; line-height: 1.3; letter-spacing: -0.01em; }
+/* --st-shift: seats the ink inside §4's clip window — see _smart-text.
+   Measured to centre the caps: at lh 0.65 the ink sat 5.9px proud of the
+   window at 196px, at lh 0.7 it sat 0.4px proud. */
+.super { font-size: calc(245rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
+.super-small { font-size: calc(190rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
+.h1 { font-size: calc(95rem * var(--mono-fit)); line-height: 0.7; letter-spacing: -0.04em; --st-shift: -0.011em; }
+/* --st-window: §4's clip window has to clear the line box, or the mask
+   shaves the bottom off the glyphs. Keep it equal to line-height on
+   everything set with normal leading. */
+.small { font-size: 16rem; line-height: 1.3; letter-spacing: -0.01em; --st-window: 1.3em; }
 
 .h2 {
   font-family: var(--font-body), Helvetica, Arial, sans-serif;
   font-size: 48rem;
   line-height: 1;
   letter-spacing: -0.03em;
+  --st-window: 1em;
+}
+
+/* Section indices: theme mark, bold. --mark already resolves per section
+   — accent on paper, --ink on the yellow and blue inversions — so there
+   is no override to maintain and no ground this can go invisible on. */
+.index {
+  color: var(--mark);
+  font-weight: 700;
 }
 
 a {

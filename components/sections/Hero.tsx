@@ -11,13 +11,19 @@ import SmartText, { type SmartTextHandle } from "../SmartText";
    exactly why the page reads as a title card.
 
    t=0 is the moment the loader begins to fade.
-     0.00  line 1 rises + scrambles   (2 and 3 at +100 / +200ms)
-     1.28  title container begins exiting upward
-     3.49  container reaches translateY(-100%) and stays
-     4.38  subtitle settles                                        */
+     0.00  lines rise (CSS delay 0.10s + 1.4s travel) and scramble,
+           the three scrambles staggered +0/+100/+200ms
+     1.50  headline is fully risen AND fully resolved
+     2.60  title container begins exiting upward — a 1.1s HOLD on the
+           settled headline, which is the whole point of an overture.
+           This used to fire at 1.28s, i.e. 0.22s BEFORE the lines had
+           finished rising: the page lifted away mid-animation, so there
+           was never a moment where the headline simply sat there.
+     5.00  container has reached translateY(-100%) and stays
+     5.40  subtitle settles                                        */
 
-const EXIT_AT = 1280;
-const SUB_AT = 2980;
+const EXIT_AT = 2600;
+const SUB_AT = 3900;
 
 /* §5 hero copy constraint: three lines, two words, 11–13 chars,
    roughly equal — equal lengths are what make the dense scramble
