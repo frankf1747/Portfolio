@@ -20,10 +20,16 @@ import SmartText, { type SmartTextHandle } from "../SmartText";
            finished rising: the page lifted away mid-animation, so there
            was never a moment where the headline simply sat there.
      5.00  container has reached translateY(-100%) and stays
-     5.40  subtitle settles                                        */
+     5.00  ONLY NOW does the subtitle start. At 3.9s it began while the
+           overture was still 46% on screen, so the headline and the
+           subtitle were painted over each other for 1.1s. The subtitle
+           also starts 70rem low and rides up as it resolves, so it
+           arrives into the space the overture just vacated instead of
+           having been sitting there the whole time.
+     6.50  subtitle settled                                        */
 
 const EXIT_AT = 2600;
-const SUB_AT = 3900;
+const SUB_AT = 5000;
 
 /* §5 hero copy constraint: three lines, two words, 11–13 chars,
    roughly equal — equal lengths are what make the dense scramble
@@ -32,6 +38,7 @@ const LINES = ["DENSE SIGNALS", "CLEAR CHOICES", "SHIPPED WORK"];
 
 export default function Hero() {
   const [exiting, setExiting] = useState(false);
+  const [subIn, setSubIn] = useState(false);
   const heroRefs = useRef<(SmartTextHandle | null)[]>([]);
   const subRef = useRef<SmartTextHandle | null>(null);
 
@@ -46,11 +53,17 @@ export default function Hero() {
       if (reduced) {
         subRef.current?.resolve();
         setExiting(true);
+        setSubIn(true);
         return;
       }
 
       timers.push(window.setTimeout(() => setExiting(true), EXIT_AT));
-      timers.push(window.setTimeout(() => subRef.current?.play(), SUB_AT));
+      timers.push(
+        window.setTimeout(() => {
+          setSubIn(true);
+          subRef.current?.play();
+        }, SUB_AT)
+      );
     };
 
     window.addEventListener("site:reveal", start, { once: true });
@@ -86,7 +99,7 @@ export default function Hero() {
         Frank Fu — data-led product design. Dense signals, clear choices, shipped work.
       </h1>
 
-      <div className="hero__sub">
+      <div className={`hero__sub${subIn ? " is-in" : ""}`}>
         <SmartText trigger="manual" instanceRef={subRef} className="h1">
           — DATA-LED PRODUCT DESIGN
         </SmartText>

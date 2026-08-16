@@ -69,10 +69,19 @@ export default function Nav() {
     return () => mo.disconnect();
   }, [replay]);
 
-  /* Only scramble on hover if the hover is what is doing the expanding. */
+  /* Only replay the whole stack if the hover is what is doing the expanding. */
   const onEnter = useCallback(() => {
     if (document.documentElement.classList.contains("is-down")) replay();
   }, [replay]);
+
+  /* Hovering one link decodes THAT link and nothing else, on top of the
+     underline wipe. Suppressed while collapsed, where the group replay
+     above already owns the scramble — running both would decode the same
+     label twice from different start times. */
+  const onItemEnter = useCallback((i: number) => {
+    if (document.documentElement.classList.contains("is-down")) return;
+    handles.current[i]?.play({ scrambleOnly: true });
+  }, []);
 
   return (
     <nav className="nav" aria-label="Primary">
@@ -84,7 +93,12 @@ export default function Nav() {
         </div>
 
         {ITEMS.map((it, i) => (
-          <a className="nav__item" key={it.label} href={it.href}>
+          <a
+            className="nav__item"
+            key={it.label}
+            href={it.href}
+            onMouseEnter={() => onItemEnter(i)}
+          >
             <SmartText
               trigger="manual"
               instanceRef={{
@@ -106,16 +120,23 @@ export default function Nav() {
         <span className="nav__logoText">Frank Fu</span>
       </a>
 
+      {/* Two masks, not one: the reference sets the label as two vertical
+          columns, and each needs its own sweep bar. */}
       <a className="nav__contact contact" href="#contact">
         <span className="buttonText">
           <span className="textMask">
-            <span>GET IN TOUCH</span>
+            <span>GET IN</span>
+            <span aria-hidden="true" />
+          </span>
+          <span className="textMask">
+            <span>TOUCH</span>
             <span aria-hidden="true" />
           </span>
         </span>
+        {/* arrow points ↘ at rest; the fold's rotate(-90deg) turns it ↗ */}
         <svg viewBox="0 0 40 40" aria-hidden="true">
           <circle className="ring" cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path className="arrow" d="M14 26 L26 14 M17 14 H26 V23" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path className="arrow" d="M14 14 L26 26 M26 17 V26 H17" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
       </a>
     </nav>

@@ -58,6 +58,19 @@
   left: 138rem;
   bottom: 160rem;
   color: var(--mark);
+  /* Starts low AND hidden, then rides up into the space the overture
+     vacates. The hide is load-bearing, not decoration: SmartText resolves
+     `trigger="manual"` instances on mount, so this line is fully painted
+     from the first frame and was sitting under the overture for the whole
+     landing. Delaying play() alone does not hide it. */
+  opacity: 0;
+  transform: translateY(70rem);
+  transition: opacity 1s var(--ease), transform 1.4s var(--ease);
+
+  &.is-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero__meta {
@@ -219,14 +232,9 @@
 .work {
   padding: 120rem 0 200rem;
 
-  &__head {
-    display: flex;
-    justify-content: space-between;
-    margin: 0 var(--margin) 24rem;
-  }
-
-  /* image 7: the section name at display size with the count set as a
-     superscript beside it, not as a second column */
+  /* image 7: ONE heading — the section name at display size with the count
+     as a superscript. The small "03 — PROJECTS" index that used to sit
+     above it said the same word twice. */
   &__title {
     display: flex;
     align-items: flex-start;

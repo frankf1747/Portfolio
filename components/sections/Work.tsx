@@ -116,10 +116,6 @@ export default function Work() {
 
   return (
     <section className="work" id="work">
-      <div className="work__head">
-        <SmartText className="small index">03 — PROJECTS</SmartText>
-      </div>
-
       <h2 className="work__title">
         <SmartText as="span" className="h1">PROJECTS</SmartText>
         <span className="work__count" aria-hidden="true">({CARDS.length})</span>

@@ -162,13 +162,17 @@ html.is-down:not(.is-start) .nav__items:not(:hover):not(:focus-within) {
   color: var(--mark);
 }
 
+/* The wordmark is the one place the mono is wrong: at a 0.6em advance it
+   sets wide and loose, which reads as a label rather than a mark. Archivo
+   is the grotesque already loaded for body copy — much tighter fitting,
+   and -0.05em pulls the pair into a single shape. */
 .nav__logoText {
   display: block;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 34rem;
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+  font-size: 36rem;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.05em;
   white-space: nowrap;
   transform-origin: 50% 0;
   transform: scale(1) translateY(0);
@@ -184,12 +188,15 @@ html.is-down:not(.is-start) .nav__logoText {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16rem;
-  /* distance the ring rises when the label folds — measured as the text
-     run's height plus the gap (120.2rem at 1440), so the ring lands
-     exactly where the text began rather than at an arbitrary offset */
-  --contact-fold: 120rem;
+  /* right-aligned, not centred: the ring hangs off the same edge the text
+     runs down, so the two read as one mark instead of two stacked pieces */
+  align-items: flex-end;
+  gap: 10rem;
+  /* distance the ring rises when the label folds — set from the measured
+     text run plus the gap, so the ring lands exactly where the text began
+     rather than at an arbitrary offset. Verified in-browser after any
+     change to the label, its size, or the gap. */
+  --contact-fold: 62rem;
   /* NO overflow:hidden here. It clipped the ring's :hover scale — and so
      did the 40×40 viewBox, where an r=18 circle with a 2-wide stroke
      already reaches 19 of the 20 available. The clip is now scoped to
@@ -251,12 +258,22 @@ html.is-down:not(.is-start) .nav__contact:not(:hover) {
    back to the reference's orientation. */
 .buttonText {
   display: inline-flex;
+  /* In vertical-rl the INLINE axis is vertical and the BLOCK axis is
+     horizontal, so flex `row` would stack the two masks head-to-tail down
+     the page. `column` runs them along the block axis — side by side —
+     and because the block direction is right-to-left, "GET IN" lands to
+     the right of "TOUCH", which is the reference's order. */
+  flex-direction: column;
+  gap: 4rem;
   writing-mode: vertical-rl;
   transition: transform 1s var(--ease);
 }
 
+/* display:block inside a vertical writing mode stacks along the BLOCK axis,
+   which is horizontal — so the two masks sit as side-by-side columns, the
+   way the reference sets them, rather than running on as one long line. */
 .textMask {
-  display: inline-block;
+  display: block;
   overflow: hidden;
   position: relative;
 
