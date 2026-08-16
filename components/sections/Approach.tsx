@@ -21,11 +21,18 @@ export default function Approach() {
       <ol className="approach__list">
         {ITEMS.map((it) => (
           <li key={it.n}>
-            <span className="approach__n">{it.n}</span>
+            <SmartText as="span" className="small approach__n">
+              {it.n}
+            </SmartText>
             <SmartText as="span" className="h2 approach__t">
               {it.t}
             </SmartText>
-            <span className="approach__d">{it.d}</span>
+            {/* the description has to decode too — left plain it resolved
+                instantly while its own heading was still scrambling, so the
+                row read bottom-up */}
+            <SmartText as="span" className="approach__d" isBody>
+              {it.d}
+            </SmartText>
           </li>
         ))}
       </ol>

@@ -28,10 +28,10 @@ export default function Subjects() {
           </div>
         ))}
       </div>
-      <p className="subjects__note">
+      <SmartText as="p" className="subjects__note" isBody>
         Companies studied in coursework and independent analysis using public
         and provided datasets. Not client work.
-      </p>
+      </SmartText>
     </section>
   );
 }

@@ -31,8 +31,8 @@ export default function Contact() {
             </a>
           ))}
         </span>
-        <span>LOS ANGELES, CA</span>
-        <span>©2026 FRANK FU</span>
+        <SmartText as="span" className="small">LOS ANGELES, CA</SmartText>
+        <SmartText as="span" className="small">©2026 FRANK FU</SmartText>
       </footer>
     </section>
   );

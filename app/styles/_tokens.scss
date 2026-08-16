@@ -112,12 +112,19 @@ body {
    everything set with normal leading. */
 .small { font-size: 16rem; line-height: 1.3; letter-spacing: -0.01em; --st-window: 1.3em; }
 
+/* The only non-mono class that is not .is-body, so it is the only one that
+   needs the §4 gap metrics re-cut for a proportional face. Archivo's space
+   is 0.21em against the mono's 0.6em; on the mono defaults these headings
+   set at 2.8× normal word spacing and read as double-spaced. All the gap
+   goes in --st-space so the unpack still has something to animate. */
 .h2 {
   font-family: var(--font-body), Helvetica, Arial, sans-serif;
   font-size: 48rem;
   line-height: 1;
   letter-spacing: -0.03em;
   --st-window: 1em;
+  --st-space: 0.21em;
+  --st-pad: 0;
 }
 
 /* Section indices: theme mark, bold. --mark already resolves per section

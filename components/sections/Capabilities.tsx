@@ -24,7 +24,9 @@ export default function Capabilities() {
       <div className="caps__strip" role="list">
         {ITEMS.map((it, i) => (
           <div className="caps__item" role="listitem" key={it}>
-            <span className="caps__idx">{String(i + 1).padStart(2, "0")}</span>
+            <SmartText as="span" className="small caps__idx">
+              {String(i + 1).padStart(2, "0")}
+            </SmartText>
             <SmartText className="h1">{it}</SmartText>
           </div>
         ))}

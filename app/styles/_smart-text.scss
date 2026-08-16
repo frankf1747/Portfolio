@@ -83,9 +83,14 @@
      glyphs and unpacks into words as it resolves. Gaps come from the
      scrambled-space plus the word padding; both collapse while the
      .scrambled class is on .text. */
+  /* The gap between words is --st-space plus --st-pad on each side, and
+     0.25 + 2×0.17 = 0.59em is calibrated for the MONO face, whose space is
+     ~0.6em. Any proportional face needs its own values or the words drift
+     apart: Archivo's space is 0.21em, so .h2 was setting at 2.8× normal.
+     Override both per type class, never assume the mono defaults. */
   .scrambled-space {
     display: inline-block;
-    width: 0.25em;
+    width: var(--st-space, 0.25em);
     /* short, because these now open one at a time behind the lock front.
        At 1s each the separation lagged so far behind the letters that the
        line still read as a slab well after it had resolved. */
@@ -97,7 +102,7 @@
   }
 
   .text.scrambled .scrambled-space.is-open {
-    width: 0.25em;
+    width: var(--st-space, 0.25em);
   }
 
   &:not(.is-body) .word {
@@ -105,11 +110,11 @@
   }
 
   &:not(.is-body) .word:not(:last-child).right-space {
-    padding-right: 0.17em;
+    padding-right: var(--st-pad, 0.17em);
   }
 
   &:not(.is-body) .word:not(:first-child).left-space {
-    padding-left: 0.17em;
+    padding-left: var(--st-pad, 0.17em);
   }
 
   &:not(.is-body) .text.scrambled .word {
@@ -119,11 +124,11 @@
 
   /* …and reopens word by word as the lock front clears it */
   &:not(.is-body) .text.scrambled .word.is-open:not(:last-child).right-space {
-    padding-right: 0.17em;
+    padding-right: var(--st-pad, 0.17em);
   }
 
   &:not(.is-body) .text.scrambled .word.is-open:not(:first-child).left-space {
-    padding-left: 0.17em;
+    padding-left: var(--st-pad, 0.17em);
   }
 
   /* SCROLL PACE — the spec's longer reveal for anything triggered below the
@@ -156,7 +161,7 @@
   }
 
   .smart-text .scrambled-space {
-    width: 0.25em !important;
+    width: var(--st-space, 0.25em) !important;
     transition: none !important;
   }
 
