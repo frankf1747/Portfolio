@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "//build": "writes to .next-build so a production build can never clobber a running dev server's chunks",
+    "//build": "with output:'export', Next treats a custom distDir as the EXPORT dir and forces the build dir back to .next -- so this puts the deployable static site in .next-build (what wrangler.jsonc serves), while build artifacts still land in .next alongside the dev server's",
     "build": "NEXT_DIST_DIR=.next-build next build",
     "start": "next start",
     "lint": "next lint"

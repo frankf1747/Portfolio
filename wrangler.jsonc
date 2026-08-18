@@ -1,0 +1,15 @@
+{
+  // Static-assets-only Worker. The site is a Next.js static export
+  // (`output: "export"`), so there is no server to run — Cloudflare just
+  // serves the exported files. This file's presence is also what stops
+  // `wrangler deploy` from running its Next.js auto-config, which tries to
+  // migrate the project onto OpenNext and refuses to build on Next 14.
+  "name": "portfolio",
+  "compatibility_date": "2026-08-18",
+  "assets": {
+    // Where `npm run build` leaves the export: with `output: "export"`,
+    // Next treats a custom distDir as the *export* directory.
+    "directory": "./.next-build",
+    "not_found_handling": "404-page"
+  }
+}
