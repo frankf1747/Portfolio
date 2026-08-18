@@ -41,11 +41,18 @@
   justify-content: center;
   text-align: center;
   transform: translateY(0);
-  /* The launch: creeps for most of its 3s, then throws roughly half the
-     travel into the last 0.3s. Starts at 0.5s — while the lines are still
-     decoding — so the creep is covered and never reads as a stall. Clears
-     the top at ~3.5s. */
-  transition: transform 3s var(--ease-launch);
+  /* The launch. Fires at 2.7s, AFTER the decode has settled and the page
+     has held still for a 0.3s beat — see the timeline in
+     sections/Hero.tsx, which derives that moment rather than hard-coding
+     it. This 2s must stay in step with EXIT_MS there.
+
+     That beat is why this is --ease-lift and no longer --ease-launch.
+     ease-launch is an ease-in-expo that creeps imperceptibly through most
+     of its travel; it only worked when the exit began UNDER a running
+     decode, which covered the creep. Beginning from rest — even after a
+     pause as short as 0.3s — it reads as the page having hung. This
+     breaks from rest visibly. Clears the top at ~4.7s. */
+  transition: transform 2s var(--ease-lift);
 
   &.is-exiting {
     transform: translateY(-100%);

@@ -39,6 +39,18 @@ export default function SmartText({
   const ref = useRef<HTMLElement | null>(null);
   const inst = useRef<SmartTextInstance | null>(null);
 
+  /* `instanceRef` must NOT be an effect dependency.
+     Callers hand us a ref object, and one built inline in the parent's
+     render — Hero's per-line binder, for one — is a NEW object on every
+     render. As a dependency that tore the engine down and rebuilt it on
+     every parent state change: the landing flipped state at +0.5s, so the
+     overture was destroyed and force-resolved 500ms into a 2.6s decode,
+     and the rebuilt lines were inserted under an already-revealed root —
+     which is what made the headline snap to its final position instead of
+     finishing its travel. Hold it in a ref and keep the engine alive. */
+  const instanceRefHolder = useRef(instanceRef);
+  instanceRefHolder.current = instanceRef;
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -46,7 +58,7 @@ export default function SmartText({
     const resolvedPace: ScramblePace = pace ?? (trigger === "view" ? "scroll" : "landing");
     const instance = smartText(el, resolvedPace);
     inst.current = instance;
-    if (instanceRef) instanceRef.current = instance;
+    if (instanceRefHolder.current) instanceRefHolder.current.current = instance;
 
     let ro: ResizeObserver | null = null;
     let io: IntersectionObserver | null = null;
@@ -86,9 +98,16 @@ export default function SmartText({
       instance.resolve();
     }
 
-    /* re-split only when the box actually changes width */
+    /* Re-split only when the box actually changes width — and never while
+       a decode is in flight. resplit() rebuilds the DOM and force-resolves,
+       so a resize observed mid-play cancels the animation outright. The
+       decode is layout-neutral now, so this should not fire on our own
+       frames; it stays as a guard because it is cheap and the failure it
+       prevents is total. A width change that lands during a play is
+       re-checked on the next real resize. */
     ro = new ResizeObserver(() => {
       if (Math.abs(el.clientWidth - width) < 1) return;
+      if (instance.isPlaying()) return;
       width = el.clientWidth;
       instance.resplit();
     });
@@ -99,9 +118,9 @@ export default function SmartText({
       ro?.disconnect();
       io?.disconnect();
       instance.destroy();
-      if (instanceRef) instanceRef.current = null;
+      if (instanceRefHolder.current) instanceRefHolder.current.current = null;
     };
-  }, [delay, trigger, pace, instanceRef]);
+  }, [delay, trigger, pace]);
 
   const cls = [
     "smart-text",

@@ -79,11 +79,19 @@
     display: inline-block;
   }
 
-  /* SPACE UNPACKING: the line begins as one dense unreadable run of
-     glyphs and unpacks into words as it resolves. Gaps come from the
-     scrambled-space plus the word padding; both collapse while the
-     .scrambled class is on .text. */
-  /* The gap between words is --st-space plus --st-pad on each side, and
+  /* WORD SPACING — fixed. These metrics are identical scrambling and
+     settled, which is what keeps the decode layout-neutral.
+
+     ⚠ Nothing here may animate or collapse while .scrambled is set. An
+     earlier build zeroed these and re-opened them behind the lock front
+     (the "dense slab unpacking into words" effect). Because that changes
+     the element's own width, every .smart-text in a shrink-to-fit box —
+     the flex section heads, the grid row titles, the absolutely-positioned
+     hero subtitle — resized itself mid-decode, which tripped the host's
+     ResizeObserver and cancelled the animation one frame in. See §4 in
+     lib/smartText.ts.
+
+     The gap between words is --st-space plus --st-pad on each side, and
      0.25 + 2×0.17 = 0.59em is calibrated for the MONO face, whose space is
      ~0.6em. Any proportional face needs its own values or the words drift
      apart: Archivo's space is 0.21em, so .h2 was setting at 2.8× normal.
@@ -91,22 +99,6 @@
   .scrambled-space {
     display: inline-block;
     width: var(--st-space, 0.25em);
-    /* short, because these now open one at a time behind the lock front.
-       At 1s each the separation lagged so far behind the letters that the
-       line still read as a slab well after it had resolved. */
-    transition: width 0.35s var(--ease-space);
-  }
-
-  .text.scrambled .scrambled-space {
-    width: 0;
-  }
-
-  .text.scrambled .scrambled-space.is-open {
-    width: var(--st-space, 0.25em);
-  }
-
-  &:not(.is-body) .word {
-    transition: padding 0.35s var(--ease-space);
   }
 
   &:not(.is-body) .word:not(:last-child).right-space {
@@ -117,38 +109,48 @@
     padding-left: var(--st-pad, 0.17em);
   }
 
-  &:not(.is-body) .text.scrambled .word {
-    padding-left: 0;
-    padding-right: 0;
-  }
+  /* SCROLL PACE — a longer reveal than the landing's 1.5s, so a block
+     triggered below the fold materialises out of the mask while it is
+     already decoding rather than arriving and then playing.
 
-  /* …and reopens word by word as the lock front clears it */
-  &:not(.is-body) .text.scrambled .word.is-open:not(:last-child).right-space {
-    padding-right: var(--st-pad, 0.17em);
-  }
-
-  &:not(.is-body) .text.scrambled .word.is-open:not(:first-child).left-space {
-    padding-left: var(--st-pad, 0.17em);
-  }
-
-  /* SCROLL PACE — the spec's longer reveal for anything triggered below the
-     fold: 1.9s expo.inOut against the landing's 1.5s expo.out. The slower
-     in-out start keeps the line under the mask while it is already
-     scrambling, so it materialises rather than arriving and then playing. */
+     Was 1.9s on --ease-content. That curve is flat at both ends, so the
+     first ~0.75s produced no visible ink at all: on a live scroll you
+     reached the block and then waited on it. The shorter duration and the
+     earlier break from rest keep the same in-out shape and cut the dead
+     lead-in to roughly a third of what it was. */
   &.is-scroll .line .text {
-    transition-duration: 1.9s;
-    transition-timing-function: var(--ease-content);
+    transition-duration: 1.2s;
+    transition-timing-function: var(--ease-reveal);
   }
 
   /* OVERTURE — the rise stretched to match the longer decode, so the line
-     is still arriving as the last characters lock rather than parking. */
+     is still arriving as the last characters lock rather than parking.
+     Tracks the overture pace in lib/smartText.ts: it lands ~0.3s before
+     the final character locks, and has to be re-cut whenever that
+     scrambleMs changes or the headline starts parking again. */
   &.is-overture .line .text {
-    transition-duration: 2.4s;
+    transition-duration: 2s;
   }
 
-  /* body copy keeps normal leading and normal spaces */
+  /* BODY COPY keeps normal leading and normal spaces.
+
+     Its clip window is the line box itself — the height rule above is
+     deliberately scoped to :not(.is-body) — and the display rise distance
+     never reached it: 0.73em × 1.21 = 0.883em against the 1.45em row of
+     .approach__d, so 40% of every row stayed inside the mask. Unplayed
+     paragraphs sat on screen as a half-cut sliver of each line, and the
+     rise only ever travelled part of the way out. Riding on the element's
+     OWN height clears the box exactly, at any leading, with nothing to
+     keep in sync per type class. */
   &.is-body .line .text {
     white-space: normal;
+    transform: translateY(100%);
+  }
+
+  /* equal specificity to the .is-body rule above and declared after it, so
+     this is what wins once the block plays — do not reorder */
+  &.is-body.is-revealed .line .text {
+    transform: translateY(0);
   }
 }
 
@@ -161,17 +163,11 @@
    all transforms off, scramble off (JS), text renders resolved,
    loader still fades */
 @media (prefers-reduced-motion: reduce) {
+  /* The rise is the only thing left to switch off here. Word gaps no
+     longer animate at any time, so they need no reduced-motion override —
+     they are already at their resting metrics on every frame. */
   .smart-text .line .text {
     transform: none !important;
-    transition: none !important;
-  }
-
-  .smart-text .scrambled-space {
-    width: var(--st-space, 0.25em) !important;
-    transition: none !important;
-  }
-
-  .smart-text .word {
     transition: none !important;
   }
 }

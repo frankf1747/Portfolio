@@ -11,16 +11,30 @@
                └ .scrambled-space
 
    Two motions run concurrently per line:
-     RISE      translateY(0.885em) → 0, 1.5s, --ease, 120ms/line
-     SCRAMBLE  1.5s — in lockstep with the rise, so each line resolves at
-               the same instant it stops travelling.
+     RISE      translateY(window × 1.21) → 0, --ease, staggered per line
+     SCRAMBLE  in lockstep with the rise, so each line resolves at the
+               same instant it stops travelling.
 
-   The line starts as one dense unreadable run of glyphs (word gaps
-   collapsed to zero) and unpacks into words as it resolves.
+   ⚠ THE DECODE IS LAYOUT-NEUTRAL. Every letter cycles inside a slot
+   pinned to its own final width, so the line measures the same on every
+   frame of the scramble as it does when settled. Nothing reflows, so
+   nothing can re-wrap, spill its container, or feed a width change back
+   into the ResizeObserver in components/SmartText.tsx.
+
+   This is what the nav has always done — its labels are single words, so
+   there was never a gap to animate — and it is the only place the effect
+   read correctly. An earlier build collapsed the word gaps to zero and
+   re-opened them behind the lock front, so the line began as one dense
+   slab and unpacked as it resolved. It looked good in isolation and was
+   structurally fatal: collapsing the gaps changes the element's width,
+   which in any shrink-to-fit container (every section head, every grid
+   row title) resized the box, tripped the ResizeObserver, and made the
+   engine tear down and force-resolve the animation it had just started.
 
    0.885em: the rise distance is 121% of the 0.73em clip window
    (0.73 × 1.21 = 0.883), which is 216.7rem on a 245rem line — glyphs
-   fully clear of the mask, nothing peeking.
+   fully clear of the mask, nothing peeking. Body copy keeps its natural
+   leading, so it rides on translateY(100%) instead — see _smart-text.
    ============================================================ */
 
 const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -44,26 +58,40 @@ const LINE_STAGGER_MS = 120;
    enters frame and never appears to park and then perform. That needs a
    later lock-start and a longer tail — the length is what sells it as
    scroll-linked rather than as a canned animation. */
-export type ScramblePace = "landing" | "scroll" | "overture";
+export type ScramblePace = "landing" | "scroll" | "overture" | "slow";
 
 const PACE: Record<ScramblePace, { scrambleMs: number; lockStartMs: number; staggerMs: number }> = {
   landing: { scrambleMs: SCRAMBLE_MS, lockStartMs: 300, staggerMs: LINE_STAGGER_MS },
-  scroll: { scrambleMs: 1400, lockStartMs: 650, staggerMs: 110 },
+  /* lockStartMs is the beat before the FIRST character locks — until then
+     the line is pure noise. At 650 against a rise that was itself slow to
+     show ink, a scrolled-to block made you wait twice over. Pulled in so
+     the line starts becoming readable almost as soon as it is visible. */
+  scroll: { scrambleMs: 1250, lockStartMs: 420, staggerMs: 90 },
+  /* An unhurried decode for a heading that is its own moment on the page
+     and is not competing with anything else on screen — but only about a
+     third longer than the scroll pace now. It has been pulled in twice:
+     the tail on a short word like PROJECTS was doing the damage, and the
+     lock curve above carries most of that fix. */
+  slow: { scrambleMs: 1700, lockStartMs: 500, staggerMs: 140 },
   /* The overture is the one block the viewer is guaranteed to be watching
-     from its first frame, and it has the longest runway: the launch does
-     not become perceptible until ~2.8s. At the landing pace the decode
-     finished at 1.74s and the finished headline then sat still for a full
-     second before being carried off. Running to ~2.9s means the last
-     character locks just as the launch takes hold. */
-  overture: { scrambleMs: 2600, lockStartMs: 500, staggerMs: 160 }
+     from its first frame, so it decodes slower than anything triggered by
+     a scroll — but it is also the gate on the entire landing. The three
+     lines start 100ms apart, so the last character locks at
+     scrambleMs + 200, and the HOLD, the exit and everything after it are
+     measured from that instant. Change this number and the constants in
+     sections/Hero.tsx have to move with it. */
+  overture: { scrambleMs: 2200, lockStartMs: 500, staggerMs: 160 }
 };
 const GLYPH_SWAP_MS = 55;
 
 export type SmartTextInstance = {
+  /** True from play() until the last line locks. */
+  isPlaying: () => boolean;
   /** Re-measure line breaks and rebuild. Called on resize. */
   resplit: () => void;
-  /** Run the rise + scramble. */
-  play: (opts?: { delay?: number; scrambleOnly?: boolean }) => void;
+  /** Run the rise + scramble. `scrambleOnly` decodes in place with no
+      rise; `riseOnly` travels in with the glyphs already settled. */
+  play: (opts?: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean }) => void;
   /** Render fully resolved, no motion (reduced-motion, or pre-play state). */
   resolve: () => void;
   destroy: () => void;
@@ -77,11 +105,6 @@ export type SmartTextInstance = {
    as an 88px (16.9%) swing on the Approach titles and flipped the About
    paragraph between one and two rendered rows mid-scramble. */
 type Letter = { el: HTMLElement; final: string; resolveAt: number; done: boolean; w: number };
-
-/* A word box or the space span after it, plus the moment the lock front
-   reaches it. Opening these progressively is what makes the slab WIDEN
-   left-to-right instead of springing apart all at once at the end. */
-type Gap = { el: HTMLElement; at: number; open: boolean };
 
 const prefersReduced = () =>
   typeof window !== "undefined" &&
@@ -99,9 +122,18 @@ const prefersReduced = () =>
 
    Monospace hosts keep their width for free; the caller is responsible for
    reserving space if the face is proportional. */
+type Cancelable = HTMLElement & { __stCancel?: () => void };
+
 export function scrambleText(el: HTMLElement, opts: { duration?: number } = {}) {
   const final = (el.dataset.scrambleSource ??= el.textContent || "");
   const ms = opts.duration ?? SCRAMBLE_MS;
+
+  /* Re-entry has to kill the run in flight. These fire on hover, and a
+     second hover before the first finished used to leave two loops
+     writing the same node from different start times — the label would
+     churn indefinitely, each loop undoing the other's locks. */
+  (el as Cancelable).__stCancel?.();
+
   if (prefersReduced()) {
     el.textContent = final;
     return () => {};
@@ -130,14 +162,20 @@ export function scrambleText(el: HTMLElement, opts: { duration?: number } = {}) 
     el.textContent = out.join("");
 
     if (remaining > 0) raf = requestAnimationFrame(tick);
-    else el.textContent = final;
+    else {
+      el.textContent = final;
+      delete (el as Cancelable).__stCancel;
+    }
   };
   raf = requestAnimationFrame(tick);
 
-  return () => {
+  const cancel = () => {
     cancelAnimationFrame(raf);
     el.textContent = final;
+    delete (el as Cancelable).__stCancel;
   };
+  (el as Cancelable).__stCancel = cancel;
+  return cancel;
 }
 
 export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): SmartTextInstance {
@@ -146,9 +184,14 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
 
   let lines: HTMLElement[] = [];
   let letters: Letter[][] = [];
-  let gaps: Gap[][] = [];
-  let raf = 0;
+  /* one handle PER LINE. A single shared handle only ever cancelled the
+     last line to start, so a resize or replay mid-decode left the other
+     lines' loops running against detached nodes. */
+  let rafs: number[] = [];
   let timers: number[] = [];
+  /* set for the whole of a play() so the host's ResizeObserver can tell a
+     real container resize from one of our own frames */
+  let playing = false;
 
   /* ---- build ------------------------------------------------------ */
 
@@ -200,7 +243,6 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
     root.textContent = "";
     lines = [];
     letters = [];
-    gaps = [];
 
     groups.forEach((group, gi) => {
       const line = document.createElement("span");
@@ -226,36 +268,38 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
       lines.push(line);
 
       const ls = Array.from(text.querySelectorAll<HTMLElement>(".letter-inner"));
-      const n = Math.max(1, ls.length - 1);
+
       /* The RESOLVED COUNT rises on an ease-out, so per-character the lock
          time is that curve inverted: a burst of letters settles early and
-         the tail draws out. A linear ramp reads mechanical. */
+         the tail draws out. A linear ramp reads mechanical.
+
+         ⚠ Sample to i/len, NOT i/(len-1). The curve has a vertical tangent
+         at x = 1, so feeding the last letter x = 1 exactly puts it on that
+         tangent and it inherits an enormous share of the decode: on
+         PROJECTS the final glyph held for 529ms of a 1400ms resolve
+         window — 38% of the whole decode spent on one character, which
+         reads as the word hanging on its last letters instead of
+         finishing. Sampling one step short keeps every letter off the
+         tangent; dividing through by the final letter's own value then
+         rescales the curve so it still ARRIVES exactly on scrambleMs.
+         That last part is load-bearing — the landing timeline in
+         sections/Hero.tsx derives its hold and exit from the assumption
+         that the overture's last character locks on scrambleMs. */
+      const span = Math.max(1, ls.length);
+      const endValue = 1 - Math.sqrt(1 - (span - 1) / span);
+      const ease = (i: number) =>
+        endValue > 0 ? (1 - Math.sqrt(1 - i / span)) / endValue : 1;
+
       /* measured here, while the letters still hold their real glyphs and
          a layout pass is already being taken for the line grouping */
       const lineLetters: Letter[] = ls.map((el, i) => ({
         el,
         final: el.textContent || "",
-        resolveAt: lockStartMs + (scrambleMs - lockStartMs) * (1 - Math.sqrt(1 - i / n)),
+        resolveAt: lockStartMs + (scrambleMs - lockStartMs) * ease(i),
         done: false,
         w: el.getBoundingClientRect().width
       }));
       letters.push(lineLetters);
-
-      /* Each word, and the space that follows it, opens as the lock front
-         clears that word's last letter. */
-      const wordEls = Array.from(text.querySelectorAll<HTMLElement>(".word"));
-      const spaceEls = Array.from(text.querySelectorAll<HTMLElement>(".scrambled-space"));
-      const lineGaps: Gap[] = [];
-      let cursor = 0;
-      wordEls.forEach((w, wi) => {
-        cursor += w.querySelectorAll(".letter-inner").length;
-        const at = lineLetters[cursor - 1]?.resolveAt ?? 0;
-        lineGaps.push({ el: w, at, open: false });
-        /* spaceEls[wi] is the span appended before word wi+1 — i.e. the one
-           immediately after word wi */
-        if (spaceEls[wi]) lineGaps.push({ el: spaceEls[wi], at, open: false });
-      });
-      gaps.push(lineGaps);
     });
   }
 
@@ -264,26 +308,25 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
   function clearTimers() {
     timers.forEach((t) => window.clearTimeout(t));
     timers = [];
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
+    rafs.forEach((r) => r && cancelAnimationFrame(r));
+    rafs = [];
+    playing = false;
   }
 
   function scrambleLine(li: number) {
     const set = letters[li];
     if (!set || !set.length) return;
+    /* state hook only — no CSS rule may change this element's METRICS
+       while it is set, or the decode starts fighting layout again */
     const text = lines[li].querySelector<HTMLElement>(".text");
-    const lineGaps = gaps[li] ?? [];
     text?.classList.add("scrambled");
     set.forEach((l) => {
       l.done = false;
-      /* pin the slot for the duration of the cycling; released the moment
-         the letter locks, so the settled run keeps its natural kerning */
+      /* pin the slot to the letter's OWN final width, so a wide stand-in
+         glyph cannot widen the line. Released on lock, where the natural
+         advance is identical — there is no jump to see. */
       l.el.style.width = `${l.w}px`;
       l.el.style.textAlign = "center";
-    });
-    lineGaps.forEach((g) => {
-      g.open = false;
-      g.el.classList.remove("is-open");
     });
 
     const started = performance.now();
@@ -311,26 +354,18 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
         }
       }
 
-      /* the lock front, trailing one word behind the letters — the locked
-         region carries real spacing while the tail stays a solid slab */
-      for (const g of lineGaps) {
-        if (!g.open && t >= g.at) {
-          g.el.classList.add("is-open");
-          g.open = true;
-        }
-      }
-
       if (remaining > 0) {
-        raf = requestAnimationFrame(tick);
+        rafs[li] = requestAnimationFrame(tick);
       } else {
-        /* fully resolved — drop back to the default spacing rules */
+        rafs[li] = 0;
         text?.classList.remove("scrambled");
+        if (rafs.every((r) => !r)) playing = false;
       }
     };
-    raf = requestAnimationFrame(tick);
+    rafs[li] = requestAnimationFrame(tick);
   }
 
-  function play(opts: { delay?: number; scrambleOnly?: boolean } = {}) {
+  function play(opts: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean } = {}) {
     clearTimers();
     const base = opts.delay ?? 0;
 
@@ -339,11 +374,30 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
       return;
     }
 
+    playing = true;
+
     if (!opts.scrambleOnly) {
       root.classList.remove("is-revealed");
       /* force style flush so the reset transform is committed */
       void root.offsetWidth;
       root.classList.add("is-revealed");
+    }
+
+    /* Rise with the glyphs already settled — for lines that should travel
+       in but not decode. Note this still has to WRITE the finals: the
+       instance may be replaying after a scramble that was cut short, so
+       the letters cannot be assumed to be holding their real characters. */
+    if (opts.riseOnly) {
+      letters.forEach((set) =>
+        set.forEach((l) => {
+          l.el.textContent = l.final;
+          l.el.style.width = "";
+          l.el.style.textAlign = "";
+          l.done = true;
+        })
+      );
+      playing = false;
+      return;
     }
 
     lines.forEach((_, li) => {
@@ -354,7 +408,6 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
 
   function resolve() {
     clearTimers();
-    gaps.forEach((set) => set.forEach((g) => { g.open = false; g.el.classList.remove("is-open"); }));
     letters.forEach((set, li) => {
       const text = lines[li].querySelector<HTMLElement>(".text");
       text?.classList.remove("scrambled");
@@ -371,6 +424,7 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
   split();
 
   return {
+    isPlaying: () => playing,
     resplit: () => {
       const wasRevealed = root.classList.contains("is-revealed");
       clearTimers();

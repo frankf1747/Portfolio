@@ -58,11 +58,24 @@ export default function Work() {
     if (reduced) return () => io.disconnect();
 
     /* MAX_SHIFT is in design px, so it scales with the rem trick like
-       everything else. 26 is roughly 5% of the widest frame — enough to
-       register as motion, small enough that the scatter never reads as
-       unstable. */
-    const MAX_SHIFT = 26;
-    const LERP = 0.08;
+       everything else. It is the FULL travel of the deepest card (d = 1)
+       from centre to either edge of the block; every other card gets
+       MAX_SHIFT × its own d, so raising this spreads the whole scatter
+       apart rather than sliding it as a sheet — the depth difference
+       between cards grows with it, which is the point.
+
+       42 is roughly 8% of the widest frame, up from 26 (~5%), which was
+       too reticent to read as parallax at all until you went looking for
+       it. Going much past this starts to detach the cards from the
+       cursor and the scatter reads as unstable.
+
+       LERP moved with it. It is the fraction of the remaining distance
+       covered per frame, so at a fixed 0.08 a longer throw simply takes
+       longer to arrive — the cards would have travelled further but felt
+       heavier, which is the opposite of the intent. 0.10 keeps roughly
+       the original settle time across the bigger distance. */
+    const MAX_SHIFT = 42;
+    const LERP = 0.1;
 
     let targetX = 0;
     let targetY = 0;
@@ -117,7 +130,9 @@ export default function Work() {
   return (
     <section className="work" id="work">
       <h2 className="work__title">
-        <SmartText as="span" className="h1">PROJECTS</SmartText>
+        {/* decodes slower than the other section headings on purpose —
+            it is the title of the block the page is built around */}
+        <SmartText as="span" className="h1" pace="slow">PROJECTS</SmartText>
         <span className="work__count" aria-hidden="true">({CARDS.length})</span>
       </h2>
 

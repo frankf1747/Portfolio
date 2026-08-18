@@ -1,5 +1,6 @@
 import Preloader from "@/components/Preloader";
 import ScrollProvider from "@/components/ScrollProvider";
+import Cursor from "@/components/Cursor";
 import Nav from "@/components/Nav";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
@@ -15,6 +16,7 @@ export default function Home() {
     <>
       <Preloader />
       <ScrollProvider />
+      <Cursor />
       <Nav />
 
       <main>

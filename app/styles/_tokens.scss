@@ -29,17 +29,29 @@
      a full viewport — it reads as a jump. The overture exit eases in and
      out so the page looks like it is being carried up, not yanked. */
   --ease-lift: cubic-bezier(0.65, 0, 0.35, 1);
-  /* The overture's launch — easeInExpo, the closest cubic-bezier to the
+  /* ⚠ CURRENTLY UNUSED — kept because the measurement below is the reason
+     it cannot come back without redesigning the landing around it.
+
+     The overture's launch — easeInExpo, the closest cubic-bezier to the
      spec's p^9. At the halfway point p^9 has moved 0.2%, expo 3%, and
      power4 6%, so expo is much the better stand-in.
 
      The CREEP MUST OVERLAP THE SCRAMBLE. Started after the text settles,
      the near-zero opening reads as the animation having stalled — measured
-     at ~40px of travel across a full second. Started at 0.5s it hides
-     under the decode, and motion is continuous from there on. */
+     at ~40px of travel across a full second. It used to start at 0.5s,
+     hidden under the decode. The landing now HOLDS the settled headline
+     for 1.1s so it can be read, so there is no longer a decode to hide
+     under and this curve would stall exactly as described. The overture
+     exit runs on --ease-lift instead. */
   --ease-launch: cubic-bezier(0.95, 0.05, 0.795, 0.035);
   /* expo.inOut — the content layer, softer at both ends than the launch */
   --ease-content: cubic-bezier(1, 0, 0, 1);
+  /* Scroll-reveal rise. --ease-content is flat at BOTH ends — on a 1.9s
+     reveal it held the line under the mask for ~0.75s before any ink
+     showed, which on a live scroll reads as the block refusing to arrive.
+     This keeps the in-out shape that lets the line materialise mid-decode
+     but breaks away from rest far sooner. */
+  --ease-reveal: cubic-bezier(0.62, 0.02, 0.15, 1);
 
   /* §2 — one ground + one mark colour per viewport. Never three. */
   --paper: #f5f3ec;

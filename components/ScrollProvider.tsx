@@ -18,8 +18,16 @@ export default function ScrollProvider() {
     const touch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
     html.dataset.touch = touch ? "true" : "false";
 
-    /* frozen for the life of the page — never updated */
-    if (!html.style.getPropertyValue("--start-vh")) {
+    /* Frozen for the life of the page — never updated once it holds a real
+       height. The `> 0` test is load-bearing: an embedded or prerendering
+       viewport can report innerHeight 0 on first paint, and "0px" is a
+       truthy property value, so the old guard froze the hero at zero
+       height for good and the whole landing played inside a collapsed
+       box. Leave it unset until a real measurement arrives. */
+    if (
+      window.innerHeight > 0 &&
+      parseFloat(html.style.getPropertyValue("--start-vh") || "0") <= 0
+    ) {
       html.style.setProperty("--start-vh", `${window.innerHeight}px`);
     }
 

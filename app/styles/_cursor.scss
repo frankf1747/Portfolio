@@ -1,0 +1,142 @@
+/* ============================================================
+   THE CURSOR — a small --blue disc trailing the pointer.
+
+   Sized and positioned in px, NOT rem. Everything else on the site is
+   rem so it scales with the 1440-wide design grid, but a cursor belongs
+   to the input device, not to the layout: scaled with the viewport it
+   would be a dot on a laptop and a coin on a large display.
+   ============================================================ */
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999; /* over everything, including the nav's z-index: 9 */
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--blue);
+  pointer-events: none; /* must never eat a click or a hover */
+
+  /* --blue on the blue section would be invisible, and the site inverts
+     a full viewport to that ground twice. multiply keeps the disc
+     recognisably light blue on paper while still separating it from both
+     inversions: it deepens on blue and goes green on yellow rather than
+     disappearing into either. */
+  mix-blend-mode: multiply;
+
+  opacity: 0;
+  /* transform is written every frame by the rAF loop in Cursor.tsx and is
+     deliberately NOT transitioned — the smoothing is the lerp, and a
+     transition on top of it would double-smooth into visible lag. Only
+     the states below animate. */
+  transition: opacity 0.25s var(--ease), width 0.25s var(--ease),
+    height 0.25s var(--ease), background-color 0.25s var(--ease);
+  will-change: transform;
+
+  &[data-on="true"] {
+    opacity: 1;
+  }
+
+  /* over a link, button or field that is not one of the crosshair targets */
+  &[data-hit="true"] {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* ---- the crosshair ----
+     The two arms live here rather than in a second element so they
+     inherit the parent's blend and its per-frame transform for free.
+     They are always present and scaled to nothing, because animating
+     scale is compositor-only — building them on hover would mean
+     inserting geometry during a pointer move. */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: var(--blue);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.25s var(--ease);
+  }
+
+  &::before {
+    width: 100%;
+    height: 3px;
+  }
+
+  &::after {
+    width: 3px;
+    height: 100%;
+  }
+
+  /* NAV + PROJECT CARDS — the disc drops away and the arms take over, so
+     the pointer becomes a point of aim rather than a blob covering the
+     thing it is meant to be selecting.
+
+     Compact and heavy rather than large and fine. At 30×2 the arms were
+     long enough to read as a graphic element sitting on the page and
+     thin enough to half-disappear against the blue inversion the fixed
+     nav floats over; 20×3 is a denser mark that holds up on every ground
+     while staying close to the pointer it is standing in for. Keep the
+     arm weight in step with the box — the ratio is what carries this,
+     not either number on its own. */
+  &[data-shape="plus"] {
+    width: 20px;
+    height: 20px;
+    background: transparent;
+
+    &::before,
+    &::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+}
+
+/* Hide the native pointer ONLY once the disc is actually running.
+
+   data-cursor is written by Cursor.tsx from inside its effect, and only
+   after it has confirmed a fine pointer. That makes the hide fail safe
+   in both directions: a touch device never reaches the branch that sets
+   it, and a visitor whose JS never executes keeps the system cursor
+   rather than being left with no pointer at all. Do NOT re-gate this on
+   a server-rendered attribute — those are present before the code that
+   draws the replacement has run. */
+html[data-cursor="custom"] {
+  &,
+  body,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  summary,
+  [role="button"] {
+    cursor: none;
+  }
+}
+
+/* A cursor is an accessibility surface. Anyone who has asked for reduced
+   motion still gets the disc — Cursor.tsx drops the trail, not the
+   element — but a forced-colours user has told the browser to control
+   contrast, so hand the real pointer back. */
+@media (forced-colors: active) {
+  .cursor {
+    display: none;
+  }
+
+  html[data-cursor="custom"] {
+    &,
+    body,
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    summary,
+    [role="button"] {
+      cursor: auto;
+    }
+  }
+}
