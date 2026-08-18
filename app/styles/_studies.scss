@@ -1,0 +1,656 @@
+/* ============================================================
+   §12 STUDIES — the strip trigger and the study window.
+
+   The window sits OVER the homepage and the homepage stays visible
+   behind it at low opacity. It is not a page; it should not feel like
+   one. No route change, no scroll position lost, no transition away.
+
+   Everything here is transitions. There are no keyframes anywhere on
+   this site and this is not the place to introduce the first one.
+   ============================================================ */
+
+/* ---------- the two-row strip ---------- */
+
+/* Both rows sit inside the ONE scroller declared on .subjects__strip in
+   _sections.scss, so they travel together on drag. The strip's own
+   `display: flex` would lay the rows side by side, so it is re-declared
+   here as a column. */
+/* .subjects__strip carries `overflow-x: auto` from _sections.scss for narrow
+   viewports. Per CSS overflow, a non-visible value on one axis forces the
+   other from `visible` to `auto` — so the strip is a scroll container
+   VERTICALLY as well, whether or not that was intended, and it clips at the
+   padding box edge.
+
+   The cursor parallax translates each item up to 22rem in y, so with no top
+   padding the upward half of that travel was being cut off. That is the
+   sliced-glyph effect that survived the --st-window fix: the window was
+   never the whole story, the scroll box was clipping too.
+
+   Padding is the fix rather than `overflow-y: visible`, which cannot win —
+   the computed value would go straight back to auto. The pad has to clear
+   MAX_SHIFT in components/sections/Studies.tsx; if that number grows, this
+   one grows with it. */
+.subjects__strip {
+  flex-direction: column;
+  /* 16rem, then 32rem, now 56rem. */
+  gap: 56rem;
+  /* Doubles as the parallax clearance AND the block's vertical position:
+     this is inside the scroll box, so trimming it lifts all seven names
+     together. Cut 34rem to 24rem to raise the block 10rem. It still clears
+     the 22rem MAX_SHIFT in Studies.tsx, but only by a couple of rem now —
+     raising the parallax travel without raising this will clip again. */
+  padding-top: 24rem;
+  padding-bottom: 56rem;
+}
+
+.subjects__item {
+  /* Parallax rides the item so the button keeps its own transitions. */
+  transform: translate3d(var(--px, 0rem), var(--py, 0rem), 0);
+}
+
+.subjects__row {
+  display: flex;
+  gap: 80rem;
+
+  /* Roughly half a name wide. Enough that the second row reads as a
+     continuation of the first rather than as a separate list. */
+  &.is-inset {
+    padding-left: 220rem;
+  }
+}
+
+/* ---------- the trigger in the strip ---------- */
+
+.study__open {
+  display: block;
+  text-align: left;
+  padding: 0;
+
+  /* The subject's own colour, set inline per item. §2 allows one mark per
+     viewport; this is the deliberate exception, on the same principle as
+     the per-project palette in data/projects.ts. */
+  .study__name {
+    color: var(--brand, currentColor);
+  }
+
+
+  /* The written study leads. Everything else is held back so the eye lands
+     on the one that pays off, and the rest read as available rather than as
+     equals — which is what makes them worth hovering. Colour is restored in
+     full on hover, so the brand never reads as a washed-out version of
+     itself for longer than a moment. */
+  transition: opacity 0.5s var(--ease);
+
+  &.is-draft {
+    opacity: 0.42;
+  }
+
+  &.is-draft:hover,
+  &.is-draft:focus-visible {
+    opacity: 1;
+  }
+
+  /* Always visible. This is the case, not the state — hiding it until
+     hover would leave the wall as seven bare company names, which is the
+     logo-wall reading the section exists to avoid. */
+  .study__openMeta {
+    display: block;
+    /* Negative on purpose, and the value is derived rather than picked.
+       The clip window is 1.05em (80px at this size) and the ink sits from
+       4.6 to 59.6px inside it, so there is ~20px of dead box under the
+       glyphs before any margin applies. +14 put the topic 34px away, which
+       read as unrelated to its own name; -14 left 6px, which touched.
+       -4 lands it around 16px. */
+    margin-top: -4rem;
+    color: var(--brand, currentColor);
+    opacity: 0.7;
+    transition: opacity 0.5s var(--ease);
+  }
+
+  &:hover .study__openMeta,
+  &:focus-visible .study__openMeta {
+    opacity: 1;
+  }
+
+  /* NO hover lift. translateY on the name pushed it out of the strip's box
+     mid-scramble. Hover is the scramble and nothing else, which is also the
+     rule the nav follows.
+
+     --st-window is widened from the .h1 default of 0.73em. §4 clips each
+     line to that window, and .h1's 0.7 line-height leaves it sitting almost
+     exactly on the cap height — fine in normal flow, but the parallax puts
+     every item on its own compositor layer, and the clip is then applied
+     against a rounded layer edge. That is what sliced the tops off
+     STARBUCKS and META once the cursor started moving them. */
+  .study__name {
+    display: block;
+    --st-window: 1.05em;
+    --st-shift: 0.06em;
+  }
+}
+
+/* ---------- the surrounding page, dimmed ---------- */
+
+/* This IS the effect: the page recedes rather than being covered. Both
+   layers carry the transition at rest so the return is as smooth as the
+   arrival. */
+main,
+.nav {
+  transition: opacity 0.8s var(--ease);
+}
+
+html.is-study-open {
+  main,
+  .nav {
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  /* The disc sits at 999, which is under the panel. Left alone it would
+     vanish the moment a study opened, on the one surface where the
+     pointer is doing the most work. */
+  .cursor {
+    z-index: 999999; /* one above the panel */
+  }
+}
+
+/* ---------- the window ---------- */
+
+.study {
+  position: fixed;
+  inset: 0;
+  /* clears the nav at 99999. The nav is dimmed and click-through by now,
+     but it would still paint over the panel if this sat below it. */
+  z-index: 999998;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60rem var(--margin);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &__scrim {
+    position: fixed;
+    inset: 0;
+    cursor: pointer;
+  }
+
+  &__panel {
+    position: relative;
+    width: 100%;
+    max-width: 1000rem;
+    padding: 48rem 56rem 40rem;
+    background: var(--ground);
+    border: 1px solid currentColor;
+
+    /* mounted first, flipped on the next frame — a transition needs two
+       states and there is no keyframe to fall back on */
+    opacity: 0;
+    transform: translateY(24rem);
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  }
+
+  &.is-in &__panel {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- head ---------- */
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 40rem;
+    padding-bottom: 28rem;
+    border-bottom: 1px solid currentColor;
+  }
+
+  &__ident {
+    display: flex;
+    align-items: center;
+    gap: 20rem;
+  }
+
+  /* Sized to the cap height of the title beside it so the row reads as one
+     object. Reserved whether or not art exists. */
+  &__logo {
+    flex: none;
+    display: block;
+    width: 56rem;
+    height: 56rem;
+    border: 1px solid var(--brand, currentColor);
+    background: var(--brand, transparent);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  &__n {
+    color: var(--brand, var(--mark));
+  }
+
+  /* Carries the subject's colour through from the strip. Opening a green
+     STARBUCKS into a pink one breaks the thread between the two. */
+  &__title {
+    margin: 0;
+    color: var(--brand, var(--mark));
+  }
+
+  &__close {
+    flex: none;
+    padding: 6rem 0;
+    letter-spacing: -0.01em;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 16rem;
+    text-transform: uppercase;
+    opacity: 0.6;
+    transition: opacity 0.4s var(--ease);
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  /* ---------- meta ---------- */
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32rem;
+    padding: 20rem 0;
+    border-bottom: 1px solid currentColor;
+  }
+
+  &__context {
+    margin: 20rem 0 0;
+    font-size: 16rem;
+    line-height: 1.4;
+    opacity: 0.6;
+  }
+
+  /* ---------- report ---------- */
+
+  &__block {
+    padding: 40rem 0;
+    border-bottom: 1px solid currentColor;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  &__label {
+    display: block;
+    margin: 0 0 20rem;
+    color: var(--mark);
+  }
+
+  &__body {
+    margin: 0;
+    max-width: 720rem;
+    font-size: 20rem;
+    line-height: 1.5;
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24rem;
+
+    li {
+      display: grid;
+      grid-template-columns: 48rem 1fr;
+      align-items: start;
+    }
+  }
+
+  &__stepN {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 16rem;
+    opacity: 0.5;
+    padding-top: 4rem;
+  }
+
+  /* ---------- stats ---------- */
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 60rem;
+    margin-bottom: 32rem;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6rem;
+  }
+
+  &__statV {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: calc(64rem * var(--mono-fit));
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--mark);
+  }
+
+  &__statL {
+    opacity: 0.6;
+  }
+
+  /* ---------- footer note ---------- */
+
+  &__note {
+    margin: 32rem 0 0;
+    font-size: 16rem;
+    line-height: 1.4;
+    opacity: 0.5;
+  }
+}
+
+/* ---------- figures ----------
+   Diagrams, not charts. No scale, no axis, no ticks — the underlying deck
+   reported these qualitatively, and drawing an axis on an indicative
+   proportion would be inventing precision. Real numbers live in the stat
+   row, where every value traces to source. */
+
+.fig {
+  margin: 36rem 0 0;
+
+  &__flow {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 12rem;
+  }
+
+  &__end {
+    align-self: center;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 14rem;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  &__stage {
+    flex: 1 1 180rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8rem;
+    padding: 18rem 20rem;
+    border: 1px solid currentColor;
+  }
+
+  &__stageN {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 14rem;
+    color: var(--mark);
+  }
+
+  &__stageT {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 20rem;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
+
+  &__stageD {
+    font-size: 15rem;
+    line-height: 1.35;
+    opacity: 0.65;
+  }
+
+  &__bar {
+    display: flex;
+    border: 1px solid currentColor;
+  }
+
+  &__seg {
+    padding: 16rem 18rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 14rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &--a {
+      flex: 78;
+      background: var(--mark);
+      color: var(--ground);
+    }
+
+    &--b {
+      flex: 22;
+      opacity: 0.6;
+      border-left: 1px solid currentColor;
+    }
+  }
+
+  &__cap {
+    margin-top: 14rem;
+    font-size: 15rem;
+    line-height: 1.4;
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 1024px) {
+  .study {
+    padding: 24rem 16rem;
+
+    &__panel {
+      padding: 32rem 24rem 28rem;
+    }
+
+    /* The close control stays top-right at every width. Stacking it under
+       the title moves the one affordance a reader looks for first. */
+    &__head {
+      gap: 20rem;
+    }
+
+    &__title {
+      font-size: calc(64rem * var(--mono-fit));
+    }
+  }
+}
+
+
+/* The honesty note moved out from under the strip and into the head, under
+   the right-hand label, where it reads as a caption on the section rather
+   than as a footnote nobody reaches. */
+.subjects__headRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rem;
+  text-align: right;
+}
+
+.subjects__note {
+  margin: 0;
+  max-width: 320rem;
+  font-size: 14rem;
+  line-height: 1.4;
+  opacity: 0.55;
+}
+
+/* ---------- §8 expertise: two rows, all eight visible ----------
+
+   No horizontal scroll. Eight capabilities behind a drag handle read as
+   eight; eight on screen at once read as a lot, which is the point of the
+   section. That forced the display size down from 76rem to 38rem — the
+   whole row would not otherwise fit inside 1400rem — and the smaller face
+   is what makes the reverse balance against it. */
+
+/* No ground inversion. One was tried — blue, the only one available, since
+   Statement holds the yellow directly above — and it put two saturated
+   blocks back to back. _tokens.scss allows a third inversion in the scroll;
+   this section deliberately does not spend it. */
+.caps {
+  padding-bottom: 170rem;
+}
+
+
+
+.caps__strip {
+  flex-direction: column;
+  gap: 12rem;
+  overflow-x: visible;
+  cursor: default;
+}
+
+.caps__row {
+  display: flex;
+  /* Tightened twice, 48rem then 36rem, and the difference spent on type
+     size each time. The row has a fixed 1400rem budget, so the gap and the
+     display size trade directly against each other. Below about 20rem the
+     numbered items stop reading as separate entries — which is the whole
+     job now that the separator rules are gone. */
+  gap: 22rem;
+}
+
+/* Thick, tall, bold. Anton, §8 only.
+
+   Two earlier attempts are worth recording so they are not retried.
+   Archivo 700 is WIDER than the mono, not tighter: bold grotesk caps beat a
+   0.6em fixed advance, and a row measured 1961 against a 1400 budget. Mono
+   at 700 with -0.06em tracking bought almost nothing, because monospace
+   weight is free but its advance is not negotiable.
+
+   Anton is condensed, so it solves emphasis and width at the same time:
+   near 0.47em per cap, which buys back enough room to size up sharply
+   inside the same 1400rem row.
+
+   --st-window is NOT optional here. §4's mask clips to that window, and at
+   line-height 1 with the inherited window the mask shaved the bottom off
+   every glyph — the section rendered with its letters cut in half. Per
+   _tokens.scss:122, keep it at or above the line-height. */
+.caps__name {
+  display: block;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-weight: 400;
+  /* Stays the mark. Two alternatives were tried and rejected: ink directly
+     on the paper ground read as a different site, and a blue ground
+     inversion put two saturated blocks back to back with Statement
+     immediately above. The separation now comes from the hairline rules
+     below, which cost no colour at all. */
+  color: var(--mark);
+  /* Measured ceiling with all three levers spent: 56rem. This sits one step
+     under. It briefly went to 54 when hairline separators were in — three
+     1px borders and their rounding put row one 9px over — and came back
+     when those were removed. Anton's cap height also runs far taller than
+     the mono's at the same size, so this reads much larger than the 40rem
+     mono it replaced. */
+  font-size: 55rem;
+  line-height: 1.02;
+  --st-window: 1.15em;
+  /* Three levers buy width here and all of it is spent on size: negative
+     tracking, the word gap (--st-space, which the engine owns — the space
+     between DATA and ANALYTICS is a box, not a character), and the item gap
+     on .caps__row below. */
+  letter-spacing: -0.03em;
+  --st-space: 0.14em;
+  transition: opacity 0.26s var(--ease);
+}
+
+/* Both faces share one box, and the box is reserved for the taller. */
+.caps__face {
+  position: relative;
+  display: block;
+  /* Holds the taller of the two faces, and it is what sets the distance
+     between the two rows — the gap under DATA ANALYTICS is this box, not
+     the row gap. Tightening the tool leading to 1.2 brings four rows of
+     tools down to ~82rem, so the reserve comes down with it.
+
+     A third column would shrink it further but blows the item past its own
+     name width and over its neighbour. Two columns is the limit. */
+  min-height: 84rem;
+}
+
+/* Stacked ON the name. CSS columns rather than a wrapped flex column: flex
+   fills the first column to its cap before starting the second, which left
+   AGENTIC DEV as four items and then a lonely fifth. `columns` balances. */
+.caps__tools {
+  position: absolute;
+  inset: 0;
+  column-gap: 28rem;
+  column-fill: balance;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease) 0.06s;
+  pointer-events: none;
+}
+
+.caps__tool {
+  display: block;
+  break-inside: avoid;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 17rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.caps__item:hover,
+.caps__item:focus-within {
+  .caps__name {
+    opacity: 0;
+  }
+
+  .caps__tools {
+    opacity: 0.85;
+  }
+}
+
+/* ---------- §9 projects: index head + in-progress card ---------- */
+
+/* Matches the other section heads. Without it the rail read 01, 02, 04,
+   05, 06 and visibly skipped 03. */
+.work__head {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 var(--margin) 40rem;
+}
+
+/* Card 05 is not built yet. It carries the frame so the scatter geometry
+   still reads, but it must not imply a report that does not exist. */
+.card.is-progress {
+  .card__media {
+    position: relative;
+  }
+
+  .card__flag {
+    position: absolute;
+    top: 16rem;
+    left: 16rem;
+    padding: 6rem 10rem;
+    border: 1px solid currentColor;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 12rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+}
+
+
+/* ---------- ink accents on the mark grounds ----------
+   The mark carries almost every label on the site, so a handful of
+   deliberate ink pieces are what give the scroll its hierarchy. Kept to
+   named elements rather than a blanket rule, because ink across a whole
+   block reads as a different site — see the expertise strip, where exactly
+   that was tried and reverted. */
+
+.hero__disciplines {
+  color: var(--ink);
+}
+
+.caps__head .index {
+  color: var(--ink);
+}

@@ -17,7 +17,8 @@ type Card = {
   n: string;
   client: string;
   descriptor: string;
-  href: string;
+  /** Unbuilt work. Renders the frame with a marker and does NOT link. */
+  inProgress?: boolean;
   x: number;
   w: number;
   h: number;
@@ -28,12 +29,20 @@ type Card = {
   services: string[];
 };
 
+/* Slot order is a ranking and the frame geometry carries it. Slot 02 was
+   400x314; it is 510x400 here so MOOBOX, the only founder card, gets a large
+   frame without disturbing the BioMarin → MOOBOX → UCLA sequence. At x=800 a
+   510 frame reaches 1310, inside the reach of slot 04 (x=830, w=510, 1340),
+   so nothing collides.
+
+   No hrefs. The /work/<slug> routes do not exist yet, and shipping cards
+   that link to a 404 is worse than shipping cards that do not link. */
 const CARDS: Card[] = [
-  { n: "01", client: "STARBUCKS", descriptor: "SEARCH RELEVANCE — RANKING", href: "/work/starbucks-search", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["QUERY UNDERSTANDING", "RANKING MODEL", "OFFLINE EVALUATION", "ERROR TAXONOMY"] },
-  { n: "02", client: "DOORDASH", descriptor: "CAUSAL INFERENCE — RDD", href: "/work/doordash-rdd", x: 800, w: 400, h: 314, p: 0, d: 0.45, services: ["IDENTIFICATION", "ROBUSTNESS SUITE", "DECISION MEMO"] },
-  { n: "03", client: "MULTI-AGENT RAG", descriptor: "RETRIEVAL — ACTIVATION", href: "/work/multi-agent-rag", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["AGENT PIPELINE", "VECTOR STORE", "TEST SUITE"] },
-  { n: "04", client: "AI JOKE FACTORY", descriptor: "PRODUCT DESIGN — IDENTITY", href: "/work/ai-joke-factory", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["USER FLOWS", "BACKEND SPEC", "V2 REDESIGN"] },
-  { n: "05", client: "DELL", descriptor: "M&A STRATEGY — VALUATION", href: "/work/dell-ma", x: 300, w: 310, h: 227, p: 53, d: 0.3, services: ["VALUATION", "MARKET ANALYSIS"] }
+  { n: "01", client: "BIOMARIN", descriptor: "EXTERNAL MANUFACTURING — VISIBILITY", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ONTOLOGY DESIGN", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
+  { n: "02", client: "MOOBOX", descriptor: "DEMAND & DISTRIBUTION — FOUNDER", x: 800, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "A/B TESTING", "FORECASTING"] },
+  { n: "03", client: "UCLA ANDERSON", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
+  { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
+  { n: "05", client: "COMPETITIVE ANALYSIS AGENT", descriptor: "MARKET INTELLIGENCE — AUTOMATION", inProgress: true, x: 300, w: 310, h: 227, p: 53, d: 0.3, services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"] }
 ];
 
 export default function Work() {
@@ -129,11 +138,14 @@ export default function Work() {
 
   return (
     <section className="work" id="work">
+
       <h2 className="work__title">
         {/* decodes slower than the other section headings on purpose —
             it is the title of the block the page is built around */}
         <SmartText as="span" className="h1" pace="slow">PROJECTS</SmartText>
-        <span className="work__count" aria-hidden="true">({CARDS.length})</span>
+        {/* The SECTION number, not the card count. Projects is §3 in the
+            rail; binding this to CARDS.length made it read as inventory. */}
+        <span className="work__count" aria-hidden="true">(3)</span>
       </h2>
 
       <div className="cards" ref={wrapRef}>
@@ -153,9 +165,14 @@ export default function Work() {
               } as React.CSSProperties
             }
           >
-            {/* Routes don't exist yet — swap to next/link once they do. */}
-            <a className="card" href={c.href}>
-              <span className="card__media" aria-hidden="true" />
+            {/* Not an anchor: the detail routes do not exist yet. Swap to
+                next/link when they land. */}
+            <div className={`card${c.inProgress ? " is-progress" : ""}`}>
+              <span className="card__media" aria-hidden="true">
+                {c.inProgress && (
+                  <span className="card__flag">IN PROGRESS</span>
+                )}
+              </span>
               <span className="bottom">
                 <span className="card__title">
                   <span className="card__n">({c.n})</span>
@@ -170,7 +187,7 @@ export default function Work() {
                   ))}
                 </span>
               </span>
-            </a>
+            </div>
           </div>
         ))}
       </div>

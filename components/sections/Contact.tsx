@@ -4,8 +4,8 @@ import SmartText from "../SmartText";
    wiping away on hover. Navigation gains an underline, content loses one. */
 
 const LINKS = [
-  { label: "LINKEDIN", href: "https://www.linkedin.com/" },
-  { label: "GITHUB", href: "https://github.com/" },
+  { label: "LINKEDIN", href: "https://www.linkedin.com/in/frank-fu-jiajun" },
+  { label: "GITHUB", href: "https://github.com/frankf1747" },
   { label: "EMAIL", href: "mailto:frankfu1747@gmail.com" }
 ];
 
@@ -14,7 +14,7 @@ export default function Contact() {
     <section className="contact-section" id="contact">
       <div className="contact-section__head">
         <SmartText className="small index">06 — CONTACT</SmartText>
-        <SmartText className="small">OPEN TO 2026 ROLES</SmartText>
+        <SmartText className="small">OPEN TO JAN 2027 ROLES</SmartText>
       </div>
 
       <SmartText className="super-small contact-section__big">SAY HELLO</SmartText>

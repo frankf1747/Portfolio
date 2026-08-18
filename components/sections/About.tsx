@@ -9,11 +9,11 @@ export default function About() {
       </div>
       <div className="about__body">
         <SmartText as="h2" className="h2" isBody>
-          I work between the analysis and the interface — search relevance, causal
-          inference and agent systems on one side, the flows and screens they turn
-          into on the other. Most of what I build exists to make one decision
-          easier to make, and to leave the reasoning behind it legible to whoever
-          has to make it.
+          I build the thing the analysis points to. Finding the cause is half
+          the job. The other half is deciding what&apos;s worth fixing and
+          shipping something people will actually use: a model, a dashboard, an
+          agent, an app. The best ones stop being tools and become how the work
+          runs.
         </SmartText>
       </div>
     </section>

@@ -32,7 +32,7 @@ const ITEMS = [
   { label: "EXPERTISE", href: "#capabilities" },
   { label: "PROJECTS", href: "#work" },
   { label: "APPROACH", href: "#approach" },
-  { label: "SUBJECTS", href: "#subjects" }
+  { label: "STUDIES", href: "#studies" }
 ];
 
 export default function Nav() {

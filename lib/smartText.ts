@@ -58,7 +58,7 @@ const LINE_STAGGER_MS = 120;
    enters frame and never appears to park and then perform. That needs a
    later lock-start and a longer tail — the length is what sells it as
    scroll-linked rather than as a canned animation. */
-export type ScramblePace = "landing" | "scroll" | "overture" | "slow";
+export type ScramblePace = "landing" | "scroll" | "overture" | "slow" | "hover";
 
 const PACE: Record<ScramblePace, { scrambleMs: number; lockStartMs: number; staggerMs: number }> = {
   landing: { scrambleMs: SCRAMBLE_MS, lockStartMs: 300, staggerMs: LINE_STAGGER_MS },
@@ -80,7 +80,14 @@ const PACE: Record<ScramblePace, { scrambleMs: number; lockStartMs: number; stag
      scrambleMs + 200, and the HOLD, the exit and everything after it are
      measured from that instant. Change this number and the constants in
      sections/Hero.tsx have to move with it. */
-  overture: { scrambleMs: 2200, lockStartMs: 500, staggerMs: 160 }
+  overture: { scrambleMs: 2200, lockStartMs: 500, staggerMs: 160 },
+  /* Hover. A pointer gesture has to resolve while the pointer is still
+     there — at the 1500ms landing pace the word was still cycling long
+     after the reader had moved on, which reads as lag rather than as an
+     effect. The nav keeps the slower pace deliberately: it is the
+     benchmark the rest of the site was tuned against, and it is a
+     five-item stack rather than a dense grid. */
+  hover: { scrambleMs: 520, lockStartMs: 90, staggerMs: 30 }
 };
 const GLYPH_SWAP_MS = 55;
 

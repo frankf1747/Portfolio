@@ -67,6 +67,25 @@ export default function ScrollProvider() {
     window.addEventListener("site:intro-end", unlock, { once: true });
     const failsafe = window.setTimeout(unlock, 9000);
 
+    /* Overlay scroll lock. Lenis is scoped to this effect, so anything that
+       needs to freeze the page has to ask through an event — setting
+       data-locked alone stops the native document but leaves Lenis
+       consuming wheel input and scrolling behind the panel.
+
+       Guarded on `unlocked` so a lock arriving mid-intro cannot start Lenis
+       early on release. */
+    const lock = () => {
+      lenis?.stop();
+      html.dataset.locked = "true";
+    };
+    const relock = () => {
+      if (!unlocked) return;
+      lenis?.start();
+      html.removeAttribute("data-locked");
+    };
+    window.addEventListener("site:lock", lock);
+    window.addEventListener("site:unlock", relock);
+
     /* §6 nav state is DIRECTION, not depth — scrolling up re-expands the
        nav wherever you are, rather than only at the top.
 
@@ -98,6 +117,8 @@ export default function ScrollProvider() {
       cancelAnimationFrame(raf);
       window.clearTimeout(failsafe);
       window.removeEventListener("site:intro-end", unlock);
+      window.removeEventListener("site:lock", lock);
+      window.removeEventListener("site:unlock", relock);
       html.removeAttribute("data-locked");
       if (lenis) {
         lenis.off("scroll", onScroll);

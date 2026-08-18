@@ -187,7 +187,32 @@
 
   &__body {
     margin-left: 138rem;
-    max-width: 1000rem;
+    /* 1000rem broke this paragraph to a 7th line carrying two words. The
+       copy is fixed, so the measure moves instead: 1060 fits it in six. */
+    max-width: 1060rem;
+    /* The paragraph was breaking to a 7th line carrying a single word, with
+       lines 2 and 4 running ~10% short of the rest. `pretty` lets the line
+       breaker look ahead and redistribute instead of greedily filling each
+       line, which is precisely the orphan case. */
+    text-wrap: pretty;
+  }
+
+  /* The three supporting beats step down from the 48rem lead and sit in a
+     narrower measure, so the section reads as one statement with its
+     evidence under it rather than as four equal paragraphs. */
+  &__detail {
+    max-width: 700rem;
+    margin-top: 56rem;
+    display: flex;
+    flex-direction: column;
+    gap: 28rem;
+  }
+
+  &__para {
+    margin: 0;
+    font-size: 24rem;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -260,8 +285,18 @@
     display: flex;
     align-items: flex-start;
     gap: 10rem;
-    margin: 0 var(--margin) 80rem;
+    /* Deliberately off the left margin, pulled back twice from an earlier
+       220rem which read as adrift. 140rem sat exactly on card 03's left
+       edge (.cards has the same 20rem margin, card 03 is at --x: 120rem);
+       130rem gives up that alignment by 10rem because it looked better. */
+    margin: 0 var(--margin) 80rem 130rem;
     font-weight: 700;
+    /* Ink, not the mark. Expertise sits directly above in pink at display
+       size, and with both headings in the same colour the two sections read
+       as one run. This is the only ink type on a paper ground in the whole
+       scroll — it works here because it is a single word acting as a
+       divider, where a full strip of it read as a different site. */
+    color: var(--ink);
   }
 
   &__count {
@@ -338,9 +373,17 @@
   gap: 8rem;
 }
 
+/* Ink, following the section heading above them. The services line below
+   stays in the mark, so each card still carries the accent — the two
+   naming lines are what change, not the whole card. */
 .card__n,
 .card__client {
   display: block;
+  color: var(--ink);
+}
+
+.card .subtitle {
+  color: var(--ink);
 }
 
 .card .subtitle,

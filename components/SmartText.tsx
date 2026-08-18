@@ -25,7 +25,7 @@ export default function SmartText({
   style
 }: {
   children: string;
-  as?: "span" | "h1" | "h2" | "p" | "div";
+  as?: "span" | "h1" | "h2" | "h3" | "p" | "div";
   className?: string;
   mask?: boolean;
   isBody?: boolean;

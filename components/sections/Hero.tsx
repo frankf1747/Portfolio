@@ -55,8 +55,8 @@ const END_AT = SUB_AT + 300; //       timeline over, scroll unlocked
 
 /* §5 hero copy constraint: three lines, two words, 11–13 chars,
    roughly equal — equal lengths are what make the dense scramble
-   block read as one object. 13 / 13 / 12. */
-const LINES = ["DENSE SIGNALS", "CLEAR CHOICES", "SHIPPED WORK"];
+   block read as one object. 13 / 13 / 13. */
+const LINES = ["GOAL ORIENTED", "TOTAL CLARITY", "REAL ADOPTION"];
 
 export default function Hero() {
   const [exiting, setExiting] = useState(false);
@@ -147,7 +147,8 @@ export default function Hero() {
 
       {/* the accessible heading — the overture above is decorative */}
       <h1 className="u-sr">
-        Frank Fu — data-led product design. Dense signals, clear choices, shipped work.
+        Frank Fu, data-centric product dreamer. Goal oriented, total clarity,
+        real adoption.
       </h1>
 
       {/* the second layer — travels ~60vh against the overture's 100vh, on a
@@ -156,12 +157,12 @@ export default function Hero() {
       <div className={`hero__content${contentIn ? " is-in" : ""}`}>
         <div className={`hero__sub${subIn ? " is-in" : ""}`}>
           <SmartText trigger="manual" instanceRef={subRef} className="h1">
-            — DATA-LED PRODUCT DESIGN
+            — DATA-CENTRIC PRODUCT DREAMER
           </SmartText>
         </div>
 
         <div className="hero__meta">
-          <span>SEARCH · CAUSAL INFERENCE · AGENTS</span>
+          <span className="hero__disciplines">SCOPE · EVIDENCE · ADOPTION</span>
           <span className="hero__cue">SCROLL TO VIEW MORE ↓</span>
           <span>©2026</span>
         </div>

@@ -10,9 +10,9 @@ export default function Statement() {
       {/* length-tuned to the column spans: at super scale an 8-column
           line holds ~7 characters and a 7-column line ~6. Written to the
           metric first, then for meaning. */}
-      <SmartText className="super statement__a">PROOF</SmartText>
+      <SmartText className="super statement__a">CURIOSITY</SmartText>
       <SmartText className="super statement__b" delay={120}>
-        FIRST.
+        LEARN.
       </SmartText>
     </section>
   );

@@ -246,6 +246,14 @@ html.is-down:not(.is-start) .nav__logoText {
     transform-origin: 50% 50%;
   }
 
+  /* The whole glyph. The circle IS the collapsed state of this control, so
+     it is on screen far more than the label is; the arrow follows it rather
+     than sitting pink inside an ink ring. The label keeps currentColor. */
+  .ring,
+  .arrow {
+    stroke: var(--ink);
+  }
+
   &:hover .ring {
     transform: scale(1.15);
   }
