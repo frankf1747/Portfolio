@@ -41,7 +41,7 @@ type Card = {
    No hrefs. The /work/<slug> routes do not exist yet, and shipping cards
    that link to a 404 is worse than shipping cards that do not link. */
 const CARDS: Card[] = [
-  { n: "01", client: "BIOMARIN", descriptor: "GLOBAL EXTERNAL MANUFACTURING — DATA ANALYTICS INTERN", status: "UPLOADING", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ONTOLOGY DESIGN", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
+  { n: "01", client: "BIOMARIN", descriptor: "GLOBAL EXTERNAL MANUFACTURING — DATA ANALYTICS INTERN", status: "UPLOADING", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["PROCESS MONITORING", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
   { n: "02", client: "MOOBOX", descriptor: "DEMAND & DISTRIBUTION — FOUNDER", status: "UPLOADING", x: 800, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "A/B TESTING", "FORECASTING"] },
   { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
   { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },

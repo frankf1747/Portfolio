@@ -40,7 +40,7 @@ const display = Anton({
 });
 
 export const metadata: Metadata = {
-  title: "Frank Fu - Data/Product Guy",
+  title: "Frank Fu - A Data/Product Guy",
   description:
     "Frank Fu works at both ends of the same job: scoping a fuzzy problem, finding what is causing it, then building the thing that fixes it — and measuring whether people keep using it."
 };
