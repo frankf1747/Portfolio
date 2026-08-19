@@ -49,6 +49,63 @@ export default function Studies() {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const posRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  /* True only while a drag actually moved. The names are buttons, so without
+     this a drag that ends on one opens its study. */
+  const dragged = useRef(false);
+
+  /* DRAG TO SCROLL.
+
+     The strip has always carried `overflow-x: auto`, but its scrollbar is
+     hidden and nothing implemented dragging, so on a mouse the row could not
+     be scrolled at all once it overflowed. Seven studies happen to fit today;
+     the eighth would have been unreachable.
+
+     Threshold before a drag counts, so a click that wobbles two pixels still
+     opens the study rather than being swallowed. */
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    let down = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return; // native touch scrolling is fine
+      down = true;
+      dragged.current = false;
+      startX = e.clientX;
+      startScroll = wrap.scrollLeft;
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (!dragged.current && Math.abs(dx) < 5) return;
+      dragged.current = true;
+      wrap.classList.add("is-dragging");
+      wrap.scrollLeft = startScroll - dx;
+    };
+
+    const onUp = () => {
+      down = false;
+      wrap.classList.remove("is-dragging");
+      /* Cleared on the next frame, after the click event has been and gone. */
+      requestAnimationFrame(() => {
+        dragged.current = false;
+      });
+    };
+
+    wrap.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      wrap.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -117,7 +174,10 @@ export default function Studies() {
                   <button
                     className={`study__open${s.draft ? " is-draft" : ""}`}
                     style={{ "--brand": s.brand } as React.CSSProperties}
-                    onClick={() => setOpen(s.slug)}
+                    onClick={() => {
+                      if (dragged.current) return;
+                      setOpen(s.slug);
+                    }}
                     onMouseEnter={() =>
                       handles.current[i]?.play({ scrambleOnly: true })
                     }

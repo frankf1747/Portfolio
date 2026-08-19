@@ -164,7 +164,13 @@ export default function Hero() {
         <div className="hero__meta">
           <span className="hero__disciplines">SCOPE · EVIDENCE · ADOPTION</span>
           <span className="hero__cue">SCROLL TO VIEW MORE ↓</span>
-          <span>©2026</span>
+          {/* Availability sits with the copyright rather than in its own
+              slot: the row is a three-column space-between, and a fourth
+              child would pull the scroll cue off centre. */}
+          <span className="hero__right">
+            <span className="hero__open">OPEN TO WORK</span>
+            <span>©2026</span>
+          </span>
         </div>
       </div>
     </section>

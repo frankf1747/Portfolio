@@ -20,7 +20,9 @@ import type { Study } from "@/data/studies";
    2. Lenis is scoped inside ScrollProvider's effect and cannot be reached
       from here, so the scroll lock goes through site:lock / site:unlock
       rather than by setting data-locked directly. Setting the attribute
-      alone would stop the native document but leave Lenis running.
+      alone would stop the native document but leave Lenis running. The
+      panel additionally carries data-lenis-prevent, because stopping Lenis
+      does NOT stop it swallowing wheel events.
    3. The panel is PORTALLED to body. Rendered in place it would sit
       inside <main>, which is the element being dimmed, so the report
       would fade out along with the page behind it. */
@@ -150,7 +152,17 @@ export default function StudyOverlay({
   }, []);
 
   const body = (
-    <div className={`study${shown ? " is-in" : ""}`} role="presentation">
+    <div
+      className={`study${shown ? " is-in" : ""}`}
+      role="presentation"
+      /* Lenis keeps calling preventDefault on wheel events after stop(): the
+         instance is halted but its listener is still attached, so a nested
+         scroll container never receives a native scroll. This attribute is
+         Lenis's own opt-out — it walks up from the event target and skips
+         any subtree carrying it. Without it the report cannot be scrolled
+         at all, which is worse than the page scrolling behind it. */
+      data-lenis-prevent
+    >
       {/* the dimmed surround is the click target for dismissal */}
       <div className="study__scrim" onClick={onClose} />
 

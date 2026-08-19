@@ -156,14 +156,17 @@ export const studies: Study[] = [
     takeaway: ""
   },
   {
-    slug: "cedar",
+    slug: "cedars-sinai",
     n: "07",
-    name: "CEDAR",
+    name: "CEDARS-SINAI",
     descriptor: "WORKFORCE ANALYTICS — STAFFING",
     year: "2026",
     role: "Analyst",
-    context: "Nurse attrition and burnout, and an AI staffing and demand-forecasting response. Subject is almost certainly Cedars-Sinai; confirm before launch.",
-    brand: "#3B5F5A",
+    context: "Cedars-Sinai. Nurse attrition and burnout, and an AI staffing and demand-forecasting response.",
+    // Cedars-Sinai institutional blue. Approximate: taken from their
+    // public brand rather than a spec sheet, so worth checking against the
+    // real mark before launch.
+    brand: "#00539B",
     topic: "NURSE BURNOUT & STAFFING",
     draft: true,
     what: DRAFT_COPY,

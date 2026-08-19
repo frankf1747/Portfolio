@@ -32,6 +32,15 @@
    one grows with it. */
 .subjects__strip {
   flex-direction: column;
+  /* Rows size to content, so they must not be stretched to the strip. */
+  align-items: flex-start;
+  cursor: grab;
+
+  &.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
   /* 16rem, then 32rem, now 56rem. */
   gap: 56rem;
   /* Doubles as the parallax clearance AND the block's vertical position:
@@ -51,11 +60,22 @@
 .subjects__row {
   display: flex;
   gap: 80rem;
+  /* Sizes to its own contents rather than to the strip. As a flex item in a
+     column strip the row would otherwise be capped at the container width,
+     and items overflowing it would not extend the scroll area — the strip
+     would clip additional studies instead of scrolling to them. */
+  width: max-content;
 
   /* Roughly half a name wide. Enough that the second row reads as a
      continuation of the first rather than as a separate list. */
   &.is-inset {
-    padding-left: 220rem;
+    /* Was 220rem, chosen so the second row began near the centre of
+       STARBUCKS. CEDARS-SINAI is seven characters longer than the CEDAR it
+       replaced, which pushed the row 90rem past the viewport and cut the
+       last study in half at rest. Pulled back by exactly that. The row still
+       reads as inset against row one's 20rem; it just no longer lines up
+       with anything above it. */
+    padding-left: 130rem;
   }
 }
 
@@ -619,9 +639,11 @@ html.is-study-open {
   margin: 0 var(--margin) 40rem;
 }
 
-/* Card 05 is not built yet. It carries the frame so the scatter geometry
-   still reads, but it must not imply a report that does not exist. */
-.card.is-progress {
+/* Corner flag on any card whose detail page is not up yet. It carries the
+   frame so the scatter geometry still reads, but it must not imply a report
+   that does not exist. Was scoped to card 05's boolean; now driven by the
+   `status` string so each card can say what is actually true of it. */
+.card.is-flagged {
   .card__media {
     position: relative;
   }

@@ -107,6 +107,24 @@
   text-transform: uppercase;
 }
 
+/* Availability and copyright share the right slot of the meta row. A gap
+   rather than a separator glyph: the left slot already uses middots, and
+   repeating them here would read as one list running the whole width.
+
+   NOTE: .reel also declares a __meta, so these must be written out in full
+   rather than nested as &__right / &__open under whichever block happens to
+   be above them. */
+.hero__right {
+  display: flex;
+  gap: 24rem;
+}
+
+/* Stays the mark. Ink was tried and pulls too much weight for a line that
+   sits beside a copyright notice. */
+.hero__open {
+  color: var(--mark);
+}
+
 /* ---------- REEL ---------- */
 
 .reel {
@@ -195,6 +213,53 @@
        breaker look ahead and redistribute instead of greedily filling each
        line, which is precisely the orphan case. */
     text-wrap: pretty;
+  }
+
+  /* Education, set as a spec table rather than as prose.
+
+     Fixed columns, not `auto`: with auto sizing the dates and institutions
+     would sit at a different x on each row, tracking the length of the
+     degree beside them, and the block would read as two unrelated lines
+     instead of one record. Matching the paragraph's 1060rem measure keeps
+     the right edge flush with the text above it.
+
+     Hairlines top and bottom rather than between: the block reads as one
+     closed object that way, and a single rule between two rows makes the
+     second look like a footnote to the first. */
+  &__edu {
+    /* 64rem, then 104, now 124. The paragraph is set at 48rem with generous
+       leading, so a gap anywhere near its own line height read as the next
+       line of the statement rather than as a separate record. */
+    margin: 124rem 0 0;
+    padding: 0;
+    list-style: none;
+    max-width: 1060rem;
+    border-top: 1px solid currentColor;
+  }
+
+  &__eduRow {
+    display: grid;
+    /* Third column widened from 260rem: UCLA ANDERSON SCHOOL OF MANAGEMENT
+       is 34 characters and would have wrapped, breaking the single-line
+       rhythm the two rows depend on. The degree column is 1fr and absorbs
+       the difference. */
+    grid-template-columns: 1fr 140rem 350rem;
+    column-gap: 32rem;
+    align-items: baseline;
+    padding: 20rem 0;
+    border-bottom: 1px solid currentColor;
+  }
+
+  /* Tabular figures so 2509-2612 and 2109-2505 sit digit over digit. The
+     mono face gives this for free, but the declaration keeps it true if the
+     face ever changes. */
+  &__eduDates {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.55;
+  }
+
+  &__eduSchool {
+    text-align: right;
   }
 
   /* The three supporting beats step down from the 48rem lead and sit in a
@@ -453,6 +518,14 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
   &__d {
     font-size: 20rem;
     line-height: 1.45;
+    /* Every row the same height. The title is a constant 48rem, so the only
+       thing that varied was this column running two lines on rules 01 and 03
+       and three on the rest, which gave the list a ragged left rail.
+
+       Reserved in `em` (3 lines x 1.45 leading) rather than as a pixel row
+       height, so it stays correct if the type size moves. A description that
+       needs FOUR lines will grow its row again — keep them to three. */
+    min-height: 4.35em;
   }
 }
 
