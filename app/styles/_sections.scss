@@ -720,6 +720,13 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     width: auto;
     text-align: left;
     margin-left: 0;
+    /* The shared 26vw ceiling was tuned when this section said PROOF —
+       5 characters. CURIOSITY is 9, it is ONE word so it cannot wrap, and
+       at 26vw it ran 511px across a 390px screen: the only element on the
+       page that genuinely widened the phone viewport. 17vw puts the
+       9-character line inside the margins with a little air. Retune this
+       if the statement copy changes length again. */
+    font-size: min(150rem, 17vw);
   }
 
   .cards {

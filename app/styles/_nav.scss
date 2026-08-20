@@ -330,7 +330,13 @@ html.is-down:not(.is-start) .nav__contact:not(:hover) {
     position: absolute;
     inset: 0;
     background: currentColor;
-    transform: translateY(-100%);
+    /* -101%, NOT -100%. The mask resolves to a fractional height (39.21px at
+       the design width), so an exact -100% parks the bar's bottom edge on the
+       mask's top edge and sub-pixel rounding paints a hairline of accent
+       across it. Visible at rest, and obvious once the button folds, because
+       the ring translates up underneath and leaves the line hanging over it.
+       The extra 1% costs nothing on a 2s sweep. */
+    transform: translateY(-101%);
     transition-delay: 0.15s;
   }
 }

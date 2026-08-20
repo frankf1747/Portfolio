@@ -281,17 +281,17 @@ sequence. At x=800, w=510 clears slot 01 (x=40, w=510) with room to spare.
 ### (01) BIOMARIN — 2026
 
 - Descriptor: `EXTERNAL MANUFACTURING — VISIBILITY`
-- Services: `PROCESS MONITORING` `SEMANTIC MODELING` `AGENTIC REPORTING`
+- Services: `ONTOLOGY DESIGN` `SEMANTIC MODELING` `AGENTIC REPORTING`
 - Role: Insights & Analytics Intern, Digital Transformation
-- Deliverables: STO reporting view, gold-layer semantic model, agentic reporting workflow
+- Deliverables: Entity ontology, gold-layer semantic model, agentic reporting workflow
 
-**Corrected 2026-08-18.** The card said ONTOLOGY DESIGN, taken from the
-resume line "defined the ontology and entity standards behind 11 external
-partner data sources". Frank does not claim that as his design work, so the
-service is now PROCESS MONITORING, which matches the STO tracking he did own.
-NOTE: the resume still carries the stronger ontology claim in both variants —
-site and resume now disagree, and the resume is the one a reader will check
-it against.
+**Changed to PROCESS MONITORING and then back.** The concern was that
+ONTOLOGY DESIGN overclaimed. It stands because the resume makes the same
+claim in both variants ("defined the ontology and entity standards behind 11
+external partner data sources" / "proposed the ontology and ingestion
+standard"), so the site and the resume agree, which is what matters when an
+interviewer has both open. Worth being ready to describe the entity standards
+work specifically.
 
 > Manufacturing data shows up from eleven external partners in whatever shape
 > they keep it: spreadsheets, email threads, 200-page PDFs. The fix wasn't a

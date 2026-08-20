@@ -676,3 +676,112 @@ html.is-study-open {
 .caps__head .index {
   color: var(--ink);
 }
+
+
+/* ============================================================
+   MOBILE — everything built after the original 720rem block in
+   _sections.scss, which predates all of it.
+   ============================================================ */
+
+/* NO HOVER. The expertise item's two faces are a hover interaction, so on a
+   touch device the tools were simply unreachable — the capability list went
+   back to being the eight unsupported words it was supposed to replace.
+   Both faces are shown stacked instead, which is what the flip was standing
+   in for on a pointer device. */
+@media (hover: none) {
+  .caps__face {
+    min-height: 0;
+  }
+
+  .caps__name {
+    opacity: 1 !important;
+  }
+
+  .caps__tools {
+    position: static;
+    inset: auto;
+    margin-top: 10rem;
+    opacity: 0.75;
+    column-count: 1 !important;
+  }
+}
+
+@media (max-width: 720px) {
+  /* §8 — four names per row only ever fitted because the row had 1400rem to
+     spend. `overflow-x: visible` was set to remove the desktop scrollbar
+     once all eight fitted; at phone width that pushes the page wide instead
+     of scrolling, so the scroller comes back here. */
+  .caps__strip {
+    overflow-x: auto;
+    align-items: flex-start;
+    gap: 32rem;
+  }
+
+  .caps__row {
+    gap: 40rem;
+
+    /* The inset is a luxury of a wide row. On a phone it is stolen width. */
+    &.is-inset {
+      padding-left: 0;
+    }
+  }
+
+  .caps__name {
+    font-size: 40rem;
+    letter-spacing: -0.04em;
+  }
+
+  .caps__item {
+    min-width: 0;
+  }
+
+  /* §12 — same reasoning: the second row's inset costs width the phone does
+     not have, and the strip already drags. */
+  .subjects__row.is-inset {
+    padding-left: 0;
+  }
+
+  .subjects__strip {
+    gap: 32rem;
+  }
+
+  /* §7 education — the three-column spec table cannot hold its shape at this
+     width: 350rem for an institution alone is most of the screen. It becomes
+     two lines per entry, the degree over its dates and school, with the rules
+     doing the separating. */
+  .about__edu {
+    margin-top: 72rem;
+  }
+
+  .about__eduRow {
+    grid-template-columns: 1fr auto;
+    column-gap: 16rem;
+    row-gap: 6rem;
+    padding: 16rem 0;
+  }
+
+  .about__eduDegree {
+    grid-column: 1 / -1;
+  }
+
+  .about__eduDates {
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .about__eduSchool {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  /* §9 — 130rem of indent is a third of a phone screen. */
+  .work__title {
+    margin-left: var(--margin);
+  }
+
+  /* §5 — three slots in one row is too many here; the availability line and
+     the copyright stack under the disciplines rather than crushing them. */
+  .hero__right {
+    gap: 12rem;
+  }
+}
