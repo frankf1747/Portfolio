@@ -711,8 +711,31 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     display: none;
   }
 
+  /* The subtitle is the one .h1 on the site that WRAPS. .h1 carries
+     line-height 0.7, which is correct for a single display line and
+     collapses lines into each other the moment there are two — on a phone
+     the 30-character line needs ~800px and has 362, so it broke to three
+     overlapping rows.
+
+     Sized to break cleanly into two (— DATA-CENTRIC / PRODUCT DREAMER) and
+     given real leading. --st-window has to move with the line-height or §4's
+     mask shaves the glyphs; see the note at _tokens.scss:122. */
+  .hero__sub .h1 {
+    font-size: min(38rem, 7.2vw);
+    line-height: 1.08;
+    --st-window: 1.08em;
+    --st-shift: 0.02em;
+  }
+
   .hero__meta {
     font-size: 13rem;
+  }
+
+  /* Three slots in a 362px row read as one crushed run. The scroll cue is
+     the one that can go: on a touch device "scroll to view more" is telling
+     someone how to use a phone. */
+  .hero__cue {
+    display: none;
   }
 
   .statement__a,
