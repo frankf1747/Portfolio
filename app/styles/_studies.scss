@@ -648,10 +648,13 @@ html.is-study-open {
     position: relative;
   }
 
+  /* Bottom right. The client mark owns the top-left corner now — it is
+     the card's identity and gets read first; the status is a footnote and
+     sits where a footnote goes. */
   .card__flag {
     position: absolute;
-    top: 16rem;
-    left: 16rem;
+    right: 16rem;
+    bottom: 16rem;
     padding: 6rem 10rem;
     border: 1px solid currentColor;
     font-family: var(--font-mono), ui-monospace, monospace;
@@ -659,6 +662,97 @@ html.is-study-open {
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
+}
+
+/* ---------- §9 cover artwork ---------- */
+
+/* Fills the frame; everything else on the cover sits above it. */
+.card__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Tier seams — the near-side cut at each band boundary. They bend at the
+   front corner, which is most of what tells the eye this is a solid seen
+   from above rather than a flat triangle. */
+.card__seam {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.22;
+}
+
+/* The escalation, matching §13: infrastructure reads as substantial, the
+   apex as the payoff. Tuned against the cover's warm grey, not paper — the
+   same values on white would be twice as loud.
+
+   Cut roughly to two-thirds now that all three faces draw at once: a back
+   face reads THROUGH the two in front, so every value lands about doubled
+   where they overlap. These are chosen so the overlapped region sits where
+   the single-face values used to. */
+.card__band--1 { fill: var(--mark); opacity: 0.1; }
+.card__band--2 { fill: var(--mark); opacity: 0.25; }
+.card__band--3 { fill: var(--yellow); opacity: 0.68; }
+
+/* One weight for every edge. Splitting them into near and far meant a
+   base edge changed style at the exact moment it projected to a
+   full-length line — a visible tick on every quarter turn. */
+.card__edge {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  opacity: 0.4;
+}
+
+.card__route {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The far side of the turn. Thinner AND faint — matching the near weight
+   at lower opacity still read as one flat ribbon, which defeats the
+   point. This is the only cue that the line goes round the back. */
+.card__route--far {
+  stroke-width: 3;
+  opacity: 0.26;
+}
+
+/* Client mark, TOP LEFT — the reading corner. This is whose work it is,
+   so it leads; at 18% in a bottom corner it was a detail nobody could
+   read. The artwork is centred in the frame and the mark sits clear above
+   it, with the status flag diagonally opposite at bottom right.
+
+   Percentage of the frame, capped in px: the same visual weight in the
+   510-wide slots and the 310 one, and no runaway growth on a large
+   display. Multiply, so it prints onto the panel instead of sitting on it
+   like a sticker. */
+.card__mark {
+  position: absolute;
+  top: 22rem;
+  left: 24rem;
+  width: 34%;
+  max-width: 190rem;
+  height: auto;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+  transition: opacity 0.6s var(--ease);
+}
+
+/* The flag is positioned by .is-flagged; a card can carry artwork or a
+   mark without one, so the cover needs the containing block either way. */
+.card__media {
+  position: relative;
+  overflow: hidden;
+}
+
+.card.is-linked:hover .card__mark {
+  opacity: 1;
 }
 
 

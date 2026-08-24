@@ -1,0 +1,417 @@
+/* ============================================================
+   §13 WORKS — the experience pages
+   ============================================================ */
+
+.work-page {
+  padding: 0 0 120rem;
+}
+
+/* ---------- screen 1: the thesis ---------- */
+
+/* The whole header is a LANDING VIEW: one viewport exactly, with the facts
+   SEATED AT ITS FOOT. Fixed margins cannot do that — every viewport height
+   puts the fold somewhere else — so the header is a flex column sized to
+   the screen and the facts take margin-top:auto: the copy stacks from the
+   top on its own rhythm and the spec sheet sinks to the bottom edge,
+   wherever that edge is. svh, not vh, so a collapsed browser bar cannot
+   push the row under the fold on the one screen built to end at it. */
+.wp__head {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 32rem var(--margin) 28rem;
+  border-bottom: 1px solid currentColor;
+}
+
+.wp__crumb {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40rem;
+}
+
+/* Sized off the mark's own proportions (300 x 44), so it sits as a wordmark
+   rather than as an image dropped on the page. */
+.wp__logo {
+  display: block;
+  width: 200rem;
+  height: auto;
+  margin-bottom: 30rem;
+}
+
+.wp__back {
+  color: var(--ink);
+}
+
+/* Anton, as §8. This is the only other display slot on the site that has to
+   carry a whole page on its own. */
+.wp__title {
+  margin: 0 0 14rem;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-weight: 400;
+  font-size: 84rem;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
+  /* The lines are authored (see Work.descriptor), so the measure only has to
+     be wide enough not to break the longest one again. It is a ceiling, not
+     the thing doing the shaping. */
+  max-width: 34ch;
+
+  span {
+    display: block;
+  }
+}
+
+.wp__role {
+  display: block;
+  opacity: 0.6;
+  margin-bottom: 44rem;
+}
+
+/* The thesis is set in the body face at h2 scale: it is a sentence meant to
+   be read, not a label meant to be scanned, and the mono would fight that. */
+.wp__thesis {
+  margin: 0 0 12rem;
+  max-width: 900rem;
+  font-size: 44rem;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.wp__sub {
+  margin: 0 0 44rem;
+  /* Narrower and smaller than the thesis, deliberately. At the same measure
+     and near the same size the two blocks read as one long paragraph and the
+     header went wordy; the drop in scale is what makes the thesis the line
+     you remember and this the line you check it against. */
+  max-width: 720rem;
+  font-size: 18rem;
+  line-height: 1.45;
+  opacity: 0.65;
+}
+
+.wp__facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40rem;
+  /* auto-top is the seat (see .wp__head); the shorthand would reset it */
+  margin: auto 0 0;
+
+  div {
+    border-top: 1px solid currentColor;
+    padding-top: 14rem;
+  }
+
+  dt {
+    display: block;
+    color: var(--ink);
+    margin-bottom: 6rem;
+  }
+
+  /* Values arrive as one SmartText block per line (see WorkPage), so the
+     rhythm is set here rather than by wrapping. Each item is whole on its
+     own row — no orphan halves left hanging at a break. */
+  dd {
+    margin: 0;
+    opacity: 0.65;
+
+    .smart-text + .smart-text {
+      margin-top: 4rem;
+    }
+  }
+}
+
+/* ---------- screen 2: the stack ---------- */
+
+.stack {
+  display: grid;
+  /* Triangle left. The eye lands there first on an F-scan, so the shape is
+     met before the copy that explains it. */
+  grid-template-columns: 300rem 1fr;
+  gap: 90rem;
+  padding: 90rem var(--margin) 40rem;
+  align-items: start;
+}
+
+/* Pinned for the length of the copy beside it. `align-self: start` on the
+   grid item is what lets sticky work here — a stretched item has no room to
+   move inside its own track. */
+.stack__shape {
+  position: sticky;
+  top: 120rem;
+  align-self: start;
+
+  svg {
+    width: 100%;
+    display: block;
+    overflow: visible;
+  }
+}
+
+/* The 3D column: same footprint as the SVG (the aspect is the 2D
+   viewBox's), so swapping renderers never moves the legend under it. */
+.stack__gl {
+  aspect-ratio: 200 / 214;
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.stack__seg {
+  fill: var(--ink);
+  opacity: 0.16;
+  cursor: pointer;
+  /* Transition, not keyframe — the site has none anywhere and this is not
+     the place to start. */
+  transition: opacity 0.6s var(--ease), fill 0.6s var(--ease);
+
+  &.is-active {
+    fill: var(--mark);
+    opacity: 1;
+  }
+
+  &:hover {
+    opacity: 0.34;
+  }
+
+  &.is-active:hover {
+    opacity: 1;
+  }
+}
+
+/* The apex waits its turn. Grey like the other two until the reader reaches
+   it, then yellow rather than the mark — the one part of the shape that
+   changes colour rather than just brightness, because it is the part that
+   pays. Yellow is already the §2 Statement ground, so nothing new enters the
+   palette. */
+.stack__seg--apex.is-active {
+  fill: var(--yellow);
+  opacity: 1;
+}
+
+.stack__legend {
+  list-style: none;
+  margin: 34rem 0 0;
+  padding: 0;
+}
+
+.stack__key {
+  display: flex;
+  gap: 14rem;
+  width: 100%;
+  padding: 9rem 0;
+  border: 0;
+  border-top: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.5s var(--ease);
+
+  &.is-active {
+    opacity: 1;
+  }
+}
+
+.stack__keyN {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13rem;
+}
+
+.stack__keyT {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* ---------- the pieces ---------- */
+
+/* ONE SCREEN EACH. The min-height is what the pinned shape travels against,
+   but it is also the step: at 62vh the three pieces fitted inside about two
+   viewports, so a single Lenis flick cleared two of them and landed on the
+   third and the stack read as one continuous scroll with no state to rest in.
+   A viewport per piece puts the copy blocks exactly one screen apart, so one
+   gesture advances one piece.
+
+   CENTRED, not top-aligned. The block is now far taller than its copy, and
+   anchoring the copy to the top would park half a screen of dead space under
+   it and drop the centre band — the band the triangle reads to decide which
+   segment is live — into nothing. Centred, consecutive copy blocks sit one
+   viewport apart centre to centre: one leaves the middle exactly as the next
+   arrives, and neither is ever fully off screen during the handover. */
+.piece {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 60rem;
+  opacity: 0.28;
+  transition: opacity 0.6s var(--ease);
+
+  &.is-active {
+    opacity: 1;
+  }
+}
+
+.piece__n {
+  display: block;
+  margin-bottom: 12rem;
+  opacity: 0.6;
+}
+
+/* SmartText clips every line to --st-window, which defaults to 0.73em. At
+   line-height 1 that window sits INSIDE the glyphs and shears the tops and
+   tails off the heading — the same failure the studies names and the hero
+   subtitle both hit. The window must travel with the line-height. */
+.piece__t {
+  margin: 0 0 20rem;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-weight: 400;
+  font-size: 58rem;
+  line-height: 1.06;
+  --st-window: 1.06em;
+  --st-shift: 0.02em;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
+  /* One line each. A capped measure broke them into BUILD THE / FOUNDATION,
+     which reads as two thoughts; Anton is condensed enough that the longest
+     of the three still clears the column. */
+  white-space: nowrap;
+}
+
+.piece__b {
+  margin: 0 0 26rem;
+  max-width: 620rem;
+  font-size: 22rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.piece__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  /* Concepts and methods, not a tool inventory. The tools are listed once in
+     the header; repeating them per piece says nothing about the thinking. */
+  li {
+    padding: 6rem 12rem;
+    border: 1px solid currentColor;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 12rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* ---------- screen 3: the exit ---------- */
+
+.wp__foot {
+  padding: 80rem var(--margin) 0;
+  border-top: 1px solid currentColor;
+  margin: 0 var(--margin);
+}
+
+.wp__takeaway {
+  margin: 0 0 70rem;
+  max-width: 820rem;
+  font-size: 34rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wp__exit {
+  display: flex;
+  justify-content: space-between;
+
+  a {
+    color: var(--ink);
+  }
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 900px) {
+  /* The triangle stops being a companion to the copy and becomes a header
+     for it: pinning a shape beside nothing is just lost width. */
+  .stack {
+    grid-template-columns: 1fr;
+    gap: 40rem;
+  }
+
+  .stack__shape {
+    position: static;
+    display: grid;
+    grid-template-columns: 150rem 1fr;
+    gap: 24rem;
+    align-items: center;
+  }
+
+  .stack__legend {
+    margin-top: 0;
+  }
+
+  .piece {
+    min-height: 0;
+    opacity: 1;
+    padding-bottom: 44rem;
+    border-bottom: 1px solid currentColor;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Phones scroll the header as a document again — a screen-tall header
+     with a sunk spec sheet assumes there is room for both, and at phone
+     heights there is not. */
+  .wp__head {
+    min-height: 0;
+  }
+
+  .wp__facts {
+    margin-top: 0;
+  }
+
+  .wp__title {
+    font-size: 52rem;
+    max-width: none;
+  }
+
+  .wp__thesis {
+    font-size: 28rem;
+  }
+
+  .wp__sub {
+    font-size: 15rem;
+    max-width: none;
+  }
+
+  .wp__facts {
+    grid-template-columns: 1fr;
+    gap: 20rem;
+  }
+
+  .piece__t {
+    font-size: 34rem;
+  }
+
+  .piece__b {
+    font-size: 17rem;
+  }
+
+  .wp__takeaway {
+    font-size: 24rem;
+  }
+}
