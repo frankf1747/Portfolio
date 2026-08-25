@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import type { VirtualScrollData } from "lenis";
+import { introSeen } from "./introSeen";
 
 /* §0 + §3 boot layer.
 
@@ -58,65 +59,93 @@ export default function ScrollProvider({
        The safety timer is not optional: if Hero throws or never mounts,
        the event never fires and the page would be permanently unscrollable.
        Whatever happens, scrolling is restored. */
+    /* `intro` is the page's claim; whether the lock actually arms also
+       depends on the session — a return visit skips the overture (see
+       introSeen.ts), so locking for it would freeze the page for nothing.
+       Read once here: Hero writes the flag later in this same page load,
+       and re-reading would see that write. */
+    const introActive = intro && !introSeen();
+
     let unlocked = false;
     const unlock = () => {
       if (unlocked) return;
       unlocked = true;
       lenis?.start();
       document.documentElement.removeAttribute("data-locked");
+      /* The lock also swallowed the browser's own jump to a #hash target:
+         overflow:hidden clamps the document, Next's anchor scroll no-ops,
+         and nothing re-applied it — so /#work landed the reader at the
+         top of a page that would not scroll. Re-apply it here, at the
+         first moment scrolling exists. */
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      const el = id ? document.getElementById(id) : null;
+      if (el) {
+        if (lenis) lenis.scrollTo(el, { immediate: true });
+        else el.scrollIntoView();
+      }
     };
 
-    /* THE STACK'S PAUSE — a travel cap, not a gate.
+    /* THE STACK'S PAUSE — one gesture, one glide.
 
-       Two failed shapes first, because they bound this one. lenis/snap is
-       registered as debounce(onSnap, 500): it watches a flick sail through
-       the whole stack and tidies up afterwards. Replacing it with a gate
-       that swallowed wheel events gave one-gesture-one-piece, but reading
-       it back on a real trackpad: gestures inside the quiet window were
-       eaten outright, and the lock felt like a dead stop. Blocking INPUT is
-       what felt broken — so nothing is blocked any more.
+       Three shapes failed before this one, and each failure named the next
+       constraint:
 
-       Instead the DELTA is clamped. Lenis calls `virtualScroll` for every
-       raw wheel event before applying it, and mutating data.deltaY there is
-       honoured (the source destructures after the hook returns). Each
-       gesture gets a bound: the first piece-centre meaningfully past where
-       the gesture began, or the page edge when none is. Every event spends
-       its delta freely up to that bound and not a pixel past it, so Lenis
-       eases into the stop on its own curve — the pause is the easing, not a
-       freeze. Header and exit sit outside the stops and scroll free.
+         lenis/snap is debounce(onSnap, 500) — it watches a flick sail
+         through the whole stack and tidies up afterwards.
 
-       A "gesture" ends three ways, because a trackpad tail must not absorb
-       the next flick (the failure the gate had):
-         - quiet: a gap over QUIET_MS since the last event
+         Swallowing wheel events until a quiet gap gave one-gesture-one-
+         section, but gestures inside the quiet window were eaten outright
+         and the lock read as a dead stop. So input must never be blocked
+         without producing motion.
+
+         Clamping each delta against the room left to the next stop kept
+         every gesture moving, but the tail's decaying deltas could not
+         cover the last stretch: the page crept, stopped short, and a
+         separate correction shoved it the rest of the way.
+
+         Committing that last stretch to scrollTo mid-glide removed the
+         creep and introduced a surge — Lenis eases with easeOutExpo, whose
+         speed at t=0 is ~6.9x the average, so handing it 380px over 1s
+         restarts the motion at ~2600px/s. Against a glide already running
+         at ~1500px/s that is a visible jump, arriving exactly where the
+         landing should be calmest.
+
+       The lesson across all four: any motion STARTED MID-GESTURE has to
+       match the velocity already on screen, and none of these can. So this
+       does not start mid-gesture. It decides at the FIRST event of a
+       gesture, when the page is at rest, and animates the whole way to the
+       next stop in one move with an ease-in-out — gentle at both ends
+       because both ends are stationary. The rest of the gesture, momentum
+       tail and all, is swallowed: there is nothing left to decide, and
+       nothing that could fight the animation in flight.
+
+       A gesture ends three ways, so the next flick is never eaten:
+         - quiet: a gap over QUIET_MS
          - reversal: the delta changes sign
-         - a spike: a delta clearly above the envelope, but ONLY once the
-           tail has decayed below 0.4x the gesture's peak. The peak guard is
-           load-bearing: a flick RAMPS before it decays (20, 60, 130...),
-           and without the guard every step of the ramp read as a new
-           gesture — each one re-bounded from further along, and past the
-           last piece the only bound left is the page end, which is why a
-           hard flick from piece two sailed to the bottom with no pause on
-           three.
-       Any of these re-bounds from wherever the target now is — a second
-       flick mid-tail advances one more piece instead of dying.
+         - a spike: a delta well above a tail that has already decayed past
+           40% of its peak. The peak guard matters — a flick RAMPS before it
+           decays, and without it every step of the ramp read as a new
+           gesture.
 
-       The settle is the same magnetism, backwards: when the wheel goes
-       quiet and the rest point is within half a viewport of a piece, ease
-       onto its centre. Gentle browsing far from the stack never triggers
-       it, and it uses a plain scrollTo with no lock, so a new gesture
-       simply takes over mid-settle.
+       Aiming is off targetScroll, not scroll, so a second flick mid-glide
+       advances one more section instead of re-aiming at the one in flight.
 
        Touch passes through untouched — phones keep free scroll, and the
        mobile layout drops the 100vh blocks anyway. Keyboard and scrollbar
        never enter Lenis, so they stay native, which also keeps the page
        accessible. */
     const QUIET_MS = 180;
+    const MARGIN = 0.15;
+    /* Ease in AND out. Lenis's own easeOutExpo is right for chasing a
+       moving wheel target and wrong here: it opens at full speed, which is
+       precisely the jolt this is built to avoid. */
+    const EASE = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
     let lastT = 0;
     let prevAbs = 0;
     let peakAbs = 0;
     let sign = 0;
-    let bound: number | null = null;
-    let settleTimer = 0;
 
     const gate = (data: VirtualScrollData): boolean => {
       const event = data.event as WheelEvent;
@@ -124,19 +153,8 @@ export default function ScrollProvider({
 
       const l = lenis;
       if (!l || !snap) return true;
-      const d = data.deltaY;
-      const dir = Math.sign(d);
+      const dir = Math.sign(data.deltaY);
       if (dir === 0) return true;
-
-      const now = performance.now();
-      const gap = now - lastT;
-      lastT = now;
-      const abs = Math.abs(d);
-      const spike = abs > prevAbs * 1.5 + 6 && prevAbs < peakAbs * 0.4;
-      const fresh = gap > QUIET_MS || dir !== sign || spike;
-      prevAbs = abs;
-      peakAbs = fresh ? abs : Math.max(peakAbs, abs);
-      sign = dir;
 
       const vh = window.innerHeight;
       const stops = Array.from(
@@ -147,52 +165,65 @@ export default function ScrollProvider({
         }
       );
       if (!stops.length) return true;
+      const from = l.targetScroll;
 
-      if (fresh) {
-        /* The quarter-viewport margin is load-bearing: re-bounding from
-           "the next stop past the target" with no margin meant a settle
-           that had not quite landed left the next bound 8px away, and the
-           following flick travelled 8px — which reads as a dead wheel. */
-        /* 0.15vh, down from 0.25: the margin only exists so a settle that
-           has not quite landed cannot re-bind to the stop it is sitting on
-           (a bound 8px away reads as a dead wheel). At 0.25 it had a second
-           effect: resting late in a section put the next stop inside the
-           margin and the bound skipped a whole piece. */
-        const from = l.targetScroll;
-        bound =
-          dir > 0
-            ? (stops.find((v) => v > from + vh * 0.15) ?? Math.round(l.limit))
-            : ([...stops].reverse().find((v) => v < from - vh * 0.15) ?? 0);
+      /* RELEASE AT THE END — tested FIRST, and that ordering is the whole
+         point. Everything below swallows every event of a gesture after
+         its first, so releasing further down meant one delta per flick
+         reached Lenis and the rest of the momentum was thrown away: the
+         page nudged, then stuck. That is the drag.
+
+         Past the last stop and still heading down, the reader is done with
+         the stack. Hand the event back untouched — no preventDefault, no
+         bookkeeping, nothing managed — and let the page scroll exactly as
+         it does anywhere else on the site.
+
+         The gesture state is cleared on the way out so that re-entering
+         from below counts as a fresh gesture rather than the tail of
+         whatever flick carried the reader out. Upward is untouched:
+         scrolling back up re-enters the stack and picks up its stops. */
+      if (dir > 0 && from >= stops[stops.length - 1] - vh * MARGIN) {
+        lastT = 0;
+        prevAbs = 0;
+        peakAbs = 0;
+        sign = 0;
+        return true;
       }
 
-      /* Scheduled before the zero-delta return below: a clamped-to-zero
-         event is still gesture activity, and the settle must not fire in
-         the middle of a tail just because the tail is pinned at the bound. */
-      window.clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        const l2 = lenis;
-        if (!l2) return;
-        const y = l2.scroll;
-        const near = stops.reduce((a, b) => (Math.abs(b - y) < Math.abs(a - y) ? b : a));
-        const dist = Math.abs(near - y);
-        if (dist > 2 && dist <= vh / 2) l2.scrollTo(near, { duration: 0.7 });
-      }, 350);
+      /* Lenis only calls preventDefault AFTER this hook, so anything
+         swallowed here has to be prevented here — otherwise the browser
+         scrolls natively and the gate gates nothing. */
+      if (event.cancelable) event.preventDefault();
 
-      if (bound !== null) {
-        const room = bound - l.targetScroll;
-        const clamped = dir > 0 ? Math.min(d, Math.max(0, room)) : Math.max(d, Math.min(0, room));
-        if (clamped === 0) {
-          /* Lenis treats a zero-delta wheel event as "no gesture" and
-             returns BEFORE its own preventDefault — so at the bound the
-             browser would scroll natively past the stop with the rest of
-             the momentum. Prevent it here and skip Lenis outright. */
-          if (event.cancelable) event.preventDefault();
-          return false;
-        }
-        data.deltaY = clamped;
-      }
+      const now = performance.now();
+      const gap = now - lastT;
+      lastT = now;
+      const abs = Math.abs(data.deltaY);
+      const spike = abs > prevAbs * 1.5 + 6 && prevAbs < peakAbs * 0.4;
+      const fresh = gap > QUIET_MS || dir !== sign || spike;
+      prevAbs = abs;
+      peakAbs = fresh ? abs : Math.max(peakAbs, abs);
+      sign = dir;
 
-      return true;
+      if (!fresh) return false;
+
+      /* The margin only exists so a landing a few pixels short cannot aim
+         at the stop it is already sitting on — an 8px target reads as a
+         dead wheel. Small on purpose: at 0.25vh, resting late in a section
+         put the next stop inside the margin and a whole piece was skipped. */
+      const target =
+        dir > 0
+          ? (stops.find((v) => v > from + vh * MARGIN) ?? Math.round(l.limit))
+          : ([...stops].reverse().find((v) => v < from - vh * MARGIN) ?? 0);
+
+      /* Duration follows distance, so a short hop is not stretched to the
+         same beat as a full section. */
+      const span = Math.abs(target - from) / vh;
+      l.scrollTo(target, {
+        duration: Math.max(0.6, Math.min(span * 1.15, 1.45)),
+        easing: EASE
+      });
+      return false;
     };
 
     if (!reduced) {
@@ -201,7 +232,7 @@ export default function ScrollProvider({
         smoothWheel: true,
         virtualScroll: snap ? gate : undefined
       });
-      if (intro) {
+      if (introActive) {
         lenis.stop();
         html.dataset.locked = "true";
       } else {
@@ -217,7 +248,7 @@ export default function ScrollProvider({
     }
 
     window.addEventListener("site:intro-end", unlock, { once: true });
-    const failsafe = intro ? window.setTimeout(unlock, 9000) : 0;
+    const failsafe = introActive ? window.setTimeout(unlock, 9000) : 0;
 
     /* Overlay scroll lock. Lenis is scoped to this effect, so anything that
        needs to freeze the page has to ask through an event — setting
@@ -271,7 +302,6 @@ export default function ScrollProvider({
       window.removeEventListener("site:intro-end", unlock);
       window.removeEventListener("site:lock", lock);
       window.removeEventListener("site:unlock", relock);
-      window.clearTimeout(settleTimer);
       html.removeAttribute("data-locked");
       if (lenis) {
         lenis.off("scroll", onScroll);

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import SmartText, { type SmartTextHandle } from "../SmartText";
+import { introSeen, markIntroSeen } from "../introSeen";
 
 /* §5 — the landing sequence, to the measured timeline.
 
@@ -70,12 +71,19 @@ export default function Hero() {
 
     const start = () => {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      /* One overture per session (see introSeen.ts). A return visit —
+         browser back from a project, the ALL PROJECTS link — lands on the
+         same settled state the reduced-motion path uses, and intro-end
+         fires immediately so ScrollProvider never holds the page. The
+         flag is written when the full overture STARTS, so bailing out
+         mid-launch doesn't re-arm it for the next page. */
+      const skip = reduced || introSeen();
+      markIntroSeen();
 
-      heroRefs.current.forEach((h, i) => h?.play({ delay: i * 100 }));
-
-      /* reduced motion: straight to the resting state. The curtain fade is
-         the only thing that still plays. */
-      if (reduced) {
+      /* reduced motion / return visit: straight to the resting state. The
+         curtain fade is the only thing that still plays. */
+      if (skip) {
+        heroRefs.current.forEach((h) => h?.resolve());
         subRef.current?.resolve();
         setExiting(true);
         setContentIn(true);
@@ -84,6 +92,8 @@ export default function Hero() {
         window.dispatchEvent(new Event("site:intro-end"));
         return;
       }
+
+      heroRefs.current.forEach((h, i) => h?.play({ delay: i * 100 }));
 
       timers.push(window.setTimeout(() => setExiting(true), EXIT_AT));
       timers.push(window.setTimeout(() => setContentIn(true), CONTENT_AT));

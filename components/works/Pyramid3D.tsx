@@ -32,12 +32,13 @@ import * as THREE from "three";
    radius at each angle is the POLYGON's radius, not the circle's. */
 
 const H = 2.0; // pyramid height
-/* 1.15, and the camera distances below start at 4.6: the pair is solved
-   from the projection, not tuned. A corner mid-turn reaches its widest at
-   x' = R/sqrt(d^2 - R^2) against a horizontal half-view of tan(17°)·aspect
-   ≈ 0.286 — R 1.35 with d 3.2–4.55 clipped the base corners against the
-   canvas on every turn. R 1.15 needs d ≥ 4.2; every stop keeps margin. */
-const R = 1.15; // base circumradius
+/* Base radius against camera distance is solved from the projection, not
+   tuned: a corner mid-turn is the widest the object ever gets, and it has
+   to clear the horizontal half-view — tan(17°)·d·aspect — at every stop.
+   At 1.35 with the old short distances the base corners clipped on every
+   turn. 1.28 against 4.2–4.7 leaves ~0.1 of margin at all three, and reads
+   as a pyramid with weight rather than the spike 1.15 gave. */
+const R = 1.28; // base circumradius
 /* One band per piece — the 2D triangle's base / mids / apex, in depth.
    Each lights on its own section, so section 2 is no longer the one stop
    with nothing to show. Boundaries double as the tier rings. */
@@ -49,14 +50,23 @@ const BANDS: [number, number][] = [
 const TIERS = [0.36, 0.72]; // ring cuts — the band seams
 
 const TUBE_R = 0.015;
-/* The route rides INSIDE the surface (0.975) and the depth mask sits
+/* The route rides INSIDE the surface (0.985) and the depth mask sits
    further in (0.94) — so the route is always between them: never outside
-   the silhouette (0.975·R + TUBE_R = 1.137 < R), always in front of the
+   the silhouette (0.985·R + TUBE_R = 1.276 < R = 1.28), always in front of the
    mask on the near side, always behind it on the far side. The old 1.012
    put the line 1.2% PROUD of the faces, which is what made it spill past
-   the bottom-right corner. */
-const ROUTE_INSET = 0.975;
+   the bottom-right corner.
+
+   The sandwich only holds if the fillet respects it too: FILLET_FLOOR caps
+   the corner cut at 3% of the local surface, so with the inset the route
+   never drops below 0.97·0.985 = 0.955 — still outside the 0.94 mask. The
+   unfloored fillet cut to 0.897 at the corners, which sank the tube's
+   centre up to 0.05 UNDER the mask exactly where the route bends around
+   an edge: the solid pass vanished there and only the 26% ghost showed —
+   the line read as passing through the body at sections 02 and 03. */
+const ROUTE_INSET = 0.985;
 const MASK_INSET = 0.94;
+const FILLET_FLOOR = 0.97;
 
 /* Radius of an n-gon at angle θ (circumradius 1): the surface the route
    rides. Without this the spiral bulges off the flat faces mid-face. */
@@ -198,31 +208,98 @@ export default function Pyramid3D({
     }
 
     /* The route: one wrap around the pyramid, base to apex, riding the
-       faces (ngonR) with a hair of clearance to stay off the surface. A
-       tube, not a Line — WebGL lines are 1px and the route is the cue.
-       Revealed by drawRange: tube indices run along the path, so a count
-       is a distance climbed. */
-    const routePts: THREE.Vector3[] = [];
-    /* 90° — a CORNER, and the whole design in one number. A full wrap
-       across three pieces means each third of the route spans exactly one
-       face; started at a corner, each stop's reveal is a complete
-       corner-to-corner diagonal on precisely the face the rotation has
-       just turned to the camera. One face, one climb, one stop. (Started
-       mid-face — the -90° and +30° attempts — the reveal straddles two
-       faces and the depth mask serves it up as disconnected fragments.)
+       faces (ngonR) just inside the surface. A tube, not a Line — WebGL
+       lines are 1px and the route is the cue. Revealed by drawRange: tube
+       indices run along the path, so a count is a distance climbed.
 
-       The wrap runs CLOCKWISE (angle decreasing) and the rig counter-turns
-       to match: drawn the other way the tip lands on the LEFT edge and a
-       left-to-right eye reads the climb as a descent. Mirroring the wrap
-       moves the tail to the lower-left and the tip up-and-right — an
-       ascent in reading order. The matching start corner is 210°. */
+       Starts AT the front-left base corner of the resting face, so the
+       climb begins at the bottom of the object in plain sight and reads
+       left-to-right. It runs clockwise, angle decreasing: drawn the other
+       way the tip tracks left and the eye reads the climb as a descent.
+
+       THE RUN-UP. A corner start is a silhouette problem: the corner sits
+       on a silhouette edge at every rest, the mask is inset 6%, and at
+       section 03 a solid tail there leaked past the mask's corner in
+       projection (ray-traced: 4° of clearance is the exact threshold, 6°
+       adds margin). So the first 6° of sweep is a RUN-UP that unwinds
+       over the first RUNUP_T of height on an easeOutSine — one continuous
+       curve with the climb, not a separate stub: a second curve meeting
+       the route at an angle put a visible kink at the joint. Beyond the
+       run-up the angle is exactly 204° − 360·t^E, so the emergence
+       calibration below is untouched. The run-up region is rendered as
+       its own drawRange window and faded by FACING (see paintStub): bold
+       where the resting face fronts the camera (page top, section 01 —
+       the climb visibly starts at the corner), gone once it turns away
+       (sections 02, 03 — where solid at the corner is exactly the leak). */
     const START = (7 * Math.PI) / 6;
-    for (let i = 0; i <= 140; i++) {
-      const t = i / 140;
-      const a = START - t * Math.PI * 2;
-      const r = R * (1 - t * 0.985) * ngonR(a - Math.PI / 2) * ROUTE_INSET;
-      routePts.push(new THREE.Vector3(Math.cos(a) * r, t * H, Math.sin(a) * r));
+    const TRIM = (6 * Math.PI) / 180;
+    const RUNUP_T = 0.05;
+
+    /* SWEEP EXPONENT — solved, not tuned.
+
+       With a uniform sweep the route was visible from too low at section
+       02 — below that band's 0.36 cutoff — so the line appeared to start
+       in the foundation band while the copy talked about the middle one.
+       Sweeping a little slower low down also suits the shape: the base is
+       where the radius is widest, so a degree of turn covers the most
+       ground there.
+
+       Solved by RAY-TRACING against the depth mask from section 02's
+       actual rest camera, not from the closed form: the old derivation
+       (A(0.36) = 90 → E = 1.357) ignored the mask's 6% inset, which lets
+       the route show through the silhouette sliver before it truly rounds
+       the edge — measured emergence was ~0.45, well above the cutoff.
+       With the 204° start, E = 1.118 puts the first unoccluded sample at
+       height 0.360 exactly. */
+    const SWEEP_E = 1.118;
+    const N = 200;
+
+    /* FILLET THE CORNERS — by smoothing the RADIUS, never the points.
+
+       The route hugs the polygon, so it genuinely bends at each of the
+       three edges, and CatmullRomCurve3 interpolates THROUGH its points:
+       every kink survives. The previous fix averaged the 3D points, which
+       rounded the corners and also chord-cut across the flat faces — the
+       line sank INTO the body everywhere it was not near a corner.
+
+       Averaging the radius factor instead leaves every sample on its own
+       ray. But an average raises MINIMA as well as lowering maxima, and a
+       face midpoint is a minimum of that factor — so a plain average
+       pushed the line 2.6% OUTSIDE the faces there. Hence min(): the
+       fillet may only ever cut inward. And hence max() against
+       FILLET_FLOOR: unfloored, the corner cut reached 0.897 of the
+       surface — under the 0.94 depth mask, which occluded the solid pass
+       for the whole bend (see the constants block). The fillet may cut
+       inward, but never through the mask. */
+    const angles: number[] = [];
+    const raw: number[] = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const runup = Math.sin((Math.PI / 2) * Math.min(t / RUNUP_T, 1));
+      const a = START - TRIM * runup - Math.pow(t, SWEEP_E) * Math.PI * 2;
+      angles.push(a);
+      raw.push(ngonR(a - Math.PI / 2));
     }
+    const fillet = raw.map((f, i, arr) => {
+      const w = Math.min(4, i, arr.length - 1 - i);
+      if (!w) return f;
+      let sum = 0;
+      for (let k = -w; k <= w; k++) sum += arr[i + k];
+      return Math.max(Math.min(sum / (w * 2 + 1), f), f * FILLET_FLOOR);
+    });
+
+    /* (1 - t), matching the body's own taper — NOT (1 - t·0.985). The old
+       damped slope made the spiral shrink SLOWER than the faces, so from
+       mid-height up the line rode increasingly outside the surface — 0.034
+       proud at the apex, over twice the tube's radius — and the whole
+       upper wrap floated off the object under section 03's look-down
+       camera. */
+    const routePts = angles.map((a, i) => {
+      const t = i / N;
+      const r = R * (1 - t) * fillet[i] * ROUTE_INSET;
+      return new THREE.Vector3(Math.cos(a) * r, t * H, Math.sin(a) * r);
+    });
+
     const curve = new THREE.CatmullRomCurve3(routePts);
     const tube = new THREE.TubeGeometry(curve, 240, TUBE_R, 8, false);
     const routeIndexCount = tube.index ? tube.index.count : 0;
@@ -233,15 +310,14 @@ export default function Pyramid3D({
        no climb. Half the length is only ~0.35 of the height, which is why
        a reveal asked to stop mid-band stopped at its lower edge instead.
 
-       routePts are generated at uniform HEIGHT, so their cumulative chord
-       lengths are exactly the table that converts one to the other. Every
+       The points are generated at uniform HEIGHT, so their cumulative
+       chord lengths are exactly the table that converts one to the other. Every
        reveal target below is therefore a height on the pyramid, and this
        is the only place that has to know about arc length. */
     const cum = [0];
     for (let i = 1; i < routePts.length; i++) {
       cum.push(cum[i - 1] + routePts[i].distanceTo(routePts[i - 1]));
     }
-    const N = routePts.length - 1;
     const total = cum[N];
     const arcOfHeight = (h: number) => {
       const x = Math.max(0, Math.min(h, 1)) * N;
@@ -259,19 +335,42 @@ export default function Pyramid3D({
        SOLID pass depth-tested normally on top. The near half reads at full
        strength, the far half as a trace behind the faces — the climb is
        continuous from the base corner, and the object still reads as
-       solid. drawRange lives on the geometry, so one reveal drives both. */
+       solid. Each pass carries its own geometry instance, because their
+       drawRange windows differ (see the run-up split below). */
     const routeMat = new THREE.MeshBasicMaterial({ color: mark });
+    /* 0.10, down from 0.26. At 0.26 the far half of the wrap read as a
+       SECOND LINE crossing the faces — at section 02 the whole back half
+       (base corner round to the left edge) projects as a swoop dipping
+       through the lit band, at 03 as a diagonal to the base corner — and
+       both were reported as the route cutting through the object. The
+       trace only has to whisper that the line continues behind; anything
+       loud enough to follow as a stroke is loud enough to misread. */
     const ghostMat = new THREE.MeshBasicMaterial({
       color: mark,
       transparent: true,
-      opacity: 0.26,
+      opacity: 0.1,
       depthTest: false,
       depthWrite: false
     });
     const ghost = new THREE.Mesh(tube, ghostMat);
     ghost.renderOrder = 0;
     rig.add(ghost);
-    const solid = new THREE.Mesh(tube, routeMat);
+
+    /* The SOLID pass is split at the run-up boundary — same vertices,
+       cloned geometry, so the curve stays one unbroken stroke and only
+       the rendering differs. The run-up window takes the facing-faded
+       material (see START and paintStub); the climb window takes the
+       plain solid and is what the reveal drives. */
+    const runupCount = Math.floor(routeIndexCount * arcOfHeight(RUNUP_T));
+    const runupGeo = tube.clone();
+    runupGeo.setDrawRange(0, runupCount);
+    const stubMat = new THREE.MeshBasicMaterial({ color: mark, transparent: true });
+    const runup = new THREE.Mesh(runupGeo, stubMat);
+    runup.renderOrder = 1;
+    rig.add(runup);
+
+    const solidGeo = tube.clone();
+    const solid = new THREE.Mesh(solidGeo, routeMat);
     solid.renderOrder = 1;
     rig.add(solid);
 
@@ -285,13 +384,41 @@ export default function Pyramid3D({
        line it belongs to. Depth-tested, a cap is only ever the rounded end
        of a visible line. */
     const capGeo = new THREE.SphereGeometry(TUBE_R, 12, 8);
+    /* Three fixed caps and one riding one:
+       - corner cap, faded with the run-up, rounds the true start;
+       - a ghost corner cap under it keeps the TRACE ending round at the
+         corner when the solid pair has faded (sections 02/03);
+       - tail cap at the run-up boundary rounds the climb's open ring
+         whenever the run-up is faded out from in front of it;
+       - head cap rides the reveal. */
+    const cornerCap = new THREE.Mesh(capGeo, stubMat);
+    cornerCap.position.copy(routePts[0]);
+    cornerCap.renderOrder = 1;
+    rig.add(cornerCap);
+    const cornerGhostCap = new THREE.Mesh(capGeo, ghostMat);
+    cornerGhostCap.position.copy(routePts[0]);
+    cornerGhostCap.renderOrder = 0;
+    rig.add(cornerGhostCap);
     const tail = new THREE.Mesh(capGeo, routeMat);
-    tail.position.copy(curve.getPointAt(0));
+    tail.position.copy(routePts[Math.round(RUNUP_T * N)]);
     tail.renderOrder = 1;
     rig.add(tail);
     const head = new THREE.Mesh(capGeo, routeMat);
     head.renderOrder = 1;
     rig.add(head);
+
+    /* Facing of the face the run-up rides (normal at local 150°) against
+       the camera axis (+z, world 90°): cos((150° − yaw) − 90°). Checked at
+       the rests: page top +0.5, section 01 +1 (solid), 02/03 −0.5 (gone).
+       The floor at 0.15 is still on the front side, so the pair is fully
+       gone before the silhouette sliver could expose it. */
+    const paintStub = (rot: number) => {
+      const facing = Math.cos(Math.PI / 3 - rot);
+      const o = Math.max(0, Math.min((facing - 0.15) / 0.3, 1));
+      stubMat.opacity = o;
+      runup.visible = o > 0.01;
+      cornerCap.visible = o > 0.01;
+    };
 
     /* ---- continuous progress ----
 
@@ -318,27 +445,83 @@ export default function Pyramid3D({
         const r = el.getBoundingClientRect();
         return r.top + y + r.height / 2 - vh / 2;
       });
-      if (y <= c[0]) return c[0] > 0 ? -1 + y / c[0] : 0;
-      if (y <= c[1]) return (y - c[0]) / (c[1] - c[0] || 1);
-      if (y <= c[2]) return 1 + (y - c[1]) / (c[2] - c[1] || 1);
-      return 2;
+      const raw =
+        y <= c[0]
+          ? c[0] > 0
+            ? -1 + y / c[0]
+            : 0
+          : y <= c[1]
+            ? (y - c[0]) / (c[1] - c[0] || 1)
+            : y <= c[2]
+              ? 1 + (y - c[1]) / (c[2] - c[1] || 1)
+              : 2;
+
+      /* SETTLE EARLY, THEN HOLD.
+
+         Linear in scroll, the object only finishes its step at the exact
+         centre of a section — but a 100vh piece owns the screen long
+         before that, and the legend flips to it half a section early. The
+         reader is therefore reading "03" while the pyramid is still 30%
+         from its rest: mid-turn, and with the route stalled below the apex
+         because the reveal is keyed to the same coordinate.
+
+         Compressing each step into the first 62% of its scroll span fixes
+         both at once — the turn and the climb are finished by the time the
+         piece has taken the screen, and the remaining 38% is a genuine
+         hold on the rest pose rather than a slow crawl into it.
+
+         Smoothstep, so the compression does not add a hard stop of its
+         own; integers are preserved, so every rest still lands exactly on
+         its pose. */
+      const i = Math.floor(raw);
+      const t = Math.min((raw - i) / 0.62, 1);
+      return i + t * t * (3 - 2 * t);
     };
 
-    /* Rotation, camera and band lighting run off p = s/2 clamped to the
-       stack, so each rest still turns a fresh face to the camera. */
+    /* Camera and band lighting run off p = s/2 clamped to the stack. */
     const pOf = (s: number) => Math.max(0, Math.min(s, 2)) / 2;
-    const rotOf = (p: number) => Math.PI / 3 - p * ((4 * Math.PI) / 3);
+    /* Rotation runs off s DIRECTLY, negative leg included — that leg is the
+       approach from the top of the page, and clamping it to p meant the
+       object sat dead still through the whole descent and only the line
+       moved. Arriving at section 01 you had never seen it turn, so nothing
+       established it as a solid.
+
+       So the approach gets a HALF step. At the page top the object rests
+       corner-on (yaw 120°, a near edge to the camera, both flanking faces
+       raking away); over the descent it swings 60° and squares its face at
+       section 01. The route's tip crosses the silhouette edge on the way,
+       which is the moment that reads as "this thing has sides".
+
+       Past section 01 the step doubles to the full 120° per section, so
+       each stop still brings up the next face. Both branches give PI/3 at
+       s = 0, so the change of pace is continuous — no kink at the handover.
+
+       +PI/3 is what squares a face at a stop: face centres sit at 30/150/
+       270, and yawing by 60 puts one on the camera axis.
+
+       (Face-on was blamed once for the object reading flat; that was the
+       wrong call. The cause was the CAMERA, level at -3 and +3 degrees for
+       the first two stops, where the base ring and both tier rings project
+       to straight lines and no phase can save it.) */
+    const rotOf = (s: number) =>
+      s <= 0
+        ? Math.PI / 3 - s * (Math.PI / 3)
+        : Math.PI / 3 - s * ((2 * Math.PI) / 3);
 
     /* The reveal is the exception — it runs off s directly, and its value is a
        HEIGHT on the pyramid, keyed to where the climb should have reached
        at each rest:
          page top  0     nothing drawn, tail waiting at the base corner
          piece 01  0.18  mid-way up the foundation band
-         piece 02  0.54  mid-way up the middle band — still in progress
+         piece 02  0.64  high in the middle band — still in progress
          piece 03  1.0   the summit
        Mid-band at 01 and 02 because resting on a seam reads as finished;
        the summit at 03 because that stop IS the arrival. */
-    const REST = [0.18, 0.54, 1.0];
+    /* Section 2 sits high in its band rather than at the midpoint: 0.54
+       read as barely past the seam it had just crossed. 0.64 is clearly
+       inside the middle band and clearly still short of the apex — in
+       progress, which is the state that stop is describing. */
+    const REST = [0.18, 0.64, 1.0];
     const drawOf = (s: number) => {
       if (s <= 0) return Math.max(0, (s + 1) * REST[0]);
       if (s <= 1) return REST[0] + (REST[1] - REST[0]) * s;
@@ -365,21 +548,37 @@ export default function Pyramid3D({
 
     /* EVERY stop frames the whole object; the ascent is expressed as
        ANGLE, not amputation — a cropped base at the summit reads as a
-       framing error, not altitude. Checked against the projection: with
-       fov 34 the visible half-span at the look target is tan(17°)·d, and
-       all three keep y ∈ [0, 2] inside it with margin.
-         1: low and back — eye level with the base, looking slightly up
-         2: closer, chest height — the working view
-         3: high above — ~30° down onto the apex, base still standing */
-    const camY = [0.55, 1.2, 3.0];
-    const lookY = [0.82, 0.95, 1.1];
-    const dist = [4.6, 4.4, 4.25];
+       framing error, not altitude.
 
-    /* PI/3 fronts a FACE at every stop (face centres sit at 30/150/270;
-       yawing by +60 brings one to the camera axis). The first build rested
-       at -30, which fronted neither face nor edge — the silhouette sat
-       lopsided at every pause. */
-    let rotNow = rotOf(p0);
+       ELEVATION IS THE WHOLE POINT, and the first build got it wrong: at
+       -3.4 and +3.3 degrees the first two stops were level with the
+       object, so the base ring projected to a straight line, the tier
+       rings to straight lines, and the pyramid read as a flat triangle.
+       A route that genuinely wraps it then has its near and far halves
+       land on top of each other in projection — which is why the climb
+       looked like a squiggle on one face instead of a turn around a solid.
+       Nothing was wrong with the route; the camera was never above it.
+
+       15 / 20 / 25 degrees: enough at the first stop to open the base ring
+       and separate the two halves of the wrap, rising to a clear look down
+       onto the apex at the last. The top of that range was 32 and is now
+       25 — a full wrap DOUBLES BACK on itself in projection where it
+       crosses the silhouette, and the steeper the look-down the more
+       contorted that reversal reads. 25 is the §9 cover's angle to within
+       a few degrees, which is the shape being matched. The ascent still reads, because it is the
+       CHANGE in angle that reads, not the absolute height.
+
+       Framing checked against the projection: with fov 34 the half-span at
+       the look target is tan(17°)·d, and all three keep the full object
+       inside it — 1.15 of horizontal half-extent against 1.38, and roughly
+       1.3 of vertical against 1.49. */
+    const camY = [2.05, 2.6, 3.05];
+    const lookY = [0.8, 0.92, 1.02];
+    const dist = [4.7, 4.45, 4.2];
+
+    /* A FACE squares to the camera at every stop; the approach from the
+       page top arrives into that square from corner-on — see rotOf. */
+    let rotNow = rotOf(s0);
     let camNow = new THREE.Vector3(0, keyOf(camY, p0), keyOf(dist, p0));
     let lookNow = new THREE.Vector3(0, keyOf(lookY, p0), 0);
     let drawNow = drawOf(s0);
@@ -396,12 +595,18 @@ export default function Pyramid3D({
     };
     const paintRoute = () => {
       const u = arcOfHeight(drawNow);
-      tube.setDrawRange(0, Math.floor(routeIndexCount * u));
+      const count = Math.floor(routeIndexCount * u);
+      /* ghost shows the whole trace from the corner; the solid climb only
+         past the run-up boundary — the run-up window has its own mesh and
+         facing fade (see paintStub). */
+      tube.setDrawRange(0, count);
+      solidGeo.setDrawRange(runupCount, Math.max(0, count - runupCount));
       head.position.copy(curve.getPointAt(Math.min(Math.max(u, 0), 1)));
       head.visible = drawNow > 0.004;
     };
     paintBands();
     paintRoute();
+    paintStub(rotNow);
 
     let raf = 0;
     let last = performance.now();
@@ -412,14 +617,18 @@ export default function Pyramid3D({
       const sNow = coord();
       const p = pOf(sNow);
 
-      /* Faster damping than a discrete step would want (6, not 3.2): the
-         target is already animated by the page's own scroll easing, so
-         this only smooths measurement jitter — heavier and the object
-         would lag the scroll it is supposed to be attached to. */
-      const k = 1 - Math.exp(-6 * dt);
+      /* WEIGHT. At 6 the object tracked the scroll almost exactly, so the
+         turn finished inside the page's own glide and there was nothing
+         left to watch on arrival — the approach from the top especially,
+         where it appeared to simply be in position. At 2.4 it trails the
+         scroll and keeps turning for roughly a second after the page has
+         settled, which is what makes the rotation readable as rotation.
+         Both the turn and the climb ride this, so they slow together. */
+      const k = 1 - Math.exp(-2.4 * dt);
 
-      rotNow += (rotOf(p) - rotNow) * k;
+      rotNow += (rotOf(sNow) - rotNow) * k;
       rig.rotation.y = rotNow;
+      paintStub(rotNow);
 
       camNow.lerp(new THREE.Vector3(0, keyOf(camY, p), keyOf(dist, p)), k);
       lookNow.lerp(new THREE.Vector3(0, keyOf(lookY, p), 0), k);
@@ -452,6 +661,13 @@ export default function Pyramid3D({
        rAF — and so a starved rAF (hidden tab) still shows the object. */
     renderer.render(scene, camera);
     raf = requestAnimationFrame(tick);
+
+
+
+
+
+
+
 
 
 

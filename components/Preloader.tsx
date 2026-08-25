@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { introSeen } from "./introSeen";
 
 /* §5 — nothing is drawn on it. No logo, no counter, no percentage.
    The ~1.3s before the fade is an asset gate, not a timer: fonts and
@@ -18,7 +19,14 @@ export default function Preloader() {
     const go = () => {
       if (done) return;
       done = true;
-      const wait = Math.max(0, MIN_MS - (performance.now() - started));
+      /* Return visit in the same session: the assets are warm and the
+         overture is skipped downstream (Hero), so the 1.3s floor is pure
+         dead air — drop it. Still a setTimeout, not a sync dispatch:
+         sibling effects (Hero's reveal listener, ScrollProvider) must all
+         be mounted before the event fires. */
+      const wait = introSeen()
+        ? 0
+        : Math.max(0, MIN_MS - (performance.now() - started));
       window.setTimeout(() => {
         document.documentElement.dataset.loaded = "true";
         setHidden(true);
