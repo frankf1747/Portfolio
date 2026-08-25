@@ -85,6 +85,34 @@ const COVER_BANDS: [number, number][] = [
   [0.72, 1]
 ];
 
+/* The middle band is cut into three slabs, matching §13's Pyramid3D — same
+   counts, same two gap sizes, so the cover and the page it opens are the
+   same object. Four gaps: a wider pair holding the group clear of the base
+   and the apex, a narrower pair between the slabs, which is what makes the
+   three read as one stratified piece rather than five evenly spaced things.
+
+   The band's outer limits stay on 0.36 and 0.72, so the seams (still drawn
+   at exactly those two heights) and the silhouette are untouched. The
+   padding comes out of the slabs, never out of the band.
+
+   `band` rides along because the tier class is a FILL COLOUR: the markup
+   used `i % 3` to recover which of the three tiers a quad belonged to, and
+   that arithmetic dies the moment a band stops being one quad. */
+const COVER_SLABS = [1, 3, 1];
+const COVER_GAP_INNER = 0.014;
+const COVER_GAP_OUTER = 0.019;
+const COVER_FILLS: { f0: number; f1: number; band: number }[] = COVER_BANDS.flatMap(
+  ([t0, t1], bi) => {
+    const n = COVER_SLABS[bi];
+    const pad = n > 1 ? COVER_GAP_OUTER : 0;
+    const h = (t1 - t0 - 2 * pad - COVER_GAP_INNER * (n - 1)) / n;
+    return Array.from({ length: n }, (_, s) => {
+      const f0 = t0 + pad + s * (h + COVER_GAP_INNER);
+      return { f0, f1: f0 + h, band: bi };
+    });
+  }
+);
+
 /* polygon radius at an angle, corners normalised to 1 — the route hugs the
    flat faces rather than a circumscribed cone, exactly as it does in 3D */
 const ngonR = (deg: number) => {
@@ -157,7 +185,7 @@ const cover = (yaw: number, draw: number): CoverFrame => {
     const c1 = 90 + 120 * i;
     const c2 = 210 + 120 * i;
 
-    for (const [f0, f1] of COVER_BANDS) {
+    for (const { f0, f1 } of COVER_FILLS) {
       bands.push(
         `${P(c1, rAt(f0), f0)} ${P(c2, rAt(f0), f0)} ${P(c2, rAt(f1), f1)} ${P(c1, rAt(f1), f1)}`
       );
@@ -356,7 +384,7 @@ const PyramidCover = () => {
       {COVER_REST.bands.map((pts, i) => (
         <polygon
           key={i}
-          className={`card__band card__band--${(i % 3) + 1}`}
+          className={`card__band card__band--${COVER_FILLS[i % COVER_FILLS.length].band + 1}`}
           points={pts}
         />
       ))}

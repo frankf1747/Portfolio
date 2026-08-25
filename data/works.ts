@@ -63,20 +63,28 @@ export const works: Work[] = [
     dates: "2606 — PRESENT",
     brand: "#262048",
 
-    /* The problem is FRAGMENTATION ACROSS SYSTEMS OF RECORD, and naming the
-       systems is the whole case for the build: SAP is authoritative over the
-       transaction, QMS over the quality record, and neither is authoritative
-       over the batch — so the end-to-end view has to be assembled by hand,
-       late, unreconciled, and computed differently by every function that
-       needs it. The rest is context that never lands in a system at all,
-       which is §02's problem, not a third source.
+    /* ONE ARGUMENT IN THREE MOVES, and the subThesis announces all three
+       before the reader climbs them: a record that REPRODUCES, definitions
+       that AGREE, a route that REACHES the person who can act.
+
+       Each piece owns exactly one of those verbs and nothing else. That
+       constraint is load-bearing, because the draft before this one had
+       §02 and §03 collapsing into each other: both claimed "cause", both
+       claimed a single governed version. Joining cause to movement is
+       connection work, so §02 owns cause outright; §03 owns the DECISION
+       LATENCY that was the actual brief, which nothing else touches.
 
        The thesis claims the VALUE, not the problem. A reader who gives this
-       page fifteen seconds should leave holding what the work is worth, and
-       fragmentation is the setup for that, not the point of it — so the
-       systems drop to the line underneath, and are named for real one row
-       further down in SCOPE. Plain language up top, credentials in the spec
-       sheet, and nothing lost either way.
+       page fifteen seconds should leave holding what the work is worth, so
+       the systems are named one row down in SCOPE rather than up here.
+       Plain language above, credentials in the spec sheet.
+
+       THE FINDING SITS IN THE SUBTHESIS, not in §03. It is a CONSEQUENCE of
+       the first two layers rather than the summit of them: the blended
+       metric only surfaced because the record reproduced and because the
+       definitions were interrogated. Placing it at the apex confused what
+       was found with what the work now enables, and told the same story
+       twice on a page with room for it once.
 
        A layer EXPLAINS what happened; it does not predict. The forward look
        is a consequence, not a claim: once history is structured and cycle
@@ -84,12 +92,16 @@ export const works: Work[] = [
        early. In biologics, where lead times run 12 to 18 months, that
        margin is the entire business case.
 
-       Three consumers, one model — leadership, planning, agents. That is
-       the frame the page is written to. */
+       NDA: no figures, no partner names, no internal system values anywhere
+       in the visible copy. Every claim here carries its weight through the
+       judgment it names, never through a number.
+
+       STYLE: no em dashes in visible copy. Colons and semicolons do that
+       work instead. */
     thesis:
-      "Visibility that arrives in time to change the outcome — not to explain it.",
+      "Visibility that arrives in time to change the outcome, not to explain it.",
     subThesis:
-      "Order in one system, quality in another, the context in comment fields nobody reads. I built the model that unifies them — for leadership, planning, and agents.",
+      "The metric that was about to be published was measuring the wrong thing. Establishing that took a record that reproduces, definitions that agree, and a route to the people who could act on it.",
 
     facts: [
       { label: "SCOPE", value: ["SAP \u00b7 QMS", "8 commercial products, end to end"] },
@@ -108,22 +120,22 @@ export const works: Work[] = [
         n: "01",
         title: "BUILD THE FOUNDATION",
         body:
-          "Reporting was assembled by hand from exports — late, and reconciled to nothing. I built the gold layer straight off SAP and QMS, so one governed set of tables now feeds everything downstream.",
-        tools: ["DIRECT-FROM-SOURCE INGESTION", "MEDALLION ARCHITECTURE", "BATCH-LEVEL GRAIN"]
+          "External manufacturing had no governed view of its own shipments; the one in circulation belonged to another function and rested on a hand-maintained spreadsheet. I modelled the full lifecycle of a stock transfer against a pinned, tested snapshot, so any figure reproduces on demand rather than being re-argued.",
+        tools: ["BATCH-KEY ENTITY RESOLUTION", "PINNED REPRODUCIBLE SNAPSHOT", "REGRESSION-TESTED PIPELINE"]
       },
       {
         n: "02",
         title: "DRAW THE CONNECTIONS",
         body:
-          "Tables record a transfer; they do not explain one. That sits in free-text comments, in whatever words the writer chose, read by nobody. I gave it a shared vocabulary — entities, states, owners.",
-        tools: ["DOMAIN ONTOLOGY", "GOVERNED DEFINITIONS", "STATE & OWNERSHIP MODEL"]
+          "A transaction records that material moved, never why it arrived late. That sat in a separate quality system, in vocabulary that did not survive the crossing: one code spanning two events, one metric carrying conflicting specifications. I set contracts and named owners; nothing compounds until the words agree.",
+        tools: ["METRIC & DATA CONTRACTS", "CROSS-SYSTEM CAUSE MAPPING", "DEFINITION OWNERSHIP"]
       },
       {
         n: "03",
         title: "DRIVE THE DECISION",
         body:
-          "One model, three consumers. A tiered view for leadership, cycle-time and exception management for planning, and structure enough for Power Automate to route a breach to the owner the model already knows.",
-        tools: ["TIERED EXECUTIVE VIEW", "EXCEPTION MANAGEMENT", "AUTOMATED ROUTING"]
+          "Answering why a shipment slipped took days across two functions, against lead times where a late catch cannot be recovered. It now resolves against one governed record: leadership reads exception and cost, planning reads what to chase, and the same tables answer a direct question without an analyst.",
+        tools: ["TIERED EXECUTIVE REPORTING", "EXCEPTION MANAGEMENT", "GOVERNED SELF-SERVE"]
       }
     ],
 

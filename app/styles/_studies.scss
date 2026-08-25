@@ -693,7 +693,12 @@ html.is-study-open {
    face reads THROUGH the two in front, so every value lands about doubled
    where they overlap. These are chosen so the overlapped region sits where
    the single-face values used to. */
-.card__band--1 { fill: var(--mark); opacity: 0.1; }
+/* The foundation fills with INK, not mark. At 0.1 of the mark it was both
+   the palest thing on the cover and pink, which inverts the argument twice
+   over: the base carries everything above it, and colour is supposed to
+   arrive as you climb. Ink at 0.2 makes it a grey with weight, so the
+   escalation across the three reads neutral, brand, accent. */
+.card__band--1 { fill: var(--ink); opacity: 0.2; }
 .card__band--2 { fill: var(--mark); opacity: 0.25; }
 .card__band--3 { fill: var(--yellow); opacity: 0.68; }
 

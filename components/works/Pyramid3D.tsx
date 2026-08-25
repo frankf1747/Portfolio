@@ -49,6 +49,33 @@ const BANDS: [number, number][] = [
 ];
 const TIERS = [0.36, 0.72]; // ring cuts — the band seams
 
+/* SLABS PER BAND. The middle band is cut into three, separated by open space,
+   so the piece reads as layers rather than one solid tier. Purely a fill
+   decision: the slabs share their band's ONE material, so the band still
+   lights as a single unit, and the edge lines still draw the unbroken
+   silhouette across the gaps — the object reads as one pyramid whose middle
+   is stratified, not as three loose objects. The band's OUTER limits stay
+   exactly on 0.36 and 0.72, so the tier rings and the neighbouring bands are
+   unmoved and the silhouette is untouched.
+
+   FOUR GAPS, TWO SIZES. The group is also padded away from its neighbours,
+   so the middle reads as three layers lifted clear of the base and the apex
+   rather than as one tier that happens to be scored twice. The outer pair is
+   slightly wider than the inner pair, and that difference is what makes the
+   three cohere: equal gaps throughout would read as five evenly spaced
+   things instead of one stratified piece. Keep OUTER > INNER or the grouping
+   inverts.
+
+   Sizes are held down deliberately: an earlier 0.025 opened cleanly but ate
+   the band. The FLOOR is set by the shallowest camera, because a horizontal
+   slot seen near edge-on barely opens. Measured at the page-top pose
+   (elevation ~11°, the lowest the camera ever sits), a 0.012 gap only moved
+   the fill from alpha 20 to 16, which reads as a seam rather than a gap.
+   Below about 0.012 the effect disappears at that stop. */
+const BAND_SLABS = [1, 3, 1];
+const GAP_INNER = 0.014; // between the slabs
+const GAP_OUTER = 0.019; // between the group and the bands above and below
+
 const TUBE_R = 0.015;
 /* The route rides INSIDE the surface (0.985) and the depth mask sits
    further in (0.94) — so the route is always between them: never outside
@@ -122,15 +149,25 @@ export default function Pyramid3D({
     const yellow = cssColor("--yellow", "#ffe500");
     const paper = cssColor("--paper", "#f5f3ec");
 
-    /* The bands ESCALATE: a greyed pink at the foundation, the full mark in
-       the middle, yellow at the apex. Value concentrates upward — the same
-       argument the 2D triangle made by area, made here by saturation. The
-       foundation's pink is knocked back toward paper (and a little toward
-       ink, so it greys rather than merely fades) — infrastructure should
-       read as substantial, not loud. */
-    const greyPink = mark.clone().lerp(paper, 0.5).lerp(ink, 0.12);
-    const hl = [greyPink, mark, yellow];
-    const hlPeak = [0.5, 0.5, 0.55];
+    /* The bands ESCALATE in SATURATION: a grey-ink foundation, the full mark
+       in the middle, yellow at the apex. Neutral, brand, accent — colour
+       arrives as you climb, which is the same argument the 2D triangle made
+       by area.
+
+       The foundation is built FROM INK, not from mark. Every earlier version
+       started at the mark and walked it back toward paper and ink, but the
+       mark is a saturated magenta, so walking it toward a navy ink lands on
+       plum however far you go — the base stayed pink, only muddier. Starting
+       at ink and lifting it toward paper gives a true grey, and the 9% of
+       mark is there only to keep it in the page's family rather than reading
+       as a dead neutral.
+
+       Band 0 also peaks HIGHER than band 1: density is how the base carries
+       weight now that its colour is deliberately the quietest of the three.
+       Infrastructure should read as substantial, not loud. */
+    const greyInk = ink.clone().lerp(paper, 0.34).lerp(mark, 0.09);
+    const hl = [greyInk, mark, yellow];
+    const hlPeak = [0.58, 0.5, 0.55];
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
@@ -146,9 +183,9 @@ export default function Pyramid3D({
        broken flap); CylinderGeometry shares ConeGeometry's theta start, so
        corners line up with the edges and rings for free. */
     const bandMats: THREE.MeshBasicMaterial[] = [];
-    for (const [t0, t1] of BANDS) {
-      const geo = new THREE.CylinderGeometry(R * (1 - t1), R * (1 - t0), H * (t1 - t0), 3, 1, true);
-      geo.translate(0, (H * (t0 + t1)) / 2, 0);
+    BANDS.forEach(([t0, t1], bi) => {
+      /* ONE material per BAND, not per slab — paintBands still addresses a
+         band by index, so a split band lights as a single unit. */
       const mat = new THREE.MeshBasicMaterial({
         color: ink.clone(),
         transparent: true,
@@ -157,10 +194,21 @@ export default function Pyramid3D({
         side: THREE.DoubleSide
       });
       bandMats.push(mat);
-      const band = new THREE.Mesh(geo, mat);
-      band.renderOrder = -1;
-      rig.add(band);
-    }
+
+      const n = BAND_SLABS[bi];
+      /* An unsplit band keeps the whole span: no padding, no gaps. */
+      const pad = n > 1 ? GAP_OUTER : 0;
+      const slabH = (t1 - t0 - 2 * pad - GAP_INNER * (n - 1)) / n;
+      for (let s = 0; s < n; s++) {
+        const a = t0 + pad + s * (slabH + GAP_INNER);
+        const b = a + slabH;
+        const geo = new THREE.CylinderGeometry(R * (1 - b), R * (1 - a), H * (b - a), 3, 1, true);
+        geo.translate(0, (H * (a + b)) / 2, 0);
+        const slab = new THREE.Mesh(geo, mat);
+        slab.renderOrder = -1;
+        rig.add(slab);
+      }
+    });
 
     const capped = new THREE.ConeGeometry(R, H, 3);
     capped.translate(0, H / 2, 0);
