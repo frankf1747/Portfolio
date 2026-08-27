@@ -410,7 +410,12 @@ const CARDS: Card[] = [
   { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ONTOLOGY DESIGN", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
   { n: "02", client: "MOOBOX", descriptor: "DEMAND & DISTRIBUTION — FOUNDER", status: "UPLOADING", x: 800, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "A/B TESTING", "FORECASTING"] },
   { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
-  { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
+  /* PARKED while the work is still in development — too many frames on the
+     wall read as placeholders rather than as a body of work. Uncomment to
+     restore; nothing else has to change. Slot 05 deliberately KEEPS its
+     number so this stays a pure uncomment, which does mean the rail runs
+     01, 02, 03, 05 while this is parked. */
+  // { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
   { n: "05", client: "COMPETITIVE ANALYSIS AGENT", descriptor: "MARKET INTELLIGENCE — AUTOMATION", status: "IN PROGRESS", x: 300, w: 310, h: 227, p: 53, d: 0.3, services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"] }
 ];
 

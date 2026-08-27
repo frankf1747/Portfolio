@@ -112,12 +112,23 @@ export default function ScrollProvider({
 
        The lesson across all four: any motion STARTED MID-GESTURE has to
        match the velocity already on screen, and none of these can. So this
-       does not start mid-gesture. It decides at the FIRST event of a
-       gesture, when the page is at rest, and animates the whole way to the
-       next stop in one move with an ease-in-out — gentle at both ends
-       because both ends are stationary. The rest of the gesture, momentum
-       tail and all, is swallowed: there is nothing left to decide, and
-       nothing that could fight the animation in flight.
+       does not start mid-gesture. It decides at the START of a gesture,
+       when the page is at rest, and animates the whole way to the next
+       stop in one move with an ease-in-out — gentle at both ends because
+       both ends are stationary. The rest of the gesture, momentum tail and
+       all, is swallowed: there is nothing left to decide, and nothing that
+       could fight the animation in flight.
+
+       "Start" is the first FLOOR px of a gesture, not its first event.
+       Committing on the first event made every stop a hair-trigger — a
+       graze on the trackpad is one 2px event, and at rest that launched a
+       full-section glide, which is why the middle stop (neighbours both
+       ways) felt impossible to stand on. Worse, macOS momentum tails go
+       SPARSE as they die: their last events arrive further apart than
+       QUIET_MS, so each one read as a fresh gesture and re-aimed one more
+       section — a flick from 01 sailed through 02 and landed on 03. Real
+       intent crosses FLOOR within two or three events (~30ms, invisible);
+       a graze or a dying tail never does.
 
        A gesture ends three ways, so the next flick is never eaten:
          - quiet: a gap over QUIET_MS
@@ -136,6 +147,9 @@ export default function ScrollProvider({
        accessible. */
     const QUIET_MS = 180;
     const MARGIN = 0.15;
+    /* px of accumulated wheel before a glide commits — see the block above.
+       12 is well under any deliberate swipe and well over tail-end dribble. */
+    const FLOOR = 12;
     /* Ease in AND out. Lenis's own easeOutExpo is right for chasing a
        moving wheel target and wrong here: it opens at full speed, which is
        precisely the jolt this is built to avoid. */
@@ -146,6 +160,8 @@ export default function ScrollProvider({
     let prevAbs = 0;
     let peakAbs = 0;
     let sign = 0;
+    let pend = 0;
+    let committed = false;
 
     const gate = (data: VirtualScrollData): boolean => {
       const event = data.event as WheelEvent;
@@ -187,6 +203,8 @@ export default function ScrollProvider({
         prevAbs = 0;
         peakAbs = 0;
         sign = 0;
+        pend = 0;
+        committed = false;
         return true;
       }
 
@@ -205,7 +223,17 @@ export default function ScrollProvider({
       peakAbs = fresh ? abs : Math.max(peakAbs, abs);
       sign = dir;
 
-      if (!fresh) return false;
+      /* A fresh boundary opens a CANDIDATE gesture; nothing moves until it
+         has FLOOR px behind it. A committed gesture swallows its own tail
+         exactly as before. */
+      if (fresh) {
+        pend = 0;
+        committed = false;
+      }
+      if (committed) return false;
+      pend += abs;
+      if (pend < FLOOR) return false;
+      committed = true;
 
       /* The margin only exists so a landing a few pixels short cannot aim
          at the stop it is already sitting on — an 8px target reads as a
