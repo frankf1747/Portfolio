@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MooBox mark, flattened from the three.js build (see moobox-3d.html): the
+     same solid ink cube seen down the (1,1,1) axis by an orthographic camera,
+     so this file and the 3D object are the same construction, not a redraw.
+
+     Ink cube, paper hairline seams, M knocked out of the two front faces.
+     Unit cube of edge 2 scaled x100; the near corner sits at the centre of
+     the hexagon, which is where the three seams meet. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 282.843 326.599">
+  <!-- silhouette: the cube is one flat ink hexagon. Volume reads through the
+       seams below, never through shading. -->
+  <polygon points="141.421,0 282.843,81.650 282.843,244.949 141.421,326.599 0,244.949 0,81.650" fill="#191817"/>
+  <!-- the M: a knockout, not an object. One polygon spanning both front faces,
+       which is why it turns the vertical edge instead of meeting at it. Apex
+       and baseline carry the 3D build's optical corrections. -->
+  <path d="M53.033,254.339 L141.421,305.369 L229.810,254.339 L229.810,173.505 L141.421,225.353 L53.033,173.505 Z" fill="#FEFEFC"/>
+  <!-- three seams, one weight, no accents. Paper on paper where they cross the
+       knockout, so they simply stop there. -->
+  <g stroke="#FEFEFC" stroke-width="2.4" stroke-linecap="round">
+    <path d="M141.421,163.299 L0,81.650"/>
+    <path d="M141.421,163.299 L282.843,81.650"/>
+    <path d="M141.421,163.299 L141.421,326.599"/>
+  </g>
+</svg>

@@ -728,6 +728,76 @@ html.is-study-open {
   opacity: 0.26;
 }
 
+/* ---------- the MooBox cube ----------
+   Opposite treatment to the pyramid, and deliberately so. The pyramid is
+   glass because it has interior structure worth seeing through; the cube's
+   whole claim is that it is SOLID with two openings cut into it, so it is
+   opaque and back-face culled.
+
+   MooBox's OWN ink, not the site's --ink. That has precedent on this same
+   wall: biomarin.svg draws in BioMarin's blue, not in site colour, because a
+   client mark carries its owner's value. The cube is a client mark that
+   happens to be the cover, so it gets the same treatment — site ink rendered
+   it violet, which is a different logo.
+
+   One value for the face and the jamb alike. The mark's own rule is that
+   volume reads through the seams and never through shading, so a recess is
+   allowed to be deep but not to be lit; what separates a jamb from the face
+   beside it is the paper rim, not a darker tone. */
+.card__face {
+  fill: #191817;
+}
+
+/* The inner cube: paper where the shell is ink, the mark's own two values
+   swapped rather than a third introduced. At rest it is flush inside the
+   shell and its front IS the white of the M. */
+.card__inner,
+.card__lining {
+  fill: var(--paper);
+}
+
+/* Its edges, in ink — the shell's rule inverted, since a paper solid cannot
+   carry paper seams. One weight, no accents, exactly as outside. MooBox's own
+   ink again, NOT the site's --ink: that is #262048 and rendered the inner cube
+   violet against a near-black shell, which reads as two different objects. */
+.card__iseam {
+  fill: none;
+  opacity: var(--seam-a, 0);
+  stroke: #191817;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The links, a stop down from the outlines. Roughly 30% ink over paper — far
+   enough below the hull to stop competing with it, far enough above the paper
+   faces to still describe the volume and read as one connected mass. */
+.card__ilink {
+  fill: none;
+  opacity: var(--seam-a, 0);
+  stroke: #b3b1ac;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The visible cube edges and the rim of the mouth, one weight, no accents. */
+.card__wire {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Held a hair under solid so the mark prints onto the panel rather than
+   sitting on it, matching how the corner marks are handled. On the GROUP,
+   not per element: per element it stacked wherever two pieces overlapped and
+   the seams lit up at the near corner. */
+.card__solid {
+  opacity: 0.9;
+}
+
 /* Client mark, TOP LEFT — the reading corner. This is whose work it is,
    so it leads; at 18% in a bottom corner it was a detail nobody could
    read. The artwork is centred in the frame and the mark sits clear above
