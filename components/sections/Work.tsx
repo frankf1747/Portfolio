@@ -777,7 +777,7 @@ const CubeCover = () => {
    every card that is still being written — a live detail page is not the
    same claim as a finished case study, and card 01 is both. */
 const CARDS: Card[] = [
-  { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ONTOLOGY DESIGN", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
+  { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
   { n: "02", client: "MOOBOX", descriptor: "AI-ENABLED CRM — PRODUCT & STRATEGY LEAD", status: "UPLOADING", cover: "cube", x: 800, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"] },
   { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
   /* PARKED while the work is still in development — too many frames on the
