@@ -25,17 +25,56 @@ import { scrambleText } from "@/lib/smartText";
    ever plays on hover. */
 
 const ITEMS: { t: string; tools: string[] }[] = [
-  { t: "DATA ANALYTICS", tools: ["SQL", "Python", "Databricks", "Fabric", "Snowflake", "Spark", "Medallion ETL", "Semantic modeling"] },
-  { t: "AGENTIC DEV", tools: ["LangGraph", "LLM APIs", "RAG", "Evals", "Prompt engineering"] },
-  { t: "EXPERIMENTATION", tools: ["A/B testing", "Causal inference", "RDD"] },
+  { t: "DATA ANALYTICS", tools: ["SQL", "Python", "Databricks", "Fabric", "Medallion ETL", "Semantic modeling"] },
+  { t: "MACHINE LEARNING", tools: ["scikit-learn", "Random forest", "XGBoost", "Feature engineering", "Cross-validation", "Clustering"] },
+  /* "Prompt engineering" left when AI ENGINEERING arrived carrying "Context
+     engineering", which has largely superseded it as the term of art — one
+     skill should not be claimed twice.
+
+     "Evals" and AI ENGINEERING's "Eval loop" DO both stand, deliberately, and
+     are not the duplicate they look like: this one is the graders you write
+     for an agent you are building, that one is the measure-and-feed-back cycle
+     that keeps a shipped agent honest. Different work, different category.
+     Orchestration is what LangGraph is actually for and was missing.
+
+     RAG left for AI ENGINEERING, which is the right side of the line: retrieval
+     is about what a model is allowed to REACH, alongside MCP, not about how an
+     agent is assembled. Skills took its place — packaged capabilities are how
+     an agent gets built now, and that is squarely this category. */
+  { t: "AGENTIC DEV", tools: ["LangGraph", "LLM APIs", "Skills", "Evals", "Orchestration"] },
   { t: "OPTIMIZATION", tools: ["Gurobi", "Integer programming", "Forecasting"] },
+  { t: "EXPERIMENTATION", tools: ["A/B testing", "Causal inference", "RDD"] },
   { t: "VISUALIZATION", tools: ["Power BI", "DAX", "Tableau", "GA4"] },
   { t: "PRODUCT", tools: ["PRDs", "User flows", "Figma", "Agile"] },
   { t: "FRONTEND/BACKEND", tools: ["React", "Next.js", "APIs"] },
-  { t: "PRODUCTIVITY", tools: ["Microsoft 365", "Genie Space", "MCP", "Power Automate"] }
+  { t: "PRODUCTIVITY", tools: ["Microsoft 365", "Genie Space", "Power Automate"] },
+  /* Separate from AGENTIC DEV on purpose: that one is BUILDING an agent, this
+     is what makes one fit to ship — how it is governed, what it is allowed to
+     reach (MCP for tools, RAG for knowledge), what goes in its context, and
+     how it is measured over time. MCP
+     moved here from PRODUCTIVITY, where it never belonged: it is a developer
+     protocol for giving models tools and context, not an office tool sitting
+     next to Microsoft 365.
+
+     "Tool use", "Guardrails" and "Tracing" were all cut. The first is table
+     stakes — every API has it, so claiming it says nothing. The other two name
+     products you buy rather than work you do. */
+  { t: "AI ENGINEERING", tools: ["AI governance", "MCP", "RAG", "Context engineering", "Eval loop"] },
 ];
 
-const SPLIT = 4;
+/* THREE ROWS, 4 / 4 / 2 — the first two filled, the last short.
+
+   TWO CONSTRAINTS, and the second is easy to miss. The obvious one is that a
+   row's items must fit the 1400rem budget. The other is that a hover PANEL is
+   wider than its item and grows RIGHTWARD, so `item.left + panel.width` has to
+   stay on the grid too. AI ENGINEERING has the widest panel in the set at
+   433rem; sitting last in row one it started at 1068 and ran to 1536, nearly
+   100rem off the screen. It is last in the list now, where row three's short
+   span gives it room to open into.
+
+   Measured at 1440: rows 1322 / 1276 / 607, and every panel's right edge
+   inside 1400 — the widest is FRONTEND/BACKEND reaching 1261. */
+const ROWS = [4, 4, 2];
 
 export default function Capabilities() {
   const names = useRef<(SmartTextHandle | null)[]>([]);
@@ -58,8 +97,15 @@ export default function Capabilities() {
       </div>
 
       <div className="caps__strip" role="list">
-        {[ITEMS.slice(0, SPLIT), ITEMS.slice(SPLIT)].map((row, r) => (
-          <div className={`caps__row${r ? " is-inset" : ""}`} key={r}>
+        {ROWS.map((n, r, arr) => ITEMS.slice(
+          arr.slice(0, r).reduce((a, b) => a + b, 0),
+          arr.slice(0, r + 1).reduce((a, b) => a + b, 0)
+        )).map((row, r) => (
+          /* Alternating, so the class still means something if the inset is
+             ever given a rule. It has none on .caps__row today — both rows
+             measured padding-left 0 — so this is currently inert here; the
+             padding it implies belongs to .subjects__row. */
+          <div className={`caps__row${r % 2 ? " is-inset" : ""}`} key={r}>
             {row.map((it) => {
               const i = ITEMS.indexOf(it);
               return (
@@ -93,9 +139,13 @@ export default function Capabilities() {
 
                     <span
                       className="caps__tools"
-                      /* Balanced columns. Filling one column to a height cap
-                         left AGENTIC DEV as four items and then a lonely
-                         fifth — the weight sat all on one side. */
+                      /* Two columns again, now that the panel sizes to its
+                         content rather than to the name. The earlier spill was
+                         not the column count on its own — it was two columns
+                         inside a box pinned to the name width, which gave
+                         PRODUCT a 46rem column for a 100rem label. With the
+                         width free, two columns keep the panel short, which is
+                         what keeps the row gap tight. */
                       style={{ columnCount: it.tools.length > 3 ? 2 : 1 }}
                       ref={(el) => {
                         faces.current[i] = el;

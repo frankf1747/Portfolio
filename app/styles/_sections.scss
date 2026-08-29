@@ -341,7 +341,10 @@
 /* ---------- §9 WORK ---------- */
 
 .work {
-  padding: 120rem 0 200rem;
+  /* Bottom was 200rem. With .cards no longer padded out to a flat 1500 the
+     dead space under the last frame is gone, so this padding became the whole
+     gap to the blue block and read as a hole rather than a break. */
+  padding: 120rem 0 110rem;
 
   /* image 7: ONE heading — the section name at display size with the count
      as a superscript. The small "03 — PROJECTS" index that used to sit
@@ -375,27 +378,26 @@
 
 .cards {
   position: relative;
-  /* tightened from 1900rem — the reference clusters the frames into a
-     readable two-column rhythm rather than a long sparse column */
-  height: 1500rem;
+  /* Derived from the card data now — see Work.tsx. Was a flat 1500rem, which
+     left 343rem of dead space under the last frame once 04 was parked. */
+  height: var(--cards-h, 1500rem);
   margin: 0 var(--margin);
 }
 
 .card__pos {
   position: absolute;
   left: var(--x);
+  top: var(--y);
   width: var(--w);
   /* translate3d keeps each frame on its own compositor layer, which now
      matters: --px/--py are rewritten every frame, not only on scroll */
   transform: translate3d(var(--px, 0rem), var(--py, 0rem), 0);
 }
 
-/* stacked tops, matching the reference's scatter */
-.card__pos:nth-child(1) { top: 0; }
-.card__pos:nth-child(2) { top: 180rem; }
-.card__pos:nth-child(3) { top: 520rem; }
-.card__pos:nth-child(4) { top: 800rem; }
-.card__pos:nth-child(5) { top: 1160rem; }
+/* The scatter is DATA now, not child position. Keying tops to nth-child made
+   every card's Y depend on how many were rendered, so commenting one out slid
+   the ones after it into the wrong slots — which is how 05 ended up on top of
+   03. See the `y` field on Card. */
 
 .card {
   display: block;
@@ -488,7 +490,9 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
 /* ---------- APPROACH (blue inversion) ---------- */
 
 .approach {
-  padding: 180rem 0 200rem;
+  /* Top was 180rem — measured with the above, FIVE RULES sat 368rem below the
+     last project frame. Together these bring it to 228. */
+  padding: 130rem 0 200rem;
 
   &__head {
     display: flex;

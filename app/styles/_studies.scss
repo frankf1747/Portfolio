@@ -567,7 +567,16 @@ html.is-study-open {
      when those were removed. Anton's cap height also runs far taller than
      the mono's at the same size, so this reads much larger than the 40rem
      mono it replaced. */
-  font-size: 55rem;
+  /* 55 → 51. The four data/AI capabilities measured 1385 of names at 55rem,
+     which is 1451 with gaps against a 1400 budget — the semantic grouping did
+     not fit at all, and every arrangement that DID fit had to break a group
+     to do it. Four per cent off the type buys 100rem and lets row one hold
+     its own four. Still well under the 56rem ceiling the notes above measure.
+
+     NOTE for anyone measuring this in the preview pane: the pane renders the
+     MOBILE breakpoint, where this drops to 40rem. Widths taken there are ~40%
+     small and will tell you things fit when they do not. Measure at 1440. */
+  font-size: 51rem;
   line-height: 1.02;
   --st-window: 1.15em;
   /* Three levers buy width here and all of it is spent on size: negative
@@ -580,6 +589,11 @@ html.is-study-open {
 }
 
 /* Both faces share one box, and the box is reserved for the taller. */
+/* Positioned so the hover z-index has something to apply to. */
+.caps__item {
+  position: relative;
+}
+
 .caps__face {
   position: relative;
   display: block;
@@ -590,17 +604,35 @@ html.is-study-open {
 
      A third column would shrink it further but blows the item past its own
      name width and over its neighbour. Two columns is the limit. */
-  min-height: 84rem;
+  min-height: 72rem;
 }
 
 /* Stacked ON the name. CSS columns rather than a wrapped flex column: flex
    fills the first column to its cap before starting the second, which left
    AGENTIC DEV as four items and then a lonely fifth. `columns` balances. */
+/* WIDTH, NOT HEIGHT. `inset: 0` pinned this to the name's width, which is
+   what forced the choice between splitting a narrow box into two unusable
+   columns (labels spilled sideways over the neighbour) and stacking into one
+   column (which pushed the reserved height, and so the row gap, up by half).
+
+   Sizing to content instead lets a panel be as wide as it needs and overhang
+   the item. Overhanging a neighbouring NAME is fine — it carries its own
+   ground and lifts above them on hover, so it reads as a panel over the row
+   rather than as two things colliding. Capped so it cannot run off the grid. */
 .caps__tools {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: 560rem;
   column-gap: 28rem;
   column-fill: balance;
+  /* The ground, plus room for it to read as a panel and not as text sitting
+     on top of other text. Bottom padding is what keeps the row gap honest:
+     the panel may be taller than the reserved face box now. */
+  background: var(--ground);
+  padding: 2rem 24rem 6rem 0;
   opacity: 0;
   transition: opacity 0.3s var(--ease) 0.06s;
   pointer-events: none;
@@ -620,6 +652,10 @@ html.is-study-open {
 
 .caps__item:hover,
 .caps__item:focus-within {
+  /* Above its neighbours, so an overhanging panel covers the next name
+     instead of being painted over by it. Needs the position below. */
+  z-index: 5;
+
   .caps__name {
     opacity: 0;
   }

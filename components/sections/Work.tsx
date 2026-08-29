@@ -37,6 +37,12 @@ type Card = {
   w: number;
   h: number;
   /** scroll parallax offset in design px */
+  /* Vertical slot. This used to live in CSS as .card__pos:nth-child(n){top},
+     which quietly coupled every card's Y to how many cards were RENDERED —
+     so parking 04 slid 05 up into slot 4 and straight over UCLA. The note by
+     CARDS calls parking "a pure uncomment"; it was not, until this moved into
+     the data. */
+  y: number;
   p: number;
   /** cursor parallax depth, 0 = pinned, 1 = full travel */
   d: number;
@@ -777,16 +783,20 @@ const CubeCover = () => {
    every card that is still being written — a live detail page is not the
    same claim as a finished case study, and card 01 is both. */
 const CARDS: Card[] = [
-  { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, w: 510, h: 400, p: -120, d: 1, services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
-  { n: "02", client: "MOOBOX", descriptor: "AI-ENABLED CRM — PRODUCT & STRATEGY LEAD", status: "UPLOADING", cover: "cube", x: 800, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"] },
-  { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
+  { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, y: 0, w: 510, h: 400, p: -120, d: 1, services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
+  { n: "02", client: "MOOBOX", descriptor: "AI-ENABLED CRM — PRODUCT & STRATEGY LEAD", status: "UPLOADING", cover: "cube", x: 800, y: 180, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"] },
+  { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, y: 520, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
   /* PARKED while the work is still in development — too many frames on the
      wall read as placeholders rather than as a body of work. Uncomment to
      restore; nothing else has to change. Slot 05 deliberately KEEPS its
      number so this stays a pure uncomment, which does mean the rail runs
-     01, 02, 03, 05 while this is parked. */
-  // { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
-  { n: "05", client: "COMPETITIVE ANALYSIS AGENT", descriptor: "MARKET INTELLIGENCE — AUTOMATION", status: "IN PROGRESS", x: 300, w: 310, h: 227, p: 53, d: 0.3, services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"] }
+     01, 02, 03, 05 while this is parked.
+
+     05 IS PARKED-LAYOUT POSITIONED: x 830, y 800, taking 04's empty right-hand
+     slot. Restoring 04 means putting 05 back to x 300, y 1160, or the two will
+     sit on top of each other. */
+  // { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, y: 800, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
+  { n: "05", client: "COMPETITIVE ANALYSIS AGENT", descriptor: "MARKET INTELLIGENCE — AUTOMATION", status: "IN PROGRESS", x: 830, y: 800, w: 310, h: 227, p: 53, d: 0.3, services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"] }
 ];
 
 export default function Work() {
@@ -892,7 +902,21 @@ export default function Work() {
         <span className="work__count" aria-hidden="true">(3)</span>
       </h2>
 
-      <div className="cards" ref={wrapRef}>
+      {/* Height derived, not hardcoded. It was a flat 1500rem while the tallest
+          card bottomed out at 1027 + the ~130rem title block — 343rem of dead
+          space between the last frame and FIVE RULES. Deriving it also means
+          parking or restoring a card adjusts the block instead of leaving a
+          hole. TITLE_BLOCK is the client/descriptor/services stack under each
+          frame, which is outside the card's own h. */}
+      <div
+        className="cards"
+        ref={wrapRef}
+        style={
+          {
+            "--cards-h": `${Math.max(...CARDS.map((c) => c.y + c.h)) + 130 + 20}rem`
+          } as React.CSSProperties
+        }
+      >
         {CARDS.map((c, i) => (
           <div
             key={c.n}
@@ -903,6 +927,7 @@ export default function Work() {
             style={
               {
                 "--x": `${c.x}rem`,
+                "--y": `${c.y}rem`,
                 "--w": `${c.w}rem`,
                 "--h": `${c.h}rem`,
                 "--ar": c.w / c.h
