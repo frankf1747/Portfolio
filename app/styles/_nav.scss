@@ -1,5 +1,13 @@
 /* ============================================================
    §6 NAV — the centrepiece interaction
+
+   EVERY length in this file is on --u, the poster unit, not on rem. The
+   bar is one object: the items sit top-left, the wordmark is centred and
+   the contact ring is top-right, all sharing a single padding. Damping
+   half of it — say the item pitch but not the margin, or the label but not
+   the ring — would pull those three apart on a wide screen. It renders on
+   a monitor exactly as it does on a 1440 artboard, which is what was
+   asked for. Below 1440 --u IS rem, so this is a no-op there.
    ============================================================ */
 
 .nav {
@@ -14,7 +22,7 @@
   z-index: 99999;
   pointer-events: none;
   user-select: none;
-  padding: var(--margin);
+  padding: var(--margin-u);
   box-sizing: border-box;
   color: var(--mark);
   transition: opacity 1s var(--ease), color 1s var(--ease), transform 1s var(--ease);
@@ -23,14 +31,14 @@
 .nav__items {
   display: inline-flex;
   flex-direction: column;
-  row-gap: 2rem;
+  row-gap: calc(2 * var(--u));
   position: relative;
   pointer-events: auto;
 }
 
 .nav__item {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 12rem;
+  font-size: calc(12 * var(--u));
   line-height: 1;
   --st-window: 1em; /* §4 mask must clear the line box — see _smart-text */
   letter-spacing: 0.02em;
@@ -38,10 +46,10 @@
   position: relative;
   z-index: 9;
   cursor: pointer;
-  height: 14rem; /* item pitch — tracks font-size, keeps the 2rem row gap */
+  height: calc(14 * var(--u)); /* item pitch — tracks font-size, keeps the 2rem row gap */
 
   /* entrance + collapse share this transition */
-  transform: translateY(-125rem);
+  transform: translateY(calc(-125 * var(--u)));
   transition: transform 1s var(--ease);
   will-change: transform;
 
@@ -73,12 +81,12 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  gap: 10rem;
+  gap: calc(10 * var(--u));
   pointer-events: none;
 
   span {
     display: block;
-    width: 32rem;
+    width: calc(32 * var(--u));
     height: 2px;
     background: currentColor;
     transform: scaleX(0);
@@ -146,7 +154,7 @@ html[data-nav="in"] .nav__item {
 
 html.is-down:not(.is-start) .nav__items:not(:hover):not(:focus-within) {
   .nav__item {
-    transform: translateY(-125rem);
+    transform: translateY(calc(-125 * var(--u)));
   }
 
   /* words exit TOP-DOWN */
@@ -193,7 +201,7 @@ html.is-down:not(.is-start) .nav__items:not(:hover):not(:focus-within) {
 .nav__logoText {
   display: block;
   font-family: var(--font-body), Helvetica, Arial, sans-serif;
-  font-size: 36rem;
+  font-size: calc(36 * var(--u));
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -204,7 +212,7 @@ html.is-down:not(.is-start) .nav__items:not(:hover):not(:focus-within) {
 }
 
 html.is-down:not(.is-start) .nav__logoText {
-  transform: scale(0.72) translateY(-100rem);
+  transform: scale(0.72) translateY(calc(-100 * var(--u)));
 }
 
 .nav__contact {
@@ -215,26 +223,26 @@ html.is-down:not(.is-start) .nav__logoText {
   /* centred on the text block's axis, and tight to it — edge-aligning the
      ring left it reading as a second object parked underneath */
   align-items: center;
-  gap: 6rem;
+  gap: calc(6 * var(--u));
   /* distance the ring rises when the label folds — set from the measured
      text run plus the gap, so the ring lands exactly where the text began
      rather than at an arbitrary offset. Verified in-browser after any
      change to the label, its size, or the gap. */
-  --contact-fold: 69rem;
+  --contact-fold: calc(69 * var(--u));
   /* NO overflow:hidden here. It clipped the ring's :hover scale — and so
      did the 40×40 viewBox, where an r=18 circle with a 2-wide stroke
      already reaches 19 of the 20 available. The clip is now scoped to
      the text alone (.textMask), and the svg is allowed to paint past its
      viewport so the ring has somewhere to grow. */
-  padding-right: 2rem;
+  padding-right: calc(2 * var(--u));
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 17rem;
+  font-size: calc(17 * var(--u));
   letter-spacing: 0.02em;
   text-transform: uppercase;
 
   svg {
-    width: 34rem;
-    height: 34rem;
+    width: calc(34 * var(--u));
+    height: calc(34 * var(--u));
     flex: none;
     overflow: visible;
     transition: transform 1s var(--ease);
@@ -298,7 +306,7 @@ html.is-down:not(.is-start) .nav__contact:not(:hover) {
   flex-direction: column;
   /* leading between the two vertical columns — this is the "line spacing"
      of a rotated run, not line-height */
-  gap: 1rem;
+  gap: calc(1 * var(--u));
   line-height: 1;
   writing-mode: vertical-rl;
   transition: transform 1s var(--ease);

@@ -44,14 +44,31 @@ const EDU = [
   }
 ];
 
-/* Falloff radius and travel, both in px. Radius roughly a word wide, so the
-   effect reads as local to the cursor rather than as the paragraph breathing.
-   LERP is the fraction of remaining distance covered per frame: high enough
-   to feel attached to the pointer, low enough that letters settle rather
-   than snap. */
+/* Falloff radius and travel, in DESIGN px — 1440-artboard units, the same
+   ones the stylesheet is written in. They are multiplied by the live root
+   unit before use.
+
+   They used to be raw screen px, and that was the bug behind "on a big
+   screen they barely move". The paragraph scales with the viewport; these
+   did not. On a 2560 monitor the glyphs were 78% larger while the push
+   stayed 22px — a nudge worth 26% of a letter instead of 46% — and the
+   field covered ~44% less of the block. Read in design px, the gesture is
+   now identical at every width.
+
+   Radius roughly a word wide, so the effect reads as local to the cursor
+   rather than as the paragraph breathing. LERP is the fraction of remaining
+   distance covered per frame: high enough to feel attached to the pointer,
+   low enough that letters settle rather than snap. */
 const RADIUS = 130;
 const PUSH = 22;
 const LERP = 0.18;
+
+/* px per design px. 1 at 1440 and below; ~1.19 on a 2560 monitor, where the
+   reading unit is damped. Read fresh on every measure() rather than cached
+   at mount, so it is already correct after a resize — measure() is the one
+   thing that runs on both mount and resize. */
+const rootUnit = () =>
+  parseFloat(getComputedStyle(document.documentElement).fontSize) || 1;
 
 export default function About() {
   const bodyRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +86,8 @@ export default function About() {
     let px = -9999;
     let py = -9999;
     let raf = 0;
+    let radius = RADIUS;
+    let push = PUSH;
 
     /* Positions are cached because reading 340 rects per frame is the one
        thing that would make this expensive. They are stored RELATIVE to the
@@ -78,6 +97,10 @@ export default function About() {
        these nodes on resplit and on its reveal, and an enter is both rare
        and the exact moment the cache needs to be right. */
     const measure = () => {
+      const u = rootUnit();
+      radius = RADIUS * u;
+      push = PUSH * u;
+
       const box = para.getBoundingClientRect();
       cells = Array.from(
         para.querySelectorAll<HTMLElement>(".letter-inner")
@@ -117,13 +140,13 @@ export default function About() {
 
         let tx = 0;
         let ty = 0;
-        if (dist < RADIUS && dist > 0.01) {
+        if (dist < radius && dist > 0.01) {
           /* Squared falloff rather than linear: linear makes the whole
              radius feel equally active and the edge of the field visible as
              a ring. */
-          const f = (1 - dist / RADIUS) ** 2;
-          tx = (dx / dist) * f * PUSH;
-          ty = (dy / dist) * f * PUSH;
+          const f = (1 - dist / radius) ** 2;
+          tx = (dx / dist) * f * push;
+          ty = (dy / dist) * f * push;
         }
 
         c.x += (tx - c.x) * LERP;

@@ -64,7 +64,7 @@
 .hero__content {
   position: absolute;
   inset: 0;
-  transform: translateY(calc(var(--start-vh) - min(450rem, 50vh)));
+  transform: translateY(calc(var(--start-vh) - min(calc(450 * var(--u)), 50vh)));
   transition: transform 2.4s var(--ease-content);
 
   &.is-in {
@@ -77,10 +77,14 @@
   font-weight: 400;
 }
 
+/* The cover — overture, subtitle, meta row — is pinned to --u in full, so
+   it renders on a monitor exactly as it always has. Pinning only the type
+   and letting the offsets damp would have slid the subtitle 80px left of
+   where it was drawn. */
 .hero__sub {
   position: absolute;
-  left: 138rem;
-  bottom: 160rem;
+  left: calc(138 * var(--u));
+  bottom: calc(160 * var(--u));
   color: var(--mark);
   /* The hide is load-bearing, not decoration: SmartText resolves
      `trigger="manual"` instances on mount, so this line is fully painted
@@ -92,17 +96,23 @@
   &.is-in {
     opacity: 1;
   }
+
+  /* .h1 damps with the reading unit everywhere else on the site; this one
+     line is part of the cover, so it holds the poster scale. */
+  .h1 {
+    font-size: calc(95 * var(--mono-fit) * var(--u));
+  }
 }
 
 .hero__meta {
   position: absolute;
-  left: var(--margin);
-  right: var(--margin);
-  bottom: 24rem;
+  left: var(--margin-u);
+  right: var(--margin-u);
+  bottom: calc(24 * var(--u));
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 16rem;
+  font-size: calc(16 * var(--u));
   letter-spacing: -0.01em;
   text-transform: uppercase;
 }
@@ -116,7 +126,7 @@
    be above them. */
 .hero__right {
   display: flex;
-  gap: 24rem;
+  gap: calc(24 * var(--u));
 }
 
 /* Stays the mark. Ink was tried and pulls too much weight for a line that
@@ -635,8 +645,16 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
    ============================================================ */
 
 @media (max-width: 1024px) {
+  /* Both units re-base together. --u is the poster unit, so if it kept the
+     1440 formula here the pinned top bar would render 29% smaller on a
+     tablet than it does today. Below 1440 there is nothing to damp, so rem
+     simply follows --u and the two stay identical. */
+  :root {
+    --u: clamp(0.72px, 100vw / 1024, 1px);
+  }
+
   html {
-    font-size: clamp(0.72px, 100vw / 1024, 1px);
+    font-size: var(--u);
   }
 
   /* The display sizes are literal §3 values measured against the 1440
@@ -688,8 +706,12 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
 }
 
 @media (max-width: 720px) {
+  :root {
+    --u: clamp(0.62px, 100vw / 560, 0.9px);
+  }
+
   html {
-    font-size: clamp(0.62px, 100vw / 560, 0.9px);
+    font-size: var(--u);
   }
 
   /* Below ~520px the rem clamp floors out, so a fixed rem size stops

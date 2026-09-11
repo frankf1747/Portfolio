@@ -4,7 +4,28 @@
    ============================================================ */
 
 :root {
+  /* ---------- THE TWO UNITS ----------
+
+     --u is the POSTER UNIT: one pixel on the 1440 artboard, perfectly
+     linear with the viewport, exactly as the whole site used to be.
+
+     `rem` (set on `html` below) is the READING UNIT. It tracks --u up to
+     1440 and then all but stops. Above the artboard a wider screen is not
+     a request for bigger letters — it is more room. Left linear, a 2560
+     monitor rendered the About paragraph at 85px and the page at 13,343px
+     tall: the same words, 78% larger, with no more of them on screen.
+
+     Anything whose JOB is to span the full width stays on --u, because
+     that span is composition, not legibility: the overture, SAY HELLO,
+     and the whole top bar. Everything you actually READ is in rem.
+
+     The two are identical at and below 1440, so nothing about the site as
+     drawn on a 1440 artboard — or on a phone — changes. */
+  --u: calc(100vw / 1440);
+
   --margin: 20rem;
+  /* the site margin on the poster unit, for the pinned top bar and hero */
+  --margin-u: calc(20 * var(--u));
   --gap: 20rem;
   /* 12 columns inside the margins. (§1 prints this as
      `100vw*100/12 - …`, which resolves to 8.3 viewport widths; the
@@ -65,7 +86,17 @@
 }
 
 html {
-  font-size: calc(100vw / 1440);
+  /* Linear to 1440, then only a QUARTER of each further pixel. The two
+     terms cross at exactly 1440 (both = 1px), so min() switches branches
+     without a step, and below 1440 the damped term is the larger one —
+     which is why min() and not max(). At 2560 this reads 1.19px instead
+     of 1.78px.
+
+     The 0.25 is the one knob in this file. 0 would pin the site to its
+     1440 rendering outright; 1 restores the old linear behaviour. The
+     responsive tiers in _sections.scss re-base BOTH units together and
+     must keep doing so. */
+  font-size: min(var(--u), calc(1px + (100vw - 1440px) * 0.25 / 1440));
   background: var(--ground);
 }
 
@@ -116,8 +147,14 @@ body {
 /* --st-shift: seats the ink inside §4's clip window — see _smart-text.
    Measured to centre the caps: at lh 0.65 the ink sat 5.9px proud of the
    window at 196px, at lh 0.7 it sat 0.4px proud. */
-.super { font-size: calc(245rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
-.super-small { font-size: calc(190rem * var(--mono-fit)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
+/* --u, not rem. These two are the poster sizes and they are measured to
+   fill the frame: the overture runs 99% of the viewport and SAY HELLO 97%.
+   On the reading unit they would fall to 67% and leave a dead strip down
+   the right, so they keep scaling with the screen. .h1 does NOT — it sets
+   capability names and study titles inside content blocks, where 135px on
+   a monitor was simply a heading shouting. */
+.super { font-size: calc(245 * var(--mono-fit) * var(--u)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
+.super-small { font-size: calc(190 * var(--mono-fit) * var(--u)); line-height: 0.65; letter-spacing: -0.04em; --st-shift: 0.014em; }
 .h1 { font-size: calc(95rem * var(--mono-fit)); line-height: 0.7; letter-spacing: -0.04em; --st-shift: -0.011em; }
 /* --st-window: §4's clip window has to clear the line box, or the mask
    shaves the bottom off the glyphs. Keep it equal to line-height on

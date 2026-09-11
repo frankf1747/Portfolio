@@ -22,6 +22,15 @@
         "/Users/frankfu/Documents/miscallaneous/work"
       ],
       "port": 8123
+    },
+    {
+      "name": "ugc-dashboard",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/frankfu/Documents/GitHub/UGC_Trend_Analyzer && streamlit run app/streamlit_app.py --server.port 8552"
+      ],
+      "port": 8552
     }
   ]
 }
