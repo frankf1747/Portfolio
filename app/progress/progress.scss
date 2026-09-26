@@ -1,9 +1,15 @@
 /* ============================================================
    PROGRESS — the live project dashboard (/progress)
 
-   §2 holds here too: one ground, one mark. Milestone status is told by FILL,
-   not by colour: planned is an outline, in progress fills to its percentage,
-   done is solid, blocked is hatched.
+   Type and chrome keep §2's one ground + one mark. The Gantt bars are the
+   one deliberate exception: they are the thing to find on the page, so they
+   carry the site's --blue, outlined in --ink because the light blue alone
+   barely separates from the paper. The mark stays on the TODAY line, which
+   makes "where we are now" the only pink inside the chart.
+
+   Status is still told by FILL, so it reads without colour: planned is an
+   outline, in progress fills to its percentage, done is solid, blocked is
+   hatched.
    ============================================================ */
 
 .pg {
@@ -282,7 +288,9 @@
 }
 
 .pg-bar {
+  --bar: var(--blue);
   position: absolute;
+  color: var(--ink);
   top: 50%;
   height: 16rem;
   transform: translateY(-50%);
@@ -294,12 +302,12 @@
 .pg-bar__fill {
   display: block;
   height: 100%;
-  background: currentColor;
+  background: var(--bar);
   transition: width 0.8s var(--ease);
 }
 
 .pg-bar--done {
-  background: currentColor;
+  background: var(--bar);
 }
 
 .pg-bar--blocked {
@@ -313,7 +321,7 @@
   width: 10rem;
   height: 10rem;
   transform: translate(-50%, -50%) rotate(45deg);
-  border: 1px solid currentColor;
+  border: 1px solid var(--ink);
   background: var(--ground);
 }
 
