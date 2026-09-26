@@ -166,4 +166,15 @@ describe("startLive", () => {
     await vi.advanceTimersByTimeAsync(300);
     expect(onState).not.toHaveBeenCalled();
   });
+
+  it("ignores a status from a channel that has already been stopped", () => {
+    const { db, channel } = makeDb();
+    const onLive = vi.fn();
+    const stop = startLive(db, vi.fn().mockResolvedValue(1), vi.fn(), onLive, "t");
+
+    stop();
+    onLive.mockClear();
+    emitStatus(channel, "CLOSED");
+    expect(onLive).not.toHaveBeenCalled();
+  });
 });

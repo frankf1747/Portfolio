@@ -55,6 +55,7 @@ export function startLive<T>(
     channel.on("postgres_changes", { event: "*", schema: "public", table }, soon);
   }
   channel.subscribe((status: string) => {
+    if (stopped) return;
     if (status === "SUBSCRIBED") {
       if (everSubscribed) soon();
       everSubscribed = true;
