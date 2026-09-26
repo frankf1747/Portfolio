@@ -9,16 +9,19 @@ import LiveSignal from "./LiveSignal";
 /* The §9 PROJECTS heading, as the way in to /progress.
 
    Hover (or keyboard focus) turns it pink and re-decodes it, the same
-   gesture the nav labels answer with. The title keeps its own slow pace
-   — the engine fixes pace when it splits the line — and a hover that lands
-   while the scroll-in decode is still running leaves that decode alone
-   rather than restarting it. LIVE decodes at the nav's hover speed. */
+   gesture the nav labels answer with. The scroll-in decode keeps its slow
+   pace; the hover replay runs at the "hover" pace so it resolves while the
+   pointer is still there. A hover that lands while the scroll-in decode is
+   still running leaves that decode alone rather than restarting it. LIVE
+   decodes over the same 520ms. */
 export default function ProjectsHeading() {
   const title = useRef<SmartTextHandle | null>(null);
   const live = useRef<HTMLSpanElement | null>(null);
 
   const decode = () => {
-    if (title.current && !title.current.isPlaying()) title.current.play({ scrambleOnly: true });
+    if (title.current && !title.current.isPlaying()) {
+      title.current.play({ scrambleOnly: true, pace: "hover" });
+    }
     if (live.current) scrambleText(live.current, { duration: 520 });
   };
 

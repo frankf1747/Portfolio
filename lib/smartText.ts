@@ -97,8 +97,10 @@ export type SmartTextInstance = {
   /** Re-measure line breaks and rebuild. Called on resize. */
   resplit: () => void;
   /** Run the rise + scramble. `scrambleOnly` decodes in place with no
-      rise; `riseOnly` travels in with the glyphs already settled. */
-  play: (opts?: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean }) => void;
+      rise; `riseOnly` travels in with the glyphs already settled. `pace`
+      replays at another pace's speed without re-splitting — a slow
+      heading can still answer a hover as fast as the nav does. */
+  play: (opts?: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean; pace?: ScramblePace }) => void;
   /** Render fully resolved, no motion (reduced-motion, or pre-play state). */
   resolve: () => void;
   destroy: () => void;
@@ -199,6 +201,10 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
   /* set for the whole of a play() so the host's ResizeObserver can tell a
      real container resize from one of our own frames */
   let playing = false;
+  /* Time multiplier for the current play(). Each letter's resolveAt is
+     baked in at split time from the instance's own pace; a replay at a
+     different pace runs the same curve faster rather than re-splitting. */
+  let speed = 1;
 
   /* ---- build ------------------------------------------------------ */
 
@@ -340,7 +346,7 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
     let lastSwap = 0;
 
     const tick = (now: number) => {
-      const t = now - started;
+      const t = (now - started) * speed;
       const swap = now - lastSwap > GLYPH_SWAP_MS;
       if (swap) lastSwap = now;
 
@@ -372,9 +378,12 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
     rafs[li] = requestAnimationFrame(tick);
   }
 
-  function play(opts: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean } = {}) {
+  function play(
+    opts: { delay?: number; scrambleOnly?: boolean; riseOnly?: boolean; pace?: ScramblePace } = {}
+  ) {
     clearTimers();
     const base = opts.delay ?? 0;
+    speed = opts.pace ? scrambleMs / PACE[opts.pace].scrambleMs : 1;
 
     if (prefersReduced()) {
       resolve();
@@ -408,7 +417,7 @@ export function smartText(root: HTMLElement, pace: ScramblePace = "landing"): Sm
     }
 
     lines.forEach((_, li) => {
-      const at = base + li * staggerMs;
+      const at = base + (li * staggerMs) / speed;
       timers.push(window.setTimeout(() => scrambleLine(li), at));
     });
   }

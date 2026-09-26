@@ -70,23 +70,16 @@
   transform-origin: 100% 50%;
 }
 
-/* Says "this goes somewhere". With a mouse it slides in on hover alongside
-   the pink; on touch there is no hover to reveal it, so it simply stays. */
+/* Says "this goes somewhere", so it is always there. On hover it leans a
+   little further along its own diagonal, the way the page is about to go. */
 .live-signal__arrow {
   display: inline-block;
-  transition: transform 0.6s var(--ease), opacity 0.6s var(--ease);
+  transition: transform 0.6s var(--ease);
 }
 
-/* ↗, arriving along its own diagonal from the lower left */
-html[data-touch="false"] .live-signal__arrow {
-  opacity: 0;
-  transform: translate(-5rem, 5rem);
-}
-
-html[data-touch="false"] .work__title-link:hover .live-signal__arrow,
-html[data-touch="false"] .work__title-link:focus-visible .live-signal__arrow {
-  opacity: 1;
-  transform: none;
+.work__title-link:hover .live-signal__arrow,
+.work__title-link:focus-visible .live-signal__arrow {
+  transform: translate(3rem, -3rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
