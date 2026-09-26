@@ -10,6 +10,8 @@ import Work from "@/components/sections/Work";
 import Approach from "@/components/sections/Approach";
 import Studies from "@/components/sections/Studies";
 import Contact from "@/components/sections/Contact";
+import SketchFilters from "@/components/SketchFilters";
+import Dog from "@/components/Dog";
 
 /* The whole site, as one composition. It lives here rather than in
    app/page.tsx because it is rendered at more than one path: "/" and each
@@ -22,6 +24,11 @@ export default function Landing() {
       <ScrollProvider />
       <Cursor />
       <Nav />
+      {/* the #wob1–3 filters every hand-drawn mark on the page refers to —
+          mounted once, here, so any section can use them */}
+      <SketchFilters />
+      {/* wanders the screen after the intro — see Dog.tsx */}
+      <Dog />
 
       <main>
         <Hero />

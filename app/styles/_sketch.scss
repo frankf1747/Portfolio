@@ -1,0 +1,63 @@
+/* ============================================================
+   SKETCH — the hand-drawn vocabulary, shared site-wide.
+
+   Every wobbled edge is a straight CSS shape pushed off course by one of
+   the displacement filters #wob1–3 (components/SketchFilters.tsx, mounted
+   once in Landing). Three seeds, so neighbouring marks never wobble in
+   step — alternate them between siblings.
+
+   A displacement filter warps everything it touches, type included, so it
+   only ever goes on a pseudo-element or on something that holds no text.
+   ============================================================ */
+
+/* A wobbled outline around the element, drawn on its ::before. */
+@mixin sketch-edge($wob: wob2, $w: 1.5px, $r: 3rem, $colour: var(--ink)) {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: $w solid $colour;
+    border-radius: $r;
+    filter: url(##{$wob});
+    pointer-events: none;
+    transition: border-color 0.5s var(--ease);
+  }
+}
+
+/* The wireframe's placeholder hatch. */
+@mixin hatch($colour: rgb(38 32 72 / 0.32), $gap: 6rem) {
+  background: repeating-linear-gradient(
+    -45deg,
+    $colour 0 1.2px,
+    transparent 1.2px $gap
+  );
+}
+
+/* A hand-drawn horizontal rule along the top or bottom edge. Include it
+   inside a ::before or ::after; the parent must be positioned.
+
+   WHY THE BOX IS 12rem TALL. A filter's working region is sized from the
+   element's own box. On a 1px-tall element the displacement has no room to
+   move the line up or down, so the wobble is clipped and the rule breaks
+   into dashes. The line is instead drawn through the middle of a taller
+   transparent box, centred on the edge it replaces, which gives the filter
+   room in both directions. */
+@mixin sketch-rule($side: bottom, $wob: wob2, $w: 1.3px, $colour: currentColor) {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  #{$side}: -6rem;
+  height: 12rem;
+  background: linear-gradient(
+    to bottom,
+    transparent calc(50% - #{$w} * 0.5),
+    $colour calc(50% - #{$w} * 0.5),
+    $colour calc(50% + #{$w} * 0.5),
+    transparent calc(50% + #{$w} * 0.5)
+  );
+  filter: url(##{$wob});
+  pointer-events: none;
+}

@@ -262,6 +262,14 @@ html.is-down:not(.is-start) .nav__logoText {
     stroke: var(--ink);
   }
 
+  /* Drawn, not compassed — the ring is the nav's one hand-drawn mark,
+     tying the bar to the sketched cards and rules below. wobS, not wob1–3:
+     see SketchFilters. The filter rides the circle only, so the arrow and
+     the label stay true. */
+  .ring {
+    filter: url(#wobS);
+  }
+
   &:hover .ring {
     transform: scale(1.15);
   }

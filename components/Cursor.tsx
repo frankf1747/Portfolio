@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-/* A small --blue disc that replaces the pointer.
+/* A small sketched --blue ball that replaces the pointer (look: _cursor.scss).
 
    It trails the real cursor on a lerp rather than being pinned to it.
    The lag is the whole character of the thing, but it is also why the
@@ -124,7 +124,11 @@ export default function Cursor() {
        large soft area with no obvious centre. Everything else clickable
        just grows the disc. PLUS is tested first and the two are mutually
        exclusive, so a nav link never tries to be both at once. */
-    const PLUS = ".nav a, .card";
+    /* .bento__card is the live §9 grid; .card is the parked wall, kept so
+       restoring it needs no change here. The bento redesign renamed the
+       cards and this list was missed — the crosshair silently stopped
+       appearing on projects until it was added back. */
+    const PLUS = ".nav a, .bento__card, .card";
     const HIT = "a, button, [role='button'], input, textarea, select, summary";
     const onOver = (e: PointerEvent) => {
       const t = e.target as Element | null;

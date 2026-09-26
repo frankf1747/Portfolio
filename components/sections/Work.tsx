@@ -1,980 +1,268 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import SmartText from "../SmartText";
+import { ArrowOut } from "../SketchFilters";
+import ProjectsHeading from "../progress/ProjectsHeading";
+import {
+  BioVisual,
+  CompVisual,
+  DispatchVisual,
+  MooVisual,
+  NextVisual,
+  UclaVisual
+} from "../works/visuals";
 
-/* §9 — scattered, overlapping cards.
+/* §9 — projects as a staggered bento.
 
-   Geometry and per-card parallax offsets are the measured values. The
-   parallax rides a wrapper so `.card`'s own 1s transform transition is
-   left free for the hover scale, and never lags the scroll.
+   The scattered wall this replaced — 3D covers, cursor parallax, hover
+   reveal — is stored intact in components/works/parked/WorkWall.tsx.
 
-   Suppression is blur + scale only — opacity NEVER changes — and the
-   reset is bound to .cards, not .card, so moving between two cards
-   never passes through a neutral frame. */
+   Twelve columns, three rows. The rows deliberately do NOT share their
+   seams: row one splits in halves, row two in thirds, so the joins step
+   like brickwork instead of running straight down the page. The tall card
+   starts in row two and closes the right edge of rows two and three, and
+   the wide card fills what is left of row three.
+
+     ┌─────────────┬─────────────┐
+     │ 01          │ 02          │   halves
+     ├────────┬────┴───┬────────┤
+     │ 03     │ 05     │ 04     │   thirds
+     ├────────┴────────┤ tall   │
+     │ 06              │        │
+     └─────────────────┴────────┘
+
+   Placement is DATA (`col` / `row`, grid-line syntax), not nth-child, so a
+   card can be moved or added without touching the stylesheet. Below 1024px
+   the stylesheet ignores these and lets the grid flow.
+
+   Drawn, not filled. The cards are paper on paper, outlined in ink through
+   the site's own wobble filters (SketchFilters, mounted in Landing) with hatching wherever a
+   shape needs weight, and the accent as the single mark — the §2 rule of one
+   ground and one mark holds inside the grid as everywhere else. An earlier
+   pass on dark panels with a per-project palette read as a different site.
+
+   Each card: a sketched visual on top, and a spotlight headline under it.
+   The headline is the one line the card exists to say; the client name
+   drops to a small eyebrow above it. Services come in on hover, so the
+   resting card stays one idea. */
 
 type Card = {
   n: string;
   client: string;
-  descriptor: string;
-  /** Unbuilt work. Renders the frame with a marker and does NOT link. */
-  /** Corner flag. Any string shows the badge; omit it for a finished card.
-      Was a boolean tied to card 05 alone, which could only ever say one
-      thing. */
-  status?: string;
-  /** §13 detail route. Present = the card is a link. Absent = a frame, as
-      before — a card that 404s is worse than one that does not link. */
-  href?: string;
-  /** Client mark for the cover. A MARK, not a cover image: it signs the
-      artwork from a corner rather than filling the frame. */
-  logo?: string;
-  /** Cover artwork. A logo alone on a grey panel is not a thumbnail — it is
-      an empty panel with a sticker. Each card that has a detail page gets a
-      drawing of ITS OWN argument instead. */
-  cover?: "pyramid" | "cube";
-  x: number;
-  w: number;
-  h: number;
-  /** scroll parallax offset in design px */
-  /* Vertical slot. This used to live in CSS as .card__pos:nth-child(n){top},
-     which quietly coupled every card's Y to how many cards were RENDERED —
-     so parking 04 slid 05 up into slot 4 and straight over UCLA. The note by
-     CARDS calls parking "a pure uncomment"; it was not, until this moved into
-     the data. */
-  y: number;
-  p: number;
-  /** cursor parallax depth, 0 = pinned, 1 = full travel */
-  d: number;
+  /** Spotlight headline — the single claim this card makes. */
+  headline: string;
+  summary: string;
   services: string[];
+  /** Grid lines on the 12-column desktop grid. */
+  col: string;
+  row: string;
+  visual: ReactNode;
+  status?: string;
+  /** Detail route. Present = the card is a link. */
+  href?: string;
+  /** Larger headline, for the half-width and wide cards. */
+  big?: boolean;
 };
 
-/* §9 cover — the §13 pyramid, PROJECTED, and alive on hover.
-
-   A flat triangle with a curve on it says nothing: it reads as a shape and
-   the line looks painted on one face. The idea of the page is a route that
-   WRAPS a solid, so the cover is a real projection — the same 3-sided
-   pyramid seen from 22 degrees above, with the climb going round the back
-   and out the other side. Hovering turns it through a full revolution and
-   redraws the route from the base corner to the apex, which is the page's
-   whole argument played in three seconds.
-
-   ONE pure function builds every frame. cover(yaw, draw) returns nothing
-   but strings, so the same call renders the resting state on the server
-   and each animated frame in the browser — the static markup and the
-   animation cannot drift apart, because they are the same code.
-
-   Faces, not near-side outlines: at rest a corner faces the camera, but
-   under rotation every face takes its turn, so each of the three is built
-   independently and drawn only when its normal faces the viewer. That test
-   — sin(normal + yaw) > 0 — is what decides visible from hidden for the
-   bands, both kinds of edge, and every sample of the route. Hidden route
-   runs draw thin and faint; that contrast IS the third dimension, and it
-   is what makes one line legible as a full turn around a solid. */
-
-/* Proportions are set against the projection, not guessed. The drawn width
-   is 2·cos30·R = 242 and the drawn height is H·cos(pitch) = 204, so the
-   object sits WIDER than it is tall — at 116/246 it drew 201 wide by 228
-   and read as a thin spire in a landscape frame. Rotation swings a corner
-   out to ±R = ±140, still clear of the 510 box, and the vertical span
-   (72 → 328) clears the wordmark above and the status flag below. */
-const COVER_R = 140;
-const COVER_H = 220;
-const COVER_CX = 255;
-const COVER_CY = 276; // origin placed so the object centres on y 200
-const RAD = (d: number) => (d * Math.PI) / 180;
-const PITCH_C = Math.cos(RAD(22));
-const PITCH_S = Math.sin(RAD(22));
-const COVER_BANDS: [number, number][] = [
-  [0, 0.36],
-  [0.36, 0.72],
-  [0.72, 1]
-];
-
-/* The middle band is cut into three slabs, matching §13's Pyramid3D — same
-   counts, same two gap sizes, so the cover and the page it opens are the
-   same object. Four gaps: a wider pair holding the group clear of the base
-   and the apex, a narrower pair between the slabs, which is what makes the
-   three read as one stratified piece rather than five evenly spaced things.
-
-   The band's outer limits stay on 0.36 and 0.72, so the seams (still drawn
-   at exactly those two heights) and the silhouette are untouched. The
-   padding comes out of the slabs, never out of the band.
-
-   `band` rides along because the tier class is a FILL COLOUR: the markup
-   used `i % 3` to recover which of the three tiers a quad belonged to, and
-   that arithmetic dies the moment a band stops being one quad. */
-const COVER_SLABS = [1, 3, 1];
-const COVER_GAP_INNER = 0.014;
-const COVER_GAP_OUTER = 0.019;
-const COVER_FILLS: { f0: number; f1: number; band: number }[] = COVER_BANDS.flatMap(
-  ([t0, t1], bi) => {
-    const n = COVER_SLABS[bi];
-    const pad = n > 1 ? COVER_GAP_OUTER : 0;
-    const h = (t1 - t0 - 2 * pad - COVER_GAP_INNER * (n - 1)) / n;
-    return Array.from({ length: n }, (_, s) => {
-      const f0 = t0 + pad + s * (h + COVER_GAP_INNER);
-      return { f0, f1: f0 + h, band: bi };
-    });
-  }
-);
-
-/* polygon radius at an angle, corners normalised to 1 — the route hugs the
-   flat faces rather than a circumscribed cone, exactly as it does in 3D */
-const ngonR = (deg: number) => {
-  const local = ((deg % 120) + 120) % 120;
-  return Math.cos(RAD(60)) / Math.cos(RAD(local - 60));
-};
-
-type CoverFrame = {
-  bands: string[];
-  seams: string;
-  edges: string;
-  route: string;
-  routeFar: string;
-};
-
-/* Polyline → smooth path: quadratic segments through the midpoints of each
-   pair, the standard C1 construction. The route follows the POLYGON, so it
-   has a genuine kink at each of the three pyramid edges — in 3D the
-   Catmull-Rom curve rounds those away, and without an equivalent here the
-   line arrived visibly sharp at every corner. Rounding them costs about a
-   pixel of fidelity and buys a line that reads as drawn rather than
-   plotted. */
-const smoothPath = (p: [number, number][]) => {
-  const n = p.length;
-  if (n < 2) return "";
-  const f = (q: [number, number]) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`;
-  if (n === 2) return `M${f(p[0])} L${f(p[1])} `;
-  let d = `M${f(p[0])} `;
-  let i = 1;
-  for (; i < n - 2; i++) {
-    const m: [number, number] = [(p[i][0] + p[i + 1][0]) / 2, (p[i][1] + p[i + 1][1]) / 2];
-    d += `Q${f(p[i])} ${f(m)} `;
-  }
-  d += `Q${f(p[i])} ${f(p[i + 1])} `;
-  return d;
-};
-
-const cover = (yaw: number, draw: number): CoverFrame => {
-  const PN = (deg: number, r: number, f: number): [number, number] => {
-    const a = RAD(deg + yaw);
-    return [
-      COVER_CX + Math.cos(a) * r,
-      COVER_CY - COVER_H * f * PITCH_C + Math.sin(a) * r * PITCH_S
-    ];
-  };
-  const P = (deg: number, r: number, f: number) => {
-    const q = PN(deg, r, f);
-    return `${q[0].toFixed(1)},${q[1].toFixed(1)}`;
-  };
-  const rAt = (f: number) => COVER_R * (1 - f);
-
-  /* ALL THREE FACES, ALWAYS — bands, seams and edges alike.
-
-     Culling the back face looked correct and animated badly. The fills
-     were innocent: a face is edge-on exactly when its visibility flips, so
-     its quad is zero-area at that instant and vanishing is invisible. The
-     EDGES were the fault — a base edge projects to a full-length vertical
-     line at that same moment, and it was switching from solid ink to
-     dashed-faint right there, which is the flicker on every quarter turn.
-
-     Drawing everything and letting the translucent fills stack turns the
-     object into consistent glass: the back faces read through the front,
-     nothing appears or disappears, and the rotation is continuous. Band
-     opacities are cut to compensate for the doubled layer. */
-  const bands: string[] = [];
-  let seams = "";
-  let edges = "";
-
-  for (let i = 0; i < 3; i++) {
-    const c1 = 90 + 120 * i;
-    const c2 = 210 + 120 * i;
-
-    for (const { f0, f1 } of COVER_FILLS) {
-      bands.push(
-        `${P(c1, rAt(f0), f0)} ${P(c2, rAt(f0), f0)} ${P(c2, rAt(f1), f1)} ${P(c1, rAt(f1), f1)}`
-      );
-    }
-    for (const f of [0.36, 0.72]) {
-      seams += `M${P(c1, rAt(f), f)} L${P(c2, rAt(f), f)} `;
-    }
-    edges += `M${P(c1, COVER_R, 0)} L${P(c2, COVER_R, 0)} `;
-    edges += `M${P(0, 0, 1)} L${P(c1, COVER_R, 0)} `;
-  }
-
-  /* The route keeps its near/far split — that one IS smooth, because the
-     line crosses a silhouette tangentially, and it is the only remaining
-     cue that the climb goes round the back. */
-  let route = "";
-  let routeFar = "";
-  const top = Math.max(0, Math.min(draw, 1));
-  if (top > 0.004) {
-    const N = 180;
-    const pts: [number, number][] = [];
-    const seen: boolean[] = [];
-    for (let s = 0; s <= N; s++) {
-      const t = (s / N) * top;
-      const a = 90 - t * 360;
-      pts.push(PN(a, COVER_R * (1 - t) * ngonR(a - 90), t));
-      const face = Math.floor(((((a - 90) % 360) + 360) % 360) / 120);
-      seen.push(Math.sin(RAD(150 + 120 * face + yaw)) > 0);
-    }
-    /* The crossing sample ends one run and begins the next, so the two
-       meet exactly and the line has no gap at a silhouette. */
-    let run: [number, number][] = [pts[0]];
-    let on = seen[0];
-    const flush = () => {
-      const d = smoothPath(run);
-      if (on) route += d;
-      else routeFar += d;
-    };
-    for (let s = 1; s <= N; s++) {
-      run.push(pts[s]);
-      if (seen[s] !== on) {
-        flush();
-        run = [pts[s]];
-        on = seen[s];
-      }
-    }
-    flush();
-  }
-
-  return { bands, seams, edges, route, routeFar };
-};
-
-/* Rest: no rotation, route complete. The loop lands back on exactly this
-   at yaw 360, so a cycle ends where the static markup began. */
-const COVER_REST = cover(0, 1);
-
-const PyramidCover = () => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-
-  useEffect(() => {
-    const svg = svgRef.current;
-    const card = svg?.closest(".card");
-    if (!svg || !card) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const bandEls = Array.from(svg.querySelectorAll<SVGPolygonElement>(".card__band"));
-    const q = (sel: string) => svg.querySelector<SVGPathElement>(sel);
-    const seamEl = q(".card__seam");
-    const edgeEl = q(".card__edge");
-    const routeEl = q(".card__route:not(.card__route--far)");
-    const routeFarEl = q(".card__route--far");
-
-    /* One cycle: yaw is LINEAR so the loop point is seamless (easing it
-       made the object hesitate every revolution), while the route eases
-       out and finishes early.
-
-       The two speeds are deliberately UNEQUAL. The line draws in ~1.7s and
-       the turn takes 4.6s, so the climb reads as the quick, legible event
-       and the rotation as the slow reveal carrying it — at 2.6s for both
-       they competed, and the object appeared to spin. The route then holds
-       at the summit for the remaining ~60%, which is the part that lets
-       you actually watch the finished line travel round the back. */
-    /* Two INDEPENDENT clocks, which is the whole point: the rotation is a
-       slow continuous carrier and the climb is a repeating event on top of
-       it. Tying both to one cycle (as this did) forced them to share a
-       period, and the object read as spinning to a beat.
-
-       ROT is one revolution — half the previous speed. Yaw stays LINEAR:
-       easing it made the object hesitate at every wrap.
-
-       The route draws base → apex, holds at the summit, and starts again
-       from the bottom. The hold is the point of the whole thing: the climb
-       finishes, and you get three seconds to watch the finished line carry
-       round the back before it resets. */
-    const ROT = 9.2; // seconds per revolution
-    const DRAW_TIME = 2.6; // base corner → apex
-    const HOLD = 3; // pause at the summit before redrawing
-    const DRAW_CYCLE = DRAW_TIME + HOLD;
-    const SETTLE = 0.8;
-
-    const paint = (yawDeg: number, draw: number) => {
-      const f = cover(yawDeg, draw);
-      f.bands.forEach((pts, i) => bandEls[i]?.setAttribute("points", pts));
-      seamEl?.setAttribute("d", f.seams);
-      edgeEl?.setAttribute("d", f.edges);
-      routeEl?.setAttribute("d", f.route);
-      routeFarEl?.setAttribute("d", f.routeFar);
-    };
-
-    /* Both clocks read off ONE elapsed time, so they never drift apart
-       across a long hover the way two counters would. */
-    const at = (p: number): [number, number] => {
-      const d = Math.min((p % DRAW_CYCLE) / DRAW_TIME, 1);
-      return [(360 * p) / ROT, 1 - (1 - d) ** 3];
-    };
-
-    let hovered = false;
-    let raf = 0;
-    let last = 0;
-    let phase = 0;
-    let settling = false;
-    let settleT = 0;
-    let fromYaw = 0;
-    let fromDraw = 1;
-    let yaw = 0;
-    let draw = 1;
-
-    const tick = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-
-      if (!settling) {
-        phase += dt;
-        [yaw, draw] = at(phase);
-        /* Leaving hands over to a short settle rather than snapping — but
-           it no longer waits for the turn to complete, which at 9.2s a
-           revolution would have meant seconds of spinning after the cursor
-           had gone. The settle always rotates FORWARD to the next whole
-           turn, so the object never appears to rewind. */
-        if (!hovered) {
-          settling = true;
-          settleT = 0;
-          fromYaw = yaw;
-          fromDraw = draw;
-        }
-      } else {
-        settleT += dt;
-        const k = Math.min(settleT / SETTLE, 1);
-        const e = 1 - (1 - k) ** 3;
-        const target = Math.ceil(fromYaw / 360) * 360;
-        yaw = fromYaw + (target - fromYaw) * e;
-        draw = fromDraw + (1 - fromDraw) * e;
-        if (k >= 1) {
-          paint(0, 1);
-          raf = 0;
-          settling = false;
-          phase = 0;
-          return;
-        }
-      }
-
-      paint(yaw, draw);
-      raf = requestAnimationFrame(tick);
-    };
-
-    const enter = () => {
-      hovered = true;
-      /* Re-entering mid-settle restarts the climb rather than resuming a
-         half-finished one. */
-      settling = false;
-      phase = 0;
-      if (raf) return;
-      last = performance.now();
-      raf = requestAnimationFrame(tick);
-    };
-    const leave = () => {
-      hovered = false;
-    };
-
-    card.addEventListener("pointerenter", enter);
-    card.addEventListener("pointerleave", leave);
-    return () => {
-      cancelAnimationFrame(raf);
-      card.removeEventListener("pointerenter", enter);
-      card.removeEventListener("pointerleave", leave);
-    };
-  }, []);
-
-  return (
-    <svg
-      ref={svgRef}
-      className="card__art"
-      viewBox="0 0 510 400"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-      style={{ ["--seam-a" as string]: CUBE_REST.seamAlpha }}
-    >
-      {COVER_REST.bands.map((pts, i) => (
-        <polygon
-          key={i}
-          className={`card__band card__band--${COVER_FILLS[i % COVER_FILLS.length].band + 1}`}
-          points={pts}
-        />
-      ))}
-      <path className="card__seam" d={COVER_REST.seams} />
-      <path className="card__edge" d={COVER_REST.edges} />
-      <path className="card__route card__route--far" d={COVER_REST.routeFar} />
-      <path className="card__route" d={COVER_REST.route} />
-    </svg>
-  );
-};
-
-/* §9 cover — the MooBox mark, and the cube inside it.
-
-   The mark is not a drawing of a cube, it is a cube: an orthographic view
-   down the (1,1,1) axis of a solid with an M cut into two of its faces. But
-   the M is not really a letter, and it is not really a hole either — it is a
-   WINDOW. Behind it sits a second cube, paper where the shell is ink, and at
-   rest that inner cube is exactly the size of the shell, so its front IS the
-   white you have always read as the letter.
-
-   On hover the shell comes apart along its own seams while the contents shrink
-   away from it AND divide, so the white that was a letter resolves into eight
-   structured units standing clear in the middle. The mark turns out to have
-   been a container with something in it the entire time.
-
-   For a CRM, a box whose contents are the point is the argument: lifecycle,
-   segmentation and forecasting are all claims about the RECORDS, which is why
-   the contents divide rather than staying one solid.
-
-   Same construction as the desktop three.js build, same 8-cell grid, same
-   optical corrections — this is that object, not a redraw of it.
-
-   ONE pure function builds every frame, as with the pyramid: cube(t) returns
-   nothing but strings, so the resting markup rendered on the server and each
-   animated frame in the browser are the same call and cannot drift apart. */
-
-/* At rest, sized against the pyramid: both objects span y 72 → 328, so the
-   two covers read as the same object at the same distance rather than two
-   drawings at two scales. */
-const CUBE_R = 128;
-const CUBE_S = (CUBE_R * Math.sqrt(6)) / 4; // cube half-edge in screen units
-const CUBE_CX = 255;
-const CUBE_CY = 200;
-/* Elevation atan(1/√2) = 35.264°, the isometric angle. Any other value and
-   the three visible faces stop being congruent and the mark stops being the
-   mark. A corner faces the camera, so +x, +y and +z are visible. */
-const CUBE_PC = Math.sqrt(2 / 3);
-const CUBE_PS = Math.sqrt(1 / 3);
-const CUBE_YAW = -Math.PI / 4;
-const CUBE_C = Math.cos(CUBE_YAW);
-const CUBE_SN = Math.sin(CUBE_YAW);
-
-/* The three numbers that shape the gesture, in half-edges.
-
-   H0 = 1 is not a free choice. The inner cube has to cover the ENTIRE mouth
-   at rest or the bottom of the V shows through to the card, and because the
-   M's own geometry is derived from this cube, anything under about 0.87 clips
-   exactly there. Starting flush with the shell is both the safe value and the
-   honest one: at rest there is one cube, and the white is its front.
-
-   SEP is the one that has been tuned hardest, downward each time. There IS a
-   clean threshold in the geometry: a shell panel's near corner travels
-   precisely toward the inner cube's opposite corner, both at 128·(half-edge)
-   from centre in projection, so the panels stop touching the cube at exactly
-   SEP = 2·H1 — 0.6 here. But that threshold buys FULL visibility, and the
-   cube does not need to be fully visible. It reads better half-nested in the
-   shell than floating clear of it, and clearing it costs a spread that makes
-   the three panels look adrift rather than opened. So this sits well below
-   the threshold and the panels overlap the cube on purpose — closer to a box
-   cracked open than one taken apart. 0.22 is about the floor of the idea:
-   below that the gaps stop reading as opened at all. */
-const CUBE_H0 = 1;
-const CUBE_H1 = 0.48;
-/* How far each unit backs away from the group's centre. With the split, the
-   contents reach h + GAP ≈ 0.55 rather than H1, so they fill the opening
-   better than a single cube did and sit more comfortably at a tight SEP. */
-const CUBE_GAP = 0.07;
-const CUBE_SEP = 0.26;
-
-/* The shell travels, so each frame is fitted and re-centred. Capped at 1,
-   which makes it a no-op at rest — the mark is never scaled UP. */
-const CUBE_FIT_W = 460;
-const CUBE_FIT_H = 300;
-
-type P3 = [number, number, number];
-type P2 = [number, number];
-
-/* The shell: three visible faces, the two M-bearing ones with the notch cut
-   OUT of them rather than a solid quad with a paper patch on top. That
-   matters because the inner cube sits BEHIND them — a solid quad would paint
-   straight over it. Each notch is cut in from the face's own boundary edge,
-   so these stay simple polygons: no even-odd, no subpaths.
-
-   The 0.24 and -0.74 carry the build's optical corrections — the V overshoots
-   downward or its point reads blunt, and the baseline is lifted because a
-   horizontal edge between two diagonals reads low. */
-const CUBE_PY: P3[] = [[-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1]];
-const CUBE_NZ: P3[] = [
-  [-1, -1, 1], [1, -1, 1], [1, -0.74, 1], [-0.25, -0.74, 1],
-  [-0.25, 0.25, 1], [1, 0.24, 1], [1, 1, 1], [-1, 1, 1]
-];
-const CUBE_NX: P3[] = [
-  [1, -1, 1], [1, -1, -1], [1, 1, -1], [1, 1, 1],
-  [1, 0.24, 1], [1, 0.25, -0.25], [1, -0.74, -0.25], [1, -0.74, 1]
-];
-const CUBE_NRM: P3[] = [[0, 0, 1], [1, 0, 0], [0, 1, 0]];
-
-/* THE LINING: the three far walls, in paper, and they do NOT travel with the
-   shell. Without them the M is a window onto nothing — everything behind is
-   culled — so the moment the inner cube shrinks below the opening, the mark's
-   white drains to card grey and the logo breaks. That failure is invisible at
-   a wide SEP, because by then the panels have parted far enough that the
-   opening no longer reads as a hole; it only bites when the box stays nearly
-   shut, which is exactly where a tight gap puts it. The lining is what
-   decouples the gap from the shrink and lets both be chosen freely. */
-const CUBE_LINING: P3[][] = [
-  [[1, -1, -1], [-1, -1, -1], [-1, 1, -1], [1, 1, -1]],
-  [[-1, -1, -1], [-1, -1, 1], [-1, 1, 1], [-1, 1, -1]],
-  [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1]]
-];
-
-/* ONE UNIT of the contents, about an arbitrary centre — three visible faces
-   and the nine edges bounding them. Twelve less the three meeting at the far
-   corner, which is the entire hidden-line test when the view never turns.
-   Written about a centre so the same code makes one solid or eight. */
-const cunit = (c: P3, r: number) => {
-  const at = (q: P3[]): P3[] =>
-    q.map((p) => [p[0] + c[0], p[1] + c[1], p[2] + c[2]] as P3);
-  return {
-    faces: [
-      [[-r, -r, r], [r, -r, r], [r, r, r], [-r, r, r]],
-      [[r, -r, r], [r, -r, -r], [r, r, -r], [r, r, r]],
-      [[-r, r, r], [r, r, r], [r, r, -r], [-r, r, -r]]
-    ].map((q) => at(q as P3[])),
-    /* The nine edges split by ROLE, not drawn as one set.
-
-       HULL — the six that trace the unit's outline. These are what make a
-       unit countable, so they carry full ink: the point of dividing the
-       contents is lost if you cannot tell eight things from one.
-
-       LINK — the three meeting at the near corner. They describe how a
-       unit's own faces join, so at full ink across eight units they stopped
-       reading as form and started reading as clutter, which is what buried
-       the object in the middle. In light grey they still carry the volume
-       and the sense of one connected mass, without competing with the
-       outlines that do the counting. */
-    hull: [
-      [[r, -r, -r], [r, -r, r]], [[r, -r, r], [-r, -r, r]],
-      [[-r, r, -r], [r, r, -r]], [[-r, r, r], [-r, r, -r]],
-      [[r, -r, -r], [r, r, -r]], [[-r, -r, r], [-r, r, r]]
-    ].map((q) => at(q as P3[])),
-    link: [
-      [[r, r, -r], [r, r, r]], [[r, r, r], [-r, r, r]], [[r, -r, r], [r, r, r]]
-    ].map((q) => at(q as P3[]))
-  };
-};
-
-const CUBE_OCT: P3[] = [
-  [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1],
-  [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]
-];
-
-/* THE CONTENTS, split two by two by two.
-
-   At t = 0 the eight units have half-edge h/2 at centres ±h/2 with no gap, so
-   they TILE the shell exactly — their union projects to the same hexagon a
-   single cube did, and with the edges still at zero weight this is one solid.
-   The mark is untouched. The split only becomes countable as the box opens,
-   which is what lets a CRM's claim — that the contents are records, plural
-   and structured — arrive without touching the logo at rest. */
-const ccontents = (h: number, g: number) => {
-  const q = h / 2;
-  return CUBE_OCT.map((sgn) => {
-    const c: P3 = [sgn[0] * (q + g), sgn[1] * (q + g), sgn[2] * (q + g)];
-    return { c, ...cunit(c, q) };
-  });
-};
-
-const cview = (p: P3): P2 => {
-  const x = p[0] * CUBE_C + p[2] * CUBE_SN;
-  const z = -p[0] * CUBE_SN + p[2] * CUBE_C;
-  return [x * CUBE_S, -(p[1] * CUBE_PC - z * CUBE_PS) * CUBE_S];
-};
-const cshift = (q: P3[], n: P3, s: number): P3[] =>
-  q.map((p) => [p[0] + n[0] * s, p[1] + n[1] * s, p[2] + n[2] * s] as P3);
-
-type CubeFrame = {
-  lining: string[];
-  units: { faces: string[]; links: string[]; hull: string[] }[];
-  faces: string[];
-  wire: string;
-  seamAlpha: number;
-};
-
-/* Element counts are fixed — 24 unit faces, 72 unit edges, 3 shell faces —
-   every frame, because nothing culls in or out when nothing turns.
-
-   DOM order IS paint order: lining, then the units far-to-near, then the
-   shell. The units are sorted per frame, but that sort is STABLE: they sit at
-   fixed relative positions and only ever scale uniformly, and uniform scaling
-   cannot reorder depths. So a given slot always draws the same unit. The
-   shell only ever moves AWAY from centre, so it stays nearest at every t. */
-const cube = (t: number): CubeFrame => {
-  const h = CUBE_H0 + (CUBE_H1 - CUBE_H0) * t;
-  const g = t * CUBE_GAP;
-  const s = t * CUBE_SEP;
-  const faces = [CUBE_NZ, CUBE_NX, CUBE_PY].map((f, i) => cshift(f, CUBE_NRM[i], s));
-
-  /* Sorted far-to-near so a near unit's edges land OVER a far unit's faces
-     rather than through them, with faces and edges travelling together per
-     unit for the same reason. Depth is the unit's CENTRE summed: the camera
-     looks down (1,1,1), so cx+cy+cz is exactly distance along the view axis
-     and no projection is needed to order them. */
-  const uv = ccontents(h, g)
-    .map((u) => ({
-      faces: u.faces.map((q) => q.map(cview)),
-      hull: u.hull.map((q) => q.map(cview)),
-      link: u.link.map((q) => q.map(cview)),
-      d: u.c[0] + u.c[1] + u.c[2]
-    }))
-    .sort((a, b) => a.d - b.d);
-
-  const lv = CUBE_LINING.map((q) => q.map(cview));
-  const fv = faces.map((q) => q.map(cview));
-
-  /* Fit and re-centre. Capped at 1 so rest is untouched. */
-  const all = [...uv.flatMap((u) => u.faces), ...fv].flat();
-  const xs = all.map((q) => q[0]);
-  const ys = all.map((q) => q[1]);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs);
-  const y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const k = Math.min(1, CUBE_FIT_W / Math.max(x1 - x0, 1e-6), CUBE_FIT_H / Math.max(y1 - y0, 1e-6));
-  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-  const out = (q: P2[]) =>
-    q
-      .map((v) => `${(CUBE_CX + (v[0] - mx) * k).toFixed(1)},${(CUBE_CY + (v[1] - my) * k).toFixed(1)}`)
-      .join(" ");
-
-  const faceStr = fv.map(out);
-  const path = (e: P2[]) => `M${out(e).split(" ").join(" L")}`;
-  return {
-    lining: lv.map(out),
-    /* PER UNIT, far to near — faces, then that unit's own edges, then the
-       next unit. Emitting all faces and then all edges (which is what this
-       did) draws every far cube's wireframe straight over every near cube's
-       face: the cluster stops being eight solids and becomes one tangle.
-       Painter's algorithm is a property of EMISSION ORDER, so grouping by
-       kind breaks it no matter how correct the depth sort is. */
-    units: uv.map((u) => ({
-      faces: u.faces.map(out),
-      links: u.link.map(path),
-      hull: u.hull.map(path)
-    })),
-    faces: faceStr,
-    /* One outline per shell face — the visible cube edges AND the rim of the
-       mouth in a single pass, at one weight. */
-    wire: faceStr.map((f) => `M${f.split(" ").join(" L")} Z `).join(""),
-    /* The inner cube's edges arrive as it separates. At rest it is flush
-       inside the shell and has no edges of its own to show — drawing them
-       then would put an ink line straight down the middle of the M, which is
-       a different mark. This is emergence, not a fade-in for effect. */
-    seamAlpha: t
-  };
-};
-
-/* Rest is the logo: one cube, and the white is its front. */
-const CUBE_REST = cube(0);
-
-const CubeCover = () => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-
-  useEffect(() => {
-    const svg = svgRef.current;
-    const card = svg?.closest(".card");
-    if (!svg || !card) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const q = (sel: string) => Array.from(svg.querySelectorAll<SVGElement>(sel));
-    const liningEls = q(".card__lining");
-    const innerEls = q(".card__inner");
-    const seamEls = q(".card__iseam");
-    const linkEls = q(".card__ilink");
-    const faceEls = q(".card__face");
-    const wireEl = svg.querySelector<SVGPathElement>(".card__wire");
-
-    /* Opens on enter, closes on leave — no loop. The pyramid loops because a
-       rotation has no end state; opening a box does, and holding it open for
-       as long as you are looking is the honest behaviour. */
-    const DUR = 1.15;
-    const EASE = (k: number) => 1 - (1 - k) ** 3;
-
-    const paint = (t: number) => {
-      const f = cube(t);
-      f.lining.forEach((p, i) => liningEls[i]?.setAttribute("points", p));
-      /* Flattening in unit order is safe: the markup is grouped by unit, so
-         document order for each class is exactly this order. */
-      f.units.flatMap((u) => u.faces).forEach((p, i) => innerEls[i]?.setAttribute("points", p));
-      f.units.flatMap((u) => u.hull).forEach((d, i) => seamEls[i]?.setAttribute("d", d));
-      f.units.flatMap((u) => u.links).forEach((d, i) => linkEls[i]?.setAttribute("d", d));
-      f.faces.forEach((p, i) => faceEls[i]?.setAttribute("points", p));
-      /* The edges can no longer share one wrapper — they are interleaved with
-         the faces now — so their weight rides on a custom property instead. */
-      svg.style.setProperty("--seam-a", f.seamAlpha.toFixed(3));
-      wireEl?.setAttribute("d", f.wire);
-    };
-
-    let raf = 0;
-    let last = 0;
-    let t = 0;
-    let dir = -1;
-
-    const tick = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      t = Math.max(0, Math.min(1, t + (dir * dt) / DUR));
-      /* Eased out going in and back in coming out, so it settles rather than
-         arriving, and closing is the same curve run backwards. */
-      paint(dir > 0 ? EASE(t) : 1 - EASE(1 - t));
-      if ((dir > 0 && t >= 1) || (dir < 0 && t <= 0)) {
-        raf = 0;
-        return;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-
-    const go = (d: number) => {
-      dir = d;
-      if (raf) return;
-      last = performance.now();
-      raf = requestAnimationFrame(tick);
-    };
-    const enter = () => go(1);
-    const leave = () => go(-1);
-
-    card.addEventListener("pointerenter", enter);
-    card.addEventListener("pointerleave", leave);
-    return () => {
-      cancelAnimationFrame(raf);
-      card.removeEventListener("pointerenter", enter);
-      card.removeEventListener("pointerleave", leave);
-    };
-  }, []);
-
-  return (
-    <svg
-      ref={svgRef}
-      className="card__art"
-      viewBox="0 0 510 400"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-      style={{ ["--seam-a" as string]: CUBE_REST.seamAlpha }}
-    >
-      {/* One group carries the opacity. Per-element it stacked wherever two
-          pieces overlapped and the seams lit up at the near corner. */}
-      <g className="card__solid">
-        {CUBE_REST.lining.map((p, i) => (
-          <polygon key={`l${i}`} className="card__lining" points={p} />
-        ))}
-        {CUBE_REST.units.map((u, ui) => (
-          <g key={`u${ui}`}>
-            {u.faces.map((p, i) => (
-              <polygon key={`i${i}`} className="card__inner" points={p} />
-            ))}
-            {u.links.map((d, i) => (
-              <path key={`k${i}`} className="card__ilink" d={d} />
-            ))}
-            {u.hull.map((d, i) => (
-              <path key={`e${i}`} className="card__iseam" d={d} />
-            ))}
-          </g>
-        ))}
-        {CUBE_REST.faces.map((p, i) => (
-          <polygon key={`s${i}`} className="card__face" points={p} />
-        ))}
-        <path className="card__wire" d={CUBE_REST.wire} />
-      </g>
-    </svg>
-  );
-};
-
-/* Slot order is a ranking and the frame geometry carries it. Slot 02 was
-   400x314; it is 510x400 here so MOOBOX, the only own-venture card, gets a
-   large frame without disturbing the BioMarin → MOOBOX → UCLA sequence. At x=800 a
-   510 frame reaches 1310, inside the reach of slot 04 (x=830, w=510, 1340),
-   so nothing collides.
-
-   Hrefs are per-card and optional: BIOMARIN's §13 page is up, so that one
-   links; the rest stay frames until their routes land. UPLOADING stays on
-   every card that is still being written — a live detail page is not the
-   same claim as a finished case study, and card 01 is both. */
 const CARDS: Card[] = [
-  { n: "01", client: "BIOMARIN", descriptor: "END-TO-END SUPPLY CHAIN INTELLIGENCE", status: "UPLOADING", href: "/works/biomarin", logo: "/logos/biomarin.svg", cover: "pyramid", x: 40, y: 0, w: 510, h: 400, p: -120, d: 1, services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"] },
-  { n: "02", client: "MOOBOX", descriptor: "AI-ENABLED CRM — PRODUCT & STRATEGY LEAD", status: "UPLOADING", cover: "cube", x: 800, y: 180, w: 510, h: 400, p: 0, d: 0.45, services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"] },
-  { n: "03", client: "UCLA ANDERSON SCHOOL OF MANAGEMENT", descriptor: "LEAN OPS SIMULATION — PRODUCT BUILD", status: "UPLOADING", x: 120, y: 520, w: 510, h: 401, p: 8, d: 0.8, services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"] },
-  /* PARKED while the work is still in development — too many frames on the
-     wall read as placeholders rather than as a body of work. Uncomment to
-     restore; nothing else has to change. Slot 05 deliberately KEEPS its
-     number so this stays a pure uncomment, which does mean the rail runs
-     01, 02, 03, 05 while this is parked.
-
-     05 IS PARKED-LAYOUT POSITIONED: x 830, y 800, taking 04's empty right-hand
-     slot. Restoring 04 means putting 05 back to x 300, y 1160, or the two will
-     sit on top of each other. */
-  // { n: "04", client: "DISPATCH AGENT", descriptor: "OPERATIONS INTELLIGENCE — AUTOMATED REPORTING", status: "UPLOADING", x: 830, y: 800, w: 510, h: 401, p: 0, d: 0.6, services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"] },
-  { n: "05", client: "COMPETITIVE ANALYSIS AGENT", descriptor: "MARKET INTELLIGENCE — AUTOMATION", status: "IN PROGRESS", x: 830, y: 800, w: 310, h: 227, p: 53, d: 0.3, services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"] }
+  {
+    n: "01",
+    client: "BIOMARIN",
+    headline: "Eleven partners. One definition of a record.",
+    summary: "Supply chain data keyed to a single batch ID, so the monthly leadership pack arrives with causes instead of assembly.",
+    services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"],
+    col: "1 / 7",
+    row: "1",
+    visual: <BioVisual />,
+    status: "UPLOADING",
+    href: "/works/biomarin",
+    big: true
+  },
+  {
+    n: "02",
+    client: "MOOBOX",
+    headline: "Three systems. One customer.",
+    summary: "CRM, purchases and fulfilment pulled into one lifecycle view, then campaigns rebuilt around the segments that behave differently.",
+    services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"],
+    col: "7 / 13",
+    row: "1",
+    visual: <MooVisual />,
+    status: "UPLOADING",
+    big: true
+  },
+  {
+    n: "03",
+    client: "UCLA ANDERSON",
+    headline: "A classroom sim that runs itself.",
+    summary: "Spreadsheets rebuilt as a React app, run unattended by ~600 participants across 7 MBA courses.",
+    services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"],
+    col: "1 / 5",
+    row: "2",
+    visual: <UclaVisual />,
+    status: "UPLOADING"
+  },
+  {
+    n: "05",
+    client: "COMPETITIVE ANALYSIS AGENT",
+    headline: "Deciding what's worth watching.",
+    summary: "Which sources, how often, and which decision each one feeds.",
+    services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"],
+    col: "5 / 9",
+    row: "2",
+    visual: <CompVisual />,
+    status: "IN PROGRESS"
+  },
+  {
+    n: "04",
+    client: "DISPATCH AGENT",
+    headline: "The report that emails itself.",
+    summary: "Five agents on a LangGraph hand off to a writer, and the leadership report lands in an inbox, not a terminal.",
+    services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"],
+    col: "9 / 13",
+    row: "2 / 4",
+    visual: <DispatchVisual />,
+    status: "UPLOADING"
+  },
+  {
+    n: "06",
+    client: "NEXT",
+    headline: "More on the way.",
+    summary: "Two builds in progress. This slot fills as they ship.",
+    services: ["IN PROGRESS"],
+    col: "1 / 9",
+    row: "3",
+    visual: <NextVisual />,
+    big: true
+  }
 ];
 
 export default function Work() {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const posRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
-  /* parallax + entry */
+  /* Reserve room for the hover details. The services row is added under
+     the summary on hover, which grows the text block upward — and with the
+     visual sized to the RESTING text, the headline slid up into it. So each
+     card's visual is placed above the text block's OPEN height instead,
+     measured here per card: tag rows wrap differently card to card (04's
+     four tags take two lines), so no single reserve in CSS fits all.
+
+     Measured with the card at rest (a hovered card is skipped, its numbers
+     would already include the tags), and again whenever layout can change:
+     fonts arriving and resize. */
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
+    let raf = 0;
+    const measure = () => {
+      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 1;
+      for (const cell of cardRefs.current) {
+        if (!cell || cell.matches(":hover")) continue;
+        const foot = cell.querySelector<HTMLElement>(".bento__foot");
+        const meta = cell.querySelector<HTMLElement>(".bento__meta");
+        const tags = cell.querySelector<HTMLElement>(".bento__tags");
+        if (!foot || !meta || !tags) continue;
+        const fb = foot.getBoundingClientRect();
+        /* resting text, eyebrow to bottom padding; + the tags; + the 8rem
+           of padding they gain when they open (see .bento__tags:hover) */
+        const rest = fb.bottom - meta.getBoundingClientRect().top;
+        const open = Math.max(fb.height, rest + tags.scrollHeight + 8 * remPx);
+        cell.style.setProperty("--foot-open", `${Math.ceil(open)}px`);
+      }
+    };
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
+    measure();
+    document.fonts?.ready.then(schedule);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
+  /* Entry only — each card rises in as it reaches the viewport. */
+  useEffect(() => {
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) e.target.classList.add("is-in");
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+        }
       },
       { threshold: 0.15 }
     );
-    posRefs.current.forEach((el) => el && io.observe(el));
-
-    if (reduced) return () => io.disconnect();
-
-    /* MAX_SHIFT is in design px, so it scales with the rem trick like
-       everything else. It is the FULL travel of the deepest card (d = 1)
-       from centre to either edge of the block; every other card gets
-       MAX_SHIFT × its own d, so raising this spreads the whole scatter
-       apart rather than sliding it as a sheet — the depth difference
-       between cards grows with it, which is the point.
-
-       42 is roughly 8% of the widest frame, up from 26 (~5%), which was
-       too reticent to read as parallax at all until you went looking for
-       it. Going much past this starts to detach the cards from the
-       cursor and the scatter reads as unstable.
-
-       LERP moved with it. It is the fraction of the remaining distance
-       covered per frame, so at a fixed 0.08 a longer throw simply takes
-       longer to arrive — the cards would have travelled further but felt
-       heavier, which is the opposite of the intent. 0.10 keeps roughly
-       the original settle time across the bigger distance. */
-    const MAX_SHIFT = 42;
-    const LERP = 0.1;
-
-    let targetX = 0;
-    let targetY = 0;
-    let curX = 0;
-    let curY = 0;
-    let raf = 0;
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") return;
-      const r = wrap.getBoundingClientRect();
-      /* -1 → 1 across the block in both axes */
-      targetX = ((e.clientX - r.left) / r.width) * 2 - 1;
-      targetY = ((e.clientY - r.top) / r.height) * 2 - 1;
-    };
-
-    const onLeave = () => {
-      targetX = 0;
-      targetY = 0;
-    };
-
-    const frame = () => {
-      raf = requestAnimationFrame(frame);
-
-      curX += (targetX - curX) * LERP;
-      curY += (targetY - curY) * LERP;
-
-      const r = wrap.getBoundingClientRect();
-      /* -1 → 1 as the block travels through the viewport */
-      const progress =
-        1 - (r.top + r.height / 2) / (window.innerHeight / 2 + r.height / 2);
-
-      posRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const c = CARDS[i];
-        el.style.setProperty("--py", `${c.p * progress + curY * MAX_SHIFT * c.d}rem`);
-        el.style.setProperty("--px", `${curX * MAX_SHIFT * c.d}rem`);
-      });
-    };
-
-    raf = requestAnimationFrame(frame);
-    wrap.addEventListener("pointermove", onMove);
-    wrap.addEventListener("pointerleave", onLeave);
-
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
-      wrap.removeEventListener("pointermove", onMove);
-      wrap.removeEventListener("pointerleave", onLeave);
-    };
+    cardRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
   }, []);
 
   return (
     <section className="work" id="work">
-
       <h2 className="work__title">
-        {/* decodes slower than the other section headings on purpose —
-            it is the title of the block the page is built around */}
-        <SmartText as="span" className="h1" pace="slow">PROJECTS</SmartText>
-        {/* The SECTION number, not the card count. Projects is §3 in the
-            rail; binding this to CARDS.length made it read as inventory. */}
-        <span className="work__count" aria-hidden="true">(3)</span>
+        {/* The heading is the way in to /progress; LIVE says where it goes. */}
+        <ProjectsHeading />
       </h2>
 
-      {/* Height derived, not hardcoded. It was a flat 1500rem while the tallest
-          card bottomed out at 1027 + the ~130rem title block — 343rem of dead
-          space between the last frame and FIVE RULES. Deriving it also means
-          parking or restoring a card adjusts the block instead of leaving a
-          hole. TITLE_BLOCK is the client/descriptor/services stack under each
-          frame, which is outside the card's own h. */}
-      <div
-        className="cards"
-        ref={wrapRef}
-        style={
-          {
-            "--cards-h": `${Math.max(...CARDS.map((c) => c.y + c.h)) + 130 + 20}rem`
-          } as React.CSSProperties
-        }
-      >
-        {CARDS.map((c, i) => (
-          <div
-            key={c.n}
-            className="card__pos"
-            ref={(el) => {
-              posRefs.current[i] = el;
-            }}
-            style={
-              {
-                "--x": `${c.x}rem`,
-                "--y": `${c.y}rem`,
-                "--w": `${c.w}rem`,
-                "--h": `${c.h}rem`,
-                "--ar": c.w / c.h
-              } as React.CSSProperties
-            }
-          >
-            {/* Anchor only where a route exists; everything else stays the
-                div it was, so an unbuilt card is not focusable or clickable. */}
-            {(() => {
-              const Frame = c.href ? Link : "div";
-              const frameProps = c.href
-                ? { href: c.href, "aria-label": `${c.client} — ${c.descriptor}` }
-                : {};
-              return (
-            <Frame
-              {...(frameProps as { href: string })}
-              className={`card${c.status ? " is-flagged" : ""}${c.href ? " is-linked" : ""}`}
+      <ul className="bento" role="list">
+        {CARDS.map((c, i) => {
+          const Frame = c.href ? Link : "div";
+          const frameProps = c.href ? { href: c.href, "aria-label": `${c.client} — ${c.headline}` } : {};
+          return (
+            <li
+              key={c.n}
+              className={`bento__cell${c.big ? " is-big" : ""}`}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              style={
+                {
+                  "--col": c.col,
+                  "--row": c.row,
+                  "--i": i
+                } as CSSProperties
+              }
             >
-              <span className="card__media" aria-hidden="true">
-                {c.cover === "pyramid" && <PyramidCover />}
-                {c.cover === "cube" && <CubeCover />}
-                {c.status && <span className="card__flag">{c.status}</span>}
-                {c.logo && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img className="card__mark" src={c.logo} alt="" />
-                )}
-              </span>
-              <span className="bottom">
-                <span className="card__title">
-                  <span className="card__n">({c.n})</span>
-                  <span className="card__client">{c.client}</span>
+              <Frame
+                {...(frameProps as { href: string })}
+                className={`bento__card${c.href ? " is-linked" : ""}`}
+              >
+                <span className="bento__visual" aria-hidden="true">
+                  <span className="bento__stage">{c.visual}</span>
                 </span>
-                <span className="subtitle">{c.descriptor}</span>
-                <span className="services">
-                  {c.services.map((s, si) => (
-                    <span key={s} style={{ "--i": si } as React.CSSProperties}>
-                      {s}
+
+                <span className="bento__foot">
+                  <span className="bento__meta">
+                    <span>
+                      ({c.n}) {c.client}
                     </span>
-                  ))}
+                    {c.status && <span className="bento__flag">{c.status}</span>}
+                    {c.href && (
+                      <span className="bento__go">
+                        <ArrowOut />
+                      </span>
+                    )}
+                  </span>
+                  <SmartText as="h3" className="h2 bento__hl">
+                    {c.headline}
+                  </SmartText>
+                  <span className="bento__sum">{c.summary}</span>
+                  <span className="bento__more">
+                    <span className="bento__tags">
+                      {c.services.map((s) => (
+                        <span key={s}>{s}</span>
+                      ))}
+                    </span>
+                  </span>
                 </span>
-              </span>
-            </Frame>
-              );
-            })()}
-          </div>
-        ))}
-      </div>
+              </Frame>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

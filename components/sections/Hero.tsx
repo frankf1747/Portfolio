@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import SmartText, { type SmartTextHandle } from "../SmartText";
+import Grass from "../Grass";
 import { introSeen, markIntroSeen } from "../introSeen";
 
 /* §5 — the landing sequence, to the measured timeline.
@@ -165,6 +166,9 @@ export default function Hero() {
           softer curve, so the headline outruns it rather than the two
           sliding as one sheet. Never parent these to each other. */}
       <div className={`hero__content${contentIn ? " is-in" : ""}`}>
+        {/* a few tufts scattered over the empty paper — see Grass.tsx.
+            First child, so the title and meta row draw over it. */}
+        <Grass />
         <div className={`hero__sub${subIn ? " is-in" : ""}`}>
           <SmartText trigger="manual" instanceRef={subRef} className="h1">
             — DATA-CENTRIC PRODUCT DREAMER

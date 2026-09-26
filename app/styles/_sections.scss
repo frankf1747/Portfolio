@@ -1,3 +1,5 @@
+@use "sketch" as *;
+
 /* ============================================================
    SECTIONS — content blocks start at x:138rem, full-bleed at
    x:20rem / width:1400rem
@@ -101,6 +103,42 @@
      line is part of the cover, so it holds the poster scale. */
   .h1 {
     font-size: calc(95 * var(--mono-fit) * var(--u));
+  }
+}
+
+/* A few tufts scattered over the hero's empty paper. The svg covers the
+   whole content layer and Grass.tsx places the tufts inside it, so it rides
+   the content's slide-up with the title. */
+.hero__grass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+
+  /* Tone is per tuft, not on the layer: most of it is set well back, so it
+     reads as a margin note and never competes with the title, while the
+     two `bold` tufts carry near-full ink and lead the eye. */
+  .grass__ink {
+    filter: url(#wob2);
+    fill: var(--ink);
+    fill-opacity: 0.5;
+  }
+
+  /* the far tufts — higher up the page, smaller, fainter still */
+  .is-far {
+    fill-opacity: 0.28;
+  }
+
+  .is-bold {
+    fill-opacity: 0.9;
+  }
+
+  /* the accent, as a few small flowers, toned with their tuft */
+  .grass__flower {
+    fill: var(--accent);
+    transition: opacity 0.6s var(--ease);
   }
 }
 
@@ -244,7 +282,15 @@
     padding: 0;
     list-style: none;
     max-width: 1060rem;
-    border-top: 1px solid currentColor;
+
+    /* The three rules are drawn, not bordered — the one hand-drawn touch
+       in this section, echoing the sketched §9 cards further down. Each
+       uses a different wobble seed so the three never run in step. */
+    position: relative;
+
+    &::before {
+      @include sketch-rule(top, wob2);
+    }
   }
 
   &__eduRow {
@@ -257,7 +303,15 @@
     column-gap: 32rem;
     align-items: baseline;
     padding: 20rem 0;
-    border-bottom: 1px solid currentColor;
+    position: relative;
+
+    &::after {
+      @include sketch-rule(bottom, wob3);
+    }
+
+    &:nth-child(2)::after {
+      filter: url(#wob1);
+    }
   }
 
   /* Tabular figures so 2509-2612 and 2109-2505 sit digit over digit. The
@@ -386,6 +440,11 @@
   }
 }
 
+/* PARKED — everything from here down to the end of the §9 card rules
+   (.cards, .card__pos, .card, .card__media, .card .bottom …) styles the old
+   scattered wall, now stored in components/works/parked/WorkWall.tsx. The
+   live §9 is the bento grid in _bento.scss. Kept compiled so restoring the
+   wall is an import swap, with no stylesheet work. */
 .cards {
   position: relative;
   /* Derived from the card data now — see Work.tsx. Was a flat 1500rem, which
@@ -515,12 +574,26 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     margin-right: var(--margin);
 
     li {
+      position: relative;
       display: grid;
       grid-template-columns: 80rem 1fr 460rem;
       gap: var(--gap);
       align-items: start;
       padding: 40rem 0;
-      border-top: 2px solid currentColor;
+
+      /* the dividers are drawn (see _sketch). Seeds rotate down the list so
+         no two neighbouring rules share a wobble. */
+      &::before {
+        @include sketch-rule(top, wob1, 2px);
+      }
+
+      &:nth-child(3n + 2)::before {
+        filter: url(#wob2);
+      }
+
+      &:nth-child(3n)::before {
+        filter: url(#wob3);
+      }
     }
   }
 

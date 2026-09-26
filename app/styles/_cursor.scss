@@ -1,5 +1,11 @@
 /* ============================================================
-   THE CURSOR — a small --blue disc trailing the pointer.
+   THE CURSOR — a small sketched --blue ball trailing the pointer.
+
+   Drawn like everything else hand-made on the page: blue fill, fine
+   hatching, a deeper-blue outline, and a wobbled edge. The edge BOILS —
+   it steps through three wobble seeds (#wobS, #wobS2, #wobS3) about eight
+   times a second, the way hand-traced animation frames never quite line
+   up — so even a still cursor is alive.
 
    Sized and positioned in px, NOT rem. Everything else on the site is
    rem so it scales with the 1440-wide design grid, but a cursor belongs
@@ -12,10 +18,17 @@
   top: 0;
   left: 0;
   z-index: 999; /* over everything, including the nav's z-index: 9 */
-  width: 18px;
-  height: 18px;
+  /* 22, up from the plain disc's 18: the hatching and the outline need a
+     few more pixels to read as drawing rather than as noise */
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--blue);
+  background:
+    repeating-linear-gradient(-45deg, rgb(28 110 150 / 0.4) 0 1px, transparent 1px 4px),
+    var(--blue);
+  box-shadow: inset 0 0 0 1.5px #3b9fc4;
+  filter: url(#wobS);
+  animation: cursor-boil 0.42s steps(1, end) infinite;
   pointer-events: none; /* must never eat a click or a hover */
 
   /* --blue on the blue section would be invisible, and the site inverts
@@ -86,11 +99,33 @@
     width: 20px;
     height: 20px;
     background: transparent;
+    box-shadow: none; /* the arms alone — still boiling, via the filter */
 
     &::before,
     &::after {
       transform: translate(-50%, -50%) scale(1);
     }
+  }
+}
+
+/* Discrete, not interpolated: url() filters cannot tween, and steps(1)
+   holds each seed for its whole third of the cycle. */
+@keyframes cursor-boil {
+  0% {
+    filter: url(#wobS);
+  }
+  33.333% {
+    filter: url(#wobS2);
+  }
+  66.666% {
+    filter: url(#wobS3);
+  }
+}
+
+/* Reduced motion keeps the drawn ball, still — the boil is motion. */
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
   }
 }
 

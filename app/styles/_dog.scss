@@ -1,0 +1,341 @@
+/* ============================================================
+   THE DOG — see components/Dog.tsx for behaviour. Every pose here is
+   keyed off [data-mode]: walk | stand | sniff | look | lie.
+
+   All transforms inside the svg are in its own user units (px on an SVG
+   element means one viewBox unit), and every moving part uses
+   transform-box: fill-box so its origin is set against its own shape.
+   ============================================================ */
+
+.dog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* under the custom cursor (999) and the nav, over the page */
+  z-index: 900;
+  width: 84rem;
+  pointer-events: none;
+  will-change: transform;
+
+  /* not part of the overture — arrives with the nav */
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
+}
+
+html[data-nav="in"] .dog {
+  opacity: 1;
+}
+
+.dog__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  /* the turn: a quick squash through zero reads as the dog turning round */
+  transform: scaleX(var(--face, 1));
+  transition: transform 0.3s var(--ease);
+}
+
+.dog__ink {
+  filter: url(#wobS);
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Paper fills, so it reads as one cut-out shape on every ground — paper,
+   the yellow statement, the blue rules. */
+.dog__body,
+.dog__skull,
+.dog__ear {
+  fill: var(--paper);
+}
+
+.dog__eye,
+.dog__nose {
+  fill: var(--ink);
+  stroke: none;
+}
+
+/* the accent, spent twice: collar and tongue */
+.dog__collar {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.dog__tongue {
+  fill: var(--accent);
+  stroke: none;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+.dog__leg.is-far {
+  stroke-opacity: 0.55;
+}
+
+/* ---------- moving parts ---------- */
+
+.dog__leg,
+.dog__upper,
+.dog__tail,
+.dog__head,
+.dog__eye {
+  transform-box: fill-box;
+}
+
+.dog__leg {
+  transform-origin: 50% 0; /* the hip */
+  transition: transform 0.8s var(--ease);
+}
+
+.dog__upper {
+  transition: transform 0.8s var(--ease);
+}
+
+.dog__tail {
+  transform-origin: 100% 100%; /* the root, at the rump */
+}
+
+.dog__head {
+  transform-origin: 8% 80%; /* the neck */
+  transition: transform 0.6s var(--ease);
+}
+
+.dog__eye {
+  transform-origin: 50% 50%;
+  animation: dog-blink 4.6s infinite;
+}
+
+/* ---------- walk ---------- */
+
+/* Diagonal pairs in step, as a real trot: near-front with far-back, and
+   near-back with far-front half a stride behind. */
+.dog[data-mode="walk"] {
+  .dog__leg {
+    animation: dog-stride 0.56s ease-in-out infinite;
+  }
+
+  .dog__leg.is-front:not(.is-far),
+  .dog__leg.is-far.is-back {
+    animation-delay: -0.28s;
+  }
+
+  .dog__upper {
+    animation: dog-bob 0.28s ease-in-out infinite;
+  }
+
+  .dog__tail {
+    animation: dog-wag 0.56s ease-in-out infinite;
+  }
+}
+
+/* the trot — catching up with a cursor that has got far ahead */
+.dog[data-mode="walk"][data-pace="run"] {
+  .dog__leg {
+    animation-duration: 0.3s;
+  }
+
+  .dog__leg.is-front:not(.is-far),
+  .dog__leg.is-far.is-back {
+    animation-delay: -0.15s;
+  }
+
+  .dog__upper {
+    animation-duration: 0.15s;
+  }
+}
+
+/* ---------- stand: pant and wag ---------- */
+
+.dog[data-mode="stand"] {
+  .dog__tongue {
+    opacity: 1;
+  }
+
+  .dog__head {
+    animation: dog-pant 0.42s ease-in-out infinite;
+  }
+
+  .dog__tail {
+    animation: dog-wag 0.32s ease-in-out infinite;
+  }
+}
+
+/* ---------- sniff: nose to the ground ---------- */
+
+.dog[data-mode="sniff"] {
+  .dog__head {
+    animation: dog-sniff 0.38s ease-in-out infinite;
+  }
+
+  .dog__tail {
+    animation: dog-wag 1.1s ease-in-out infinite;
+  }
+}
+
+/* ---------- look: turns about (the flips come from Dog.tsx) ---------- */
+
+.dog[data-mode="look"] {
+  .dog__tongue {
+    opacity: 1;
+  }
+
+  .dog__head {
+    transform: rotate(-8deg);
+  }
+}
+
+/* ---------- lie: down for a nap ---------- */
+
+.dog[data-mode="lie"] {
+  .dog__upper {
+    transform: translateY(10px);
+  }
+
+  /* legs fold to stubs under the body, which drops onto them */
+  .dog__leg {
+    transform: translateY(10px) scaleY(0.22);
+  }
+
+  .dog__head {
+    transform: rotate(10deg);
+  }
+
+  .dog__eye {
+    animation: none;
+    transform: scaleY(0.15);
+  }
+}
+
+.dog__zzz {
+  position: absolute;
+  top: -8rem;
+  /* over the head, whichever way it faces */
+  left: calc(50% + var(--face, 1) * 22rem);
+  display: flex;
+  gap: 1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+
+  i {
+    font-style: normal;
+    font-size: 10rem;
+    animation: dog-z 2.4s ease-in-out infinite;
+
+    &:nth-child(2) {
+      font-size: 12rem;
+      animation-delay: 0.8s;
+    }
+
+    &:nth-child(3) {
+      font-size: 14rem;
+      animation-delay: 1.6s;
+    }
+  }
+}
+
+.dog[data-mode="lie"] .dog__zzz {
+  opacity: 1;
+}
+
+/* ---------- keyframes ---------- */
+
+@keyframes dog-stride {
+  0%,
+  100% {
+    transform: rotate(16deg);
+  }
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+
+@keyframes dog-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes dog-wag {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes dog-pant {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(0.7px);
+  }
+}
+
+@keyframes dog-sniff {
+  0%,
+  100% {
+    transform: rotate(28deg);
+  }
+  50% {
+    transform: rotate(21deg);
+  }
+}
+
+@keyframes dog-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes dog-z {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4rem);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8rem, -12rem);
+  }
+}
+
+/* Asleep and still. Dog.tsx parks it in the corner and never moves it. */
+@media (prefers-reduced-motion: reduce) {
+  .dog *,
+  .dog__svg {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .dog[data-mode="lie"] .dog__zzz i {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media print {
+  .dog {
+    display: none;
+  }
+}
