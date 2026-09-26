@@ -15,9 +15,6 @@ export default function Overview() {
       <header className="pg__head">
         <Crumb state={state} live={live} backHref="/" backLabel="← FRANK FU" />
         <h1 className="h2 pg__title">What I&apos;m building, live.</h1>
-        <p className="small pg__lede">
-          Each project updates the moment a piece of work lands, pushed or not.
-        </p>
       </header>
 
       <LoadGate state={state} retry={retry}>

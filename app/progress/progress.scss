@@ -37,9 +37,10 @@
   margin: 0 0 16rem;
 }
 
-.pg__lede {
-  max-width: 560rem;
-  margin: 0 0 60rem;
+/* the overview's headline sits straight on the grid, with the gap the
+   subtitle used to provide */
+.pg__head .pg__title {
+  margin-bottom: 60rem;
 }
 
 .pg__note {
