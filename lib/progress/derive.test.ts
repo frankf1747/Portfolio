@@ -16,8 +16,11 @@ describe("currentMilestone", () => {
   it("prefers the first in-progress milestone by order", () => {
     expect(currentMilestone([ms("in_progress", 3), ms("planned", 1), ms("in_progress", 2)])?.sort_order).toBe(2);
   });
-  it("falls back to the first one not done", () => {
-    expect(currentMilestone([ms("done", 1), ms("blocked", 2), ms("planned", 3)])?.sort_order).toBe(2);
+  it("falls back to the first planned milestone, even when a blocked one comes earlier", () => {
+    expect(currentMilestone([ms("done", 1), ms("blocked", 2), ms("planned", 3)])?.sort_order).toBe(3);
+  });
+  it("falls back to the first blocked milestone when nothing is planned", () => {
+    expect(currentMilestone([ms("done", 1), ms("blocked", 2)])?.sort_order).toBe(2);
   });
   it("is null when everything is done", () => {
     expect(currentMilestone([ms("done", 1)])).toBeNull();

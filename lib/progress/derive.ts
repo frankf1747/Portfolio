@@ -12,11 +12,17 @@ export function percentComplete(ms: Pick<TrackedMilestone, "progress">[]): numbe
   return Math.round(ms.reduce((sum, m) => sum + m.progress, 0) / ms.length);
 }
 
-/* What is being worked on: the first in-progress milestone, else the first
-   one not yet done. */
+/* What is being worked on: the first in-progress milestone; else the first
+   planned one (what's queued up next); else the first blocked one (nothing
+   is queued, but something needs attention); else null when it's all done. */
 export function currentMilestone<T extends Pick<TrackedMilestone, "status" | "sort_order">>(ms: T[]): T | null {
   const sorted = [...ms].sort((a, b) => a.sort_order - b.sort_order);
-  return sorted.find((m) => m.status === "in_progress") ?? sorted.find((m) => m.status !== "done") ?? null;
+  return (
+    sorted.find((m) => m.status === "in_progress") ??
+    sorted.find((m) => m.status === "planned") ??
+    sorted.find((m) => m.status !== "done") ??
+    null
+  );
 }
 
 export function relativeTime(iso: string, now: Date): string {

@@ -44,9 +44,10 @@ export function barSpan(m: Spanned, d: Domain): { left: number; width: number } 
 export function monthTicks(d: Domain): { pct: number; label: string }[] {
   const first = new Date(d.start);
   const ticks: { pct: number; label: string }[] = [];
-  for (let i = 1; ; i++) {
+  for (let i = 0; ; i++) {
     const t = Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + i, 1);
     if (t > d.end) break;
+    if (t < d.start) continue;
     const date = new Date(t);
     const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
     ticks.push({ pct: xPct(t, d), label: date.getUTCMonth() === 0 ? `${month} ${date.getUTCFullYear()}` : month });

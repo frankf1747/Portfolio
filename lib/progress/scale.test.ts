@@ -43,4 +43,8 @@ describe("monthTicks", () => {
     const d = { start: parseDay("2026-12-20"), end: parseDay("2027-01-10") };
     expect(monthTicks(d).map((t) => t.label)).toEqual(["JAN 2027"]);
   });
+  it("keeps the first month when the domain starts on the 1st", () => {
+    const d = { start: parseDay("2026-09-01"), end: parseDay("2026-10-05") };
+    expect(monthTicks(d).map((t) => t.label)).toEqual(["SEP", "OCT"]);
+  });
 });
