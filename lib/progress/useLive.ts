@@ -3,9 +3,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { progressClient } from "./client";
-import { startLive, type LiveState } from "./live";
+import { startLive, type LiveState, type LiveStatus } from "./live";
 
-export type { LiveState };
+export type { LiveState, LiveStatus };
 
 /* Gives every effect run its own topic, so a dropped-and-recreated channel
    from a previous run can never be confused with the current one. */
@@ -17,7 +17,7 @@ let runId = 0;
    data: a failed reload or a dropped socket keeps showing what's on screen. */
 export function useLive<T>(load: (db: SupabaseClient) => Promise<T>, key: string) {
   const [state, setState] = useState<LiveState<T>>({ status: "loading" });
-  const [live, setLive] = useState(false);
+  const [live, setLive] = useState<LiveStatus>("connecting");
   const [attempt, setAttempt] = useState(0);
   const loadRef = useRef(load);
 
@@ -27,7 +27,7 @@ export function useLive<T>(load: (db: SupabaseClient) => Promise<T>, key: string
 
   useEffect(() => {
     setState({ status: "loading" });
-    setLive(false);
+    setLive("connecting");
 
     const db = progressClient();
     if (!db) {

@@ -39,14 +39,17 @@ export default function Gantt({ milestones, today }: { milestones: TrackedMilest
               <Fragment key={m.id}>
                 <div className="small pg-gantt__label" title={m.description || undefined}>
                   {m.title}
+                  <span className="u-sr">
+                    , {m.start_date} to {m.due_date}, {m.progress}%, {STATUS_LABEL[m.status]}
+                    {m.completed_at ? `, completed ${m.completed_at.slice(0, 10)}` : ""}
+                  </span>
                 </div>
-                <div className="pg-gantt__track">
+                <div className="pg-gantt__track" aria-hidden="true">
                   <span className="pg-gantt__today" style={{ left: todayLeft }} />
                   <div
                     className={`pg-bar pg-bar--${m.status}`}
                     style={{ left: `${span.left}%`, width: `${span.width}%` }}
                     title={tip}
-                    aria-label={tip.replace(/\n/g, ", ")}
                   >
                     <div className="pg-bar__fill" style={{ width: `${m.progress}%` }} />
                   </div>

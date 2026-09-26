@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { fetchOverview } from "@/lib/progress/load";
 import { useLive, useNow } from "@/lib/progress/useLive";
+import Crumb from "./Crumb";
 import LoadGate from "./LoadGate";
 import ProjectCard from "./ProjectCard";
 
@@ -13,23 +13,7 @@ export default function Overview() {
   return (
     <>
       <header className="pg__head">
-        <div className="pg__crumb">
-          <span className="small index">PROGRESS</span>
-          {state.status !== "loading" && (
-            <span className="small pg__live" aria-live="polite">
-              {live ? (
-                <>
-                  <i className="pg-pulse" aria-hidden="true" /> LIVE
-                </>
-              ) : (
-                "RECONNECTING…"
-              )}
-            </span>
-          )}
-          <Link className="small link-a" href="/">
-            ← FRANK FU
-          </Link>
-        </div>
+        <Crumb state={state} live={live} backHref="/" backLabel="← FRANK FU" />
         <h1 className="h2 pg__title">What I&apos;m building, live.</h1>
         <p className="small pg__lede">
           Each project updates the moment a piece of work lands, pushed or not.

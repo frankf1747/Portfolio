@@ -13,7 +13,9 @@ export default function ProjectCard({ summary, now }: { summary: ProjectSummary;
       <div className="small pg-card__top">
         <span className="pg-chip">{project.status}</span>
         <span className="pg-card__time">
-          {isFresh(project.updated_at, now) && <i className="pg-pulse" aria-label="Updated in the last hour" />}
+          {isFresh(project.updated_at, now) && (
+            <i className="pg-pulse" role="img" aria-label="Updated in the last hour" />
+          )}
           {relativeTime(project.updated_at, now)}
         </span>
       </div>

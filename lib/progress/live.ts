@@ -5,6 +5,12 @@ export type LiveState<T> =
   | { status: "ready"; data: T }
   | { status: "error"; message: string };
 
+/* "connecting" until the first SUBSCRIBED — an ordinary reconnect blip on
+   startup is not the same as having dropped a live connection, so it must
+   not be reported as "offline". "offline" only ever follows having been
+   subscribed at least once. */
+export type LiveStatus = "connecting" | "live" | "offline";
+
 const TABLES = ["projects", "milestones", "updates"] as const;
 
 /* The plain, testable core of useLive: opens a realtime channel on the
@@ -19,7 +25,7 @@ export function startLive<T>(
   db: SupabaseClient,
   load: () => Promise<T>,
   onState: (update: (prev: LiveState<T>) => LiveState<T>) => void,
-  onLive: (live: boolean) => void,
+  onLive: (live: LiveStatus) => void,
   topic: string
 ): () => void {
   let stopped = false;
@@ -59,9 +65,9 @@ export function startLive<T>(
     if (status === "SUBSCRIBED") {
       if (everSubscribed) soon();
       everSubscribed = true;
-      onLive(true);
+      onLive("live");
     } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-      onLive(false);
+      if (everSubscribed) onLive("offline");
     }
   });
 

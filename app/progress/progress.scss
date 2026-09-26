@@ -68,6 +68,12 @@
     background: var(--mark);
     color: var(--ground);
   }
+
+  /* Once inverted, the default outline (currentColor, now --ground) all
+     but vanishes against the --mark background it sits on. */
+  &:focus-visible {
+    outline-color: var(--mark);
+  }
 }
 
 .pg-card__top {
@@ -354,6 +360,13 @@
   opacity: 0.7;
 }
 
+/* .small uppercases text, which would turn a commit hash's hex letters
+   into "8A05492" — a hash is an identifier, not a label, so it opts back
+   out. */
+.pg-feed__sha {
+  text-transform: none;
+}
+
 /* ---------- small screens + motion ---------- */
 
 @media (max-width: 720px) {
@@ -364,6 +377,10 @@
 
   .pg-feed__item {
     gap: 4rem;
+  }
+
+  .pg-gantt__grid {
+    grid-template-columns: 140rem 1fr;
   }
 }
 

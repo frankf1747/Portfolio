@@ -2,11 +2,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { localDay, percentComplete, relativeTime } from "@/lib/progress/derive";
 import { fetchProject } from "@/lib/progress/load";
 import type { ProjectDetail } from "@/lib/progress/types";
 import { useLive, useNow } from "@/lib/progress/useLive";
+import Crumb from "./Crumb";
 import Gantt from "./Gantt";
 import LoadGate from "./LoadGate";
 import UpdateFeed from "./UpdateFeed";
@@ -18,23 +19,7 @@ export default function ProjectView({ slug }: { slug: string }) {
 
   return (
     <>
-      <div className="pg__crumb">
-        <span className="small index">PROGRESS</span>
-        {state.status !== "loading" && (
-          <span className="small pg__live" aria-live="polite">
-            {live ? (
-              <>
-                <i className="pg-pulse" aria-hidden="true" /> LIVE
-              </>
-            ) : (
-              "RECONNECTING…"
-            )}
-          </span>
-        )}
-        <Link className="small link-a" href="/progress">
-          ← ALL PROJECTS
-        </Link>
-      </div>
+      <Crumb state={state} live={live} backHref="/progress" backLabel="← ALL PROJECTS" />
 
       <LoadGate state={state} retry={retry}>
         {(detail) =>
@@ -56,6 +41,11 @@ export default function ProjectView({ slug }: { slug: string }) {
 
 function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
   const { project, milestones, updates } = detail;
+
+  useEffect(() => {
+    document.title = `${project.name} — Progress`;
+  }, [project.name]);
+
   return (
     <>
       <header className="pg-detail__head">

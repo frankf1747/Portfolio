@@ -16,7 +16,8 @@ export default function UpdateFeed({
   return (
     <ol className="pg-feed">
       {updates.map((u) => {
-        const meta = [u.milestone_id && titles.get(u.milestone_id), u.commit_sha?.slice(0, 7)].filter(Boolean);
+        const milestoneTitle = u.milestone_id ? titles.get(u.milestone_id) : undefined;
+        const sha = u.commit_sha?.slice(0, 7);
         return (
           <li key={u.id} className="pg-feed__item">
             <time className="small pg-feed__time" dateTime={u.created_at}>
@@ -24,7 +25,13 @@ export default function UpdateFeed({
             </time>
             <div>
               <p className="pg-feed__summary">{u.summary}</p>
-              {meta.length > 0 && <p className="small pg-feed__meta">{meta.join(" · ")}</p>}
+              {(milestoneTitle || sha) && (
+                <p className="small pg-feed__meta">
+                  {milestoneTitle}
+                  {milestoneTitle && sha && " · "}
+                  {sha && <span className="pg-feed__sha">{sha}</span>}
+                </p>
+              )}
             </div>
           </li>
         );

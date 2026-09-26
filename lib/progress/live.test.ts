@@ -129,7 +129,7 @@ describe("startLive", () => {
     expect(calls).toBe(1);
 
     emitStatus(channel, "SUBSCRIBED");
-    expect(onLive).toHaveBeenCalledWith(true);
+    expect(onLive).toHaveBeenCalledWith("live");
     await vi.advanceTimersByTimeAsync(250);
     expect(calls).toBe(1);
 
@@ -139,14 +139,33 @@ describe("startLive", () => {
     stop();
   });
 
-  it.each(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"])("reports not live on %s", (status) => {
+  it("stays connecting through a status that arrives before the first SUBSCRIBED", () => {
     const { db, channel } = makeDb();
     const onLive = vi.fn();
     const stop = startLive(db, vi.fn().mockResolvedValue(1), vi.fn(), onLive, "t");
-    emitStatus(channel, status);
-    expect(onLive).toHaveBeenCalledWith(false);
+    emitStatus(channel, "CHANNEL_ERROR");
+    expect(onLive).not.toHaveBeenCalled();
     stop();
   });
+
+  it.each(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"])(
+    "goes offline on %s after having been subscribed, and back to live on a re-SUBSCRIBED",
+    (status) => {
+      const { db, channel } = makeDb();
+      const onLive = vi.fn();
+      const stop = startLive(db, vi.fn().mockResolvedValue(1), vi.fn(), onLive, "t");
+
+      emitStatus(channel, "SUBSCRIBED");
+      expect(onLive).toHaveBeenLastCalledWith("live");
+
+      emitStatus(channel, status);
+      expect(onLive).toHaveBeenLastCalledWith("offline");
+
+      emitStatus(channel, "SUBSCRIBED");
+      expect(onLive).toHaveBeenLastCalledWith("live");
+      stop();
+    }
+  );
 
   it("cleanup removes the channel, cancels pending timers and ignores late promises", async () => {
     const { db, rawDb, channel } = makeDb();
@@ -172,6 +191,7 @@ describe("startLive", () => {
     const onLive = vi.fn();
     const stop = startLive(db, vi.fn().mockResolvedValue(1), vi.fn(), onLive, "t");
 
+    emitStatus(channel, "SUBSCRIBED");
     stop();
     onLive.mockClear();
     emitStatus(channel, "CLOSED");
