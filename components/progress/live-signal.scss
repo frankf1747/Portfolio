@@ -9,6 +9,14 @@
   align-items: flex-start;
   gap: inherit;
   color: inherit;
+  transition: color 0.4s var(--ease);
+
+  /* The heading is ink at rest (see .work__title); turning it to the mark on
+     hover is what tells a reader it is a link and not just a label. */
+  &:hover,
+  &:focus-visible {
+    color: var(--accent);
+  }
 }
 
 .live-signal {
