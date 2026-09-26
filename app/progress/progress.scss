@@ -1,0 +1,381 @@
+/* ============================================================
+   PROGRESS — the live project dashboard (/progress)
+
+   §2 holds here too: one ground, one mark. Milestone status is told by FILL,
+   not by colour: planned is an outline, in progress fills to its percentage,
+   done is solid, blocked is hatched.
+   ============================================================ */
+
+.pg {
+  min-height: 100vh;
+  padding: 32rem var(--margin) 200rem;
+}
+
+.pg__crumb {
+  display: flex;
+  align-items: center;
+  gap: 20rem;
+  justify-content: space-between;
+  margin-bottom: 60rem;
+}
+
+.pg__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rem;
+  margin-right: auto;
+  opacity: 0.7;
+}
+
+.pg__title {
+  margin: 0 0 16rem;
+}
+
+.pg__lede {
+  max-width: 560rem;
+  margin: 0 0 60rem;
+}
+
+.pg__note {
+  margin: 40rem 0;
+}
+
+.pg-chip {
+  display: inline-block;
+  padding: 2rem 8rem;
+  border: 1px solid currentColor;
+  text-transform: uppercase;
+}
+
+/* ---------- overview ---------- */
+
+.pg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380rem, 1fr));
+  gap: var(--gap);
+}
+
+.pg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24rem;
+  padding: 24rem;
+  border: 1px solid currentColor;
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--mark);
+    color: var(--ground);
+  }
+}
+
+.pg-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pg-card__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rem;
+}
+
+.pg-pulse {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pg-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pg-pulse {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.pg-card__body {
+  display: grid;
+  grid-template-columns: 64rem 1fr;
+  gap: 20rem;
+  align-items: center;
+}
+
+.pg-card__name {
+  margin: 0 0 6rem;
+  font-size: 28rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.pg-card__desc {
+  margin: 0;
+}
+
+.pg-card__facts {
+  display: grid;
+  grid-template-columns: 70rem 1fr;
+  gap: 6rem 12rem;
+  margin: 0;
+  padding-top: 16rem;
+  border-top: 1px solid currentColor;
+
+  dd {
+    margin: 0;
+    text-transform: none;
+  }
+}
+
+.pg-ring {
+  width: 64rem;
+  height: 64rem;
+
+  circle {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 5;
+  }
+}
+
+.pg-ring__track {
+  opacity: 0.2;
+}
+
+.pg-ring__fill {
+  transition: stroke-dashoffset 0.8s var(--ease);
+}
+
+.pg-ring__label {
+  fill: currentColor;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14px;
+}
+
+/* ---------- detail ---------- */
+
+.pg-detail__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--gap);
+  align-items: end;
+  padding-bottom: 32rem;
+  border-bottom: 1px solid currentColor;
+}
+
+.pg-detail__desc {
+  max-width: 720rem;
+  margin: 0;
+}
+
+.pg-detail__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rem 24rem;
+  margin: 20rem 0 0;
+}
+
+.pg-detail__pct {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: calc(95rem * var(--mono-fit));
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+}
+
+.pg-section-title {
+  margin: 60rem 0 0;
+  font-size: 16rem;
+}
+
+/* ---------- Gantt ---------- */
+
+/* The chart keeps a readable minimum width and scrolls sideways inside its
+   own box on narrow screens; the milestone names stay pinned on the left. */
+.pg-gantt {
+  overflow-x: auto;
+  margin: 20rem 0 16rem;
+  border-top: 1px solid currentColor;
+}
+
+.pg-gantt__grid {
+  display: grid;
+  grid-template-columns: 260rem 1fr;
+  min-width: 960rem;
+}
+
+.pg-gantt__corner,
+.pg-gantt__label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--ground);
+}
+
+.pg-gantt__corner {
+  border-bottom: 1px solid currentColor;
+}
+
+.pg-gantt__label {
+  padding: 16rem 16rem 16rem 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  text-transform: none;
+}
+
+.pg-gantt__axis {
+  position: relative;
+  height: 40rem;
+  border-bottom: 1px solid currentColor;
+}
+
+.pg-gantt__tick {
+  position: absolute;
+  bottom: 0;
+  height: 24rem;
+  padding-left: 6rem;
+  border-left: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.pg-gantt__track {
+  position: relative;
+  min-height: 52rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.pg-gantt__today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed currentColor;
+  pointer-events: none;
+}
+
+.pg-gantt__today--label {
+  bottom: auto;
+  padding-left: 6rem;
+  white-space: nowrap;
+}
+
+.pg-bar {
+  position: absolute;
+  top: 50%;
+  height: 16rem;
+  transform: translateY(-50%);
+  border: 1px solid currentColor;
+  overflow: hidden;
+  transition: left 0.8s var(--ease), width 0.8s var(--ease);
+}
+
+.pg-bar__fill {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  transition: width 0.8s var(--ease);
+}
+
+.pg-bar--done {
+  background: currentColor;
+}
+
+.pg-bar--blocked {
+  background: repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 6px);
+}
+
+.pg-gantt__done {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 10rem;
+  height: 10rem;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid currentColor;
+  background: var(--ground);
+}
+
+.pg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rem 28rem;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8rem;
+  }
+}
+
+.pg-legend__swatch {
+  position: relative;
+  top: auto;
+  display: inline-block;
+  width: 32rem;
+  height: 12rem;
+  transform: none;
+}
+
+.pg-legend__done {
+  position: relative;
+  top: auto;
+  display: inline-block;
+  transform: rotate(45deg);
+}
+
+/* ---------- feed ---------- */
+
+.pg-feed {
+  margin-top: 20rem;
+}
+
+.pg-feed__item {
+  display: grid;
+  grid-template-columns: 140rem 1fr;
+  gap: var(--gap);
+  padding: 16rem 0;
+  border-top: 1px solid currentColor;
+  animation: pg-in 0.8s var(--ease) both;
+}
+
+@keyframes pg-in {
+  from {
+    opacity: 0;
+    transform: translateY(12rem);
+  }
+}
+
+.pg-feed__summary {
+  margin: 0;
+}
+
+.pg-feed__meta {
+  margin: 4rem 0 0;
+  opacity: 0.7;
+}
+
+/* ---------- small screens + motion ---------- */
+
+@media (max-width: 720px) {
+  .pg-detail__head,
+  .pg-feed__item {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-feed__item {
+    gap: 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-pulse,
+  .pg-feed__item {
+    animation: none;
+  }
+
+  .pg-bar,
+  .pg-bar__fill,
+  .pg-ring__fill {
+    transition: none;
+  }
+}
