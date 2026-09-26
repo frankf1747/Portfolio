@@ -7,9 +7,11 @@
     "//build": "with output:'export', Next treats a custom distDir as the EXPORT dir and forces the build dir back to .next -- so this puts the deployable static site in .next-build (what wrangler.jsonc serves), while build artifacts still land in .next alongside the dev server's",
     "build": "NEXT_DIST_DIR=.next-build next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
     "@types/three": "^0.185.4",
     "lenis": "^1.1.14",
     "next": "^14.2.5",
@@ -22,6 +24,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.7",
     "sass": "^1.77.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.11"
   }
 }

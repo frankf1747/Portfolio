@@ -9,3 +9,4 @@ next-env.d.ts
 .next-build/
 .next-preview/
 tsconfig.tsbuildinfo
+.env*.local
