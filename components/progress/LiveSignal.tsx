@@ -11,6 +11,9 @@ export default function LiveSignal() {
     <span className="live-signal">
       <i className="live-signal__dot" aria-hidden="true" />
       <span className="live-signal__text">LIVE</span>
+      <span className="live-signal__arrow" aria-hidden="true">
+        →
+      </span>
       <span className="u-sr"> — see live progress on every project</span>
     </span>
   );

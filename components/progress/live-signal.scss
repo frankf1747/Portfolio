@@ -70,8 +70,30 @@
   transform-origin: 100% 50%;
 }
 
+/* Says "this goes somewhere". With a mouse it slides in on hover alongside
+   the pink; on touch there is no hover to reveal it, so it simply stays. */
+.live-signal__arrow {
+  display: inline-block;
+  transition: transform 0.6s var(--ease), opacity 0.6s var(--ease);
+}
+
+html[data-touch="false"] .live-signal__arrow {
+  opacity: 0;
+  transform: translateX(-6rem);
+}
+
+html[data-touch="false"] .work__title-link:hover .live-signal__arrow,
+html[data-touch="false"] .work__title-link:focus-visible .live-signal__arrow {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-signal__dot {
     animation: none;
+  }
+
+  .live-signal__arrow {
+    transition: none;
   }
 }
