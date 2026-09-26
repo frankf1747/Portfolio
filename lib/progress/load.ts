@@ -25,7 +25,10 @@ export function groupOverview(
 export async function fetchOverview(db: SupabaseClient): Promise<ProjectSummary[]> {
   const [p, m, u] = await Promise.all([
     db.from("projects").select("*").order("updated_at", { ascending: false }),
-    db.from("milestones").select("*").order("sort_order"),
+    /* sort_order alone is not unique, so a tie renders in whatever order
+       the database happens to return it — start_date, then id, make the
+       order deterministic instead. */
+    db.from("milestones").select("*").order("sort_order").order("start_date").order("id"),
     db.from("latest_updates").select("*")
   ]);
   return groupOverview(
@@ -39,8 +42,15 @@ export async function fetchProject(db: SupabaseClient, slug: string): Promise<Pr
   const project = must<TrackedProject | null>(await db.from("projects").select("*").eq("slug", slug).maybeSingle());
   if (!project) return null;
   const [m, u] = await Promise.all([
-    db.from("milestones").select("*").eq("project_slug", slug).order("sort_order"),
-    db.from("updates").select("*").eq("project_slug", slug).order("created_at", { ascending: false }).limit(50)
+    db.from("milestones").select("*").eq("project_slug", slug).order("sort_order").order("start_date").order("id"),
+    /* Same reasoning for updates that land in the same instant. */
+    db
+      .from("updates")
+      .select("*")
+      .eq("project_slug", slug)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(50)
   ]);
   return { project, milestones: must<TrackedMilestone[]>(m), updates: must<TrackedUpdate[]>(u) };
 }

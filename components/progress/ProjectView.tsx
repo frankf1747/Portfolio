@@ -12,6 +12,12 @@ import Gantt from "./Gantt";
 import LoadGate from "./LoadGate";
 import UpdateFeed from "./UpdateFeed";
 
+/* The same shape the MCP server validates a slug against before writing it
+   (see progress-mcp/src/schemas.ts). ?p= is free text anyone can put on
+   frankfu.me, so a value that doesn't match a real slug is never echoed
+   back into the page verbatim. */
+const SAFE_SLUG = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
+
 export default function ProjectView({ slug }: { slug: string }) {
   const load = useCallback((db: SupabaseClient) => fetchProject(db, slug), [slug]);
   const { state, retry, live } = useLive(load, `project:${slug}`);
@@ -27,7 +33,7 @@ export default function ProjectView({ slug }: { slug: string }) {
             <Detail detail={detail} now={now} />
           ) : (
             <p className="small pg__note">
-              NO PROJECT CALLED “{slug}”.{" "}
+              {SAFE_SLUG.test(slug) ? <>NO PROJECT CALLED “{slug}”. </> : "NO SUCH PROJECT. "}
               <Link className="link-b" href="/progress">
                 SEE ALL PROJECTS
               </Link>
@@ -43,7 +49,11 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
   const { project, milestones, updates } = detail;
 
   useEffect(() => {
+    const previous = document.title;
     document.title = `${project.name} — Progress`;
+    return () => {
+      document.title = previous;
+    };
   }, [project.name]);
 
   return (

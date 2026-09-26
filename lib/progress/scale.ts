@@ -2,6 +2,8 @@
    percentage of the chart width, so the chart is plain positioned HTML that
    scales with its container and keeps its text crisp. */
 
+import { localDay } from "./derive";
+
 const DAY = 86_400_000;
 
 export interface Domain {
@@ -21,12 +23,22 @@ export function parseDay(s: string): number {
   return Date.UTC(y, m - 1, d);
 }
 
+/* start_date/due_date are plain calendar days, the same everywhere. But
+   completed_at is a real instant (a trigger sets it to "now"), so its date
+   depends on the viewer: slicing its UTC ISO string can land it a day off
+   from what the milestone's own timezone-naive dates mean. Converting
+   through the viewer's local day keeps the diamond on the day the person
+   looking at the chart would call "completed". */
+export function completedDay(iso: string): number {
+  return parseDay(localDay(new Date(iso)));
+}
+
 export function ganttDomain(ms: Spanned[], today: string, padDays = 3): Domain {
   let start = parseDay(today);
   let end = start;
   for (const m of ms) {
     start = Math.min(start, parseDay(m.start_date));
-    end = Math.max(end, parseDay(m.due_date), m.completed_at ? parseDay(m.completed_at) : end);
+    end = Math.max(end, parseDay(m.due_date), m.completed_at ? completedDay(m.completed_at) : end);
   }
   return { start: start - padDays * DAY, end: end + padDays * DAY };
 }

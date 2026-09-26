@@ -107,6 +107,13 @@
   grid-template-columns: 64rem 1fr;
   gap: 20rem;
   align-items: center;
+
+  /* An unbroken string in a name or description (a URL, a path) must not
+     push the card wider than its grid column. */
+  > div {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
 }
 
 .pg-card__name {
@@ -131,6 +138,8 @@
   dd {
     margin: 0;
     text-transform: none;
+    overflow-wrap: anywhere;
+    min-width: 0;
   }
 }
 
@@ -168,6 +177,11 @@
   align-items: end;
   padding-bottom: 32rem;
   border-bottom: 1px solid currentColor;
+}
+
+.pg-detail__head > div {
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .pg-detail__desc {
@@ -228,6 +242,8 @@
   padding: 16rem 16rem 16rem 0;
   border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   text-transform: none;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .pg-gantt__axis {
@@ -342,6 +358,11 @@
   padding: 16rem 0;
   border-top: 1px solid currentColor;
   animation: pg-in 0.8s var(--ease) both;
+
+  > div {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
 }
 
 @keyframes pg-in {

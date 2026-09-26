@@ -15,6 +15,20 @@ describe("ganttDomain", () => {
     const d = ganttDomain([m("2026-09-01", "2026-09-10", "2026-09-15T18:00:00Z")], "2026-09-20");
     expect(d.end).toBe(parseDay("2026-09-23"));
   });
+
+  it("reads completed_at as the viewer's local day, not its UTC date", () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = "America/Los_Angeles";
+    try {
+      /* 2026-09-16T03:30:00Z is still 2026-09-15 evening in Los Angeles
+         (UTC-7 in September) — the domain must stretch to the 15th, not
+         the 16th the UTC slice alone would give. */
+      const d = ganttDomain([m("2026-09-01", "2026-09-10", "2026-09-16T03:30:00Z")], "2026-09-01");
+      expect(d.end).toBe(parseDay("2026-09-18"));
+    } finally {
+      process.env.TZ = originalTz;
+    }
+  });
 });
 
 describe("xPct and barSpan", () => {

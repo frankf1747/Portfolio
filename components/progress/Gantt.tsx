@@ -1,6 +1,6 @@
 import { Fragment } from "react";
-import { STATUS_LABEL } from "@/lib/progress/derive";
-import { barSpan, ganttDomain, monthTicks, parseDay, xPct } from "@/lib/progress/scale";
+import { localDay, STATUS_LABEL } from "@/lib/progress/derive";
+import { barSpan, completedDay, ganttDomain, monthTicks, parseDay, xPct } from "@/lib/progress/scale";
 import type { MilestoneStatus, TrackedMilestone } from "@/lib/progress/types";
 
 const LEGEND: MilestoneStatus[] = ["planned", "in_progress", "done", "blocked"];
@@ -33,7 +33,8 @@ export default function Gantt({ milestones, today }: { milestones: TrackedMilest
 
           {milestones.map((m) => {
             const span = barSpan(m, domain);
-            const done = m.completed_at ? `${xPct(parseDay(m.completed_at), domain)}%` : null;
+            const completedLocal = m.completed_at ? localDay(new Date(m.completed_at)) : null;
+            const done = m.completed_at ? `${xPct(completedDay(m.completed_at), domain)}%` : null;
             const tip = `${m.title}\n${m.start_date} → ${m.due_date}\n${m.progress}% · ${STATUS_LABEL[m.status]}`;
             return (
               <Fragment key={m.id}>
@@ -41,7 +42,7 @@ export default function Gantt({ milestones, today }: { milestones: TrackedMilest
                   {m.title}
                   <span className="u-sr">
                     , {m.start_date} to {m.due_date}, {m.progress}%, {STATUS_LABEL[m.status]}
-                    {m.completed_at ? `, completed ${m.completed_at.slice(0, 10)}` : ""}
+                    {completedLocal ? `, completed ${completedLocal}` : ""}
                   </span>
                 </div>
                 <div className="pg-gantt__track" aria-hidden="true">
@@ -53,7 +54,7 @@ export default function Gantt({ milestones, today }: { milestones: TrackedMilest
                   >
                     <div className="pg-bar__fill" style={{ width: `${m.progress}%` }} />
                   </div>
-                  {done && <span className="pg-gantt__done" style={{ left: done }} title={`Completed ${m.completed_at!.slice(0, 10)}`} />}
+                  {done && <span className="pg-gantt__done" style={{ left: done }} title={`Completed ${completedLocal}`} />}
                 </div>
               </Fragment>
             );
