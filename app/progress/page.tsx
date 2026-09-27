@@ -1,7 +1,7 @@
 import "./progress.scss";
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { Suspense } from "react";
 import ProgressPage from "@/components/progress/ProgressPage";
 
@@ -18,10 +18,7 @@ function ProgressFallback() {
   return (
     <main className="pg">
       <div className="pg__crumb">
-        <span className="small index">PROGRESS</span>
-        <Link className="small link-a" href="/">
-          ← FRANK FU
-        </Link>
+        <Breadcrumbs trail={[{ label: "FRANK FU", href: "/" }, { label: "LIVE PROJECTS" }]} />
       </div>
     </main>
   );

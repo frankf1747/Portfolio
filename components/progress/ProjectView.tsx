@@ -25,7 +25,21 @@ export default function ProjectView({ slug }: { slug: string }) {
 
   return (
     <>
-      <Crumb state={state} live={live} backHref="/progress" backLabel="← ALL PROJECTS" />
+      <Crumb
+        state={state}
+        live={live}
+        trail={[
+          { label: "FRANK FU", href: "/" },
+          { label: "LIVE PROJECTS", href: "/progress" },
+          /* the project's own name once loaded; a quiet placeholder until then */
+          {
+            label:
+              state.status === "ready" && state.data
+                ? state.data.project.name.toUpperCase()
+                : "…"
+          }
+        ]}
+      />
 
       <LoadGate state={state} retry={retry}>
         {(detail) =>

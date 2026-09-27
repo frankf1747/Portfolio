@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Breadcrumbs from "../Breadcrumbs";
 import ScrollProvider from "@/components/ScrollProvider";
 import Cursor from "@/components/Cursor";
 import SmartText from "@/components/SmartText";
@@ -27,12 +28,13 @@ export default function WorkPage({ work }: { work: Work }) {
       <main className="work-page">
         <header className="wp__head">
           <div className="wp__crumb">
-            <SmartText className="small index">
-              {`${work.n} — ${work.client}`}
-            </SmartText>
-            <Link className="small wp__back" href="/#work">
-              ← ALL PROJECTS
-            </Link>
+            <Breadcrumbs
+              trail={[
+                { label: "FRANK FU", href: "/" },
+                { label: "PROJECTS", href: "/#work" },
+                { label: work.client }
+              ]}
+            />
           </div>
 
           {/* eslint-disable-next-line @next/next/no-img-element */}

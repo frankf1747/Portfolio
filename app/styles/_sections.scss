@@ -28,6 +28,21 @@
   position: relative;
   height: var(--start-vh);
   overflow: hidden;
+
+  /* Paper tooth under the landing screen — see $paper-grain in _sketch.
+     A layer, not the section's own background, so it can fade out over
+     the last stretch: the texture ends softly into the plain paper of
+     About instead of on a hard line. First in paint order, so the
+     overture, grass and title all draw over it. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: $paper-grain, $paper-mottle;
+    background-size: 240px 240px, 600px 600px;
+    mask-image: linear-gradient(to bottom, #000 70%, transparent);
+    pointer-events: none;
+  }
 }
 
 /* ★ overture only — plays once, exits upward, never returns */

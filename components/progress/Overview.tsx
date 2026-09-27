@@ -13,7 +13,11 @@ export default function Overview() {
   return (
     <>
       <header className="pg__head">
-        <Crumb state={state} live={live} backHref="/" backLabel="← FRANK FU" />
+        <Crumb
+          state={state}
+          live={live}
+          trail={[{ label: "FRANK FU", href: "/" }, { label: "LIVE PROJECTS" }]}
+        />
         <h1 className="h2 pg__title">What I&apos;m building, live.</h1>
       </header>
 
