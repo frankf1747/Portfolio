@@ -118,18 +118,50 @@ body {
   overflow-x: hidden;
 }
 
+/* ---------- riso texture ----------
+   The two flat inversions are printed, not rendered: a risograph lays a
+   solid colour down with a fine speckle and uneven coverage, while the
+   paper stays clean. So the texture goes on these two grounds ONLY — the
+   paper ground is left untouched, which is exactly how a riso print reads.
+
+   Two generated noise tiles, inline, so no request and no live filter:
+
+     GRAIN   fine specks in --ink (#262048), mostly transparent. Ink-coloured
+             rather than grey — grey noise reads as a dirty photo, ink specks
+             read as print. Tiled at a fixed 240px: grain belongs to the
+             "paper", so it must not grow with the layout like rem does.
+     MOTTLE  large soft patches in paper colour (#f5f3ec) at low strength —
+             the thin, uneven spots in a riso solid.
+
+   Strength lives in each feColorMatrix's last row (alpha = a·noise + b).
+   Raise b toward 0 for heavier grain; drop the mottle layer for pure grain.
+   Kept light on purpose — the first pass (b −0.52 / −0.24) visibly muddied
+   both colours.
+
+   ⚠ baseFrequency × tile size must be a WHOLE number or the tile does not
+   wrap and shows a hard seam every tile: 0.95 × 240 = 228, 0.01 × 600 = 6.
+   (0.012 × 600 = 7.2 put a visible edge down the blue section.) */
+$riso-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.149 0 0 0 0 0.125 0 0 0 0 0.282 1.1 0 0 0 -0.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+$riso-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.01' numOctaves='3' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.961 0 0 0 0 0.953 0 0 0 0 0.925 0.3 0 0 0 -0.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+
+@mixin riso-ground {
+  background-color: var(--ground);
+  background-image: $riso-grain, $riso-mottle;
+  background-size: 240px 240px, 600px 600px;
+}
+
 /* full-section ground inversions — max three in the whole scroll */
 .is-invert-yellow {
   --ground: var(--yellow);
   --mark: var(--ink);
-  background: var(--ground);
+  @include riso-ground;
   color: var(--mark);
 }
 
 .is-invert-blue {
   --ground: var(--blue);
   --mark: var(--ink);
-  background: var(--ground);
+  @include riso-ground;
   color: var(--mark);
 }
 

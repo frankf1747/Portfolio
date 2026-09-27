@@ -57,9 +57,10 @@ const FAR = 130;
 const NAP_AFTER = 8000;
 /* Stamina, in "tiredness seconds": walking adds 1/s, trotting 2.5/s,
    standing about takes 1.5/s off. Past TIRED it sleeps where it stands,
-   for SLEEP_FOR seconds, and wakes fully rested. 26 ≈ half a minute of
-   ambling after the cursor, or ~10s of chasing it at a trot. */
-const TIRED = 26;
+   for SLEEP_FOR seconds, and wakes fully rested. 20 ≈ 20s of ambling
+   after the cursor, or ~8s of chasing it at a trot (was 26 — it could
+   run a little too long before tiring). */
+const TIRED = 20;
 const SLEEP_FOR: [number, number] = [6, 10];
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
