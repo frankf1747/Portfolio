@@ -38,7 +38,9 @@
 
 .nav__item {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: calc(12 * var(--u));
+  /* 13.5, up from 12 — the stack read slightly too small beside the
+     wordmark. The pitch below moves with it. */
+  font-size: calc(13.5 * var(--u));
   line-height: 1;
   --st-window: 1em; /* §4 mask must clear the line box — see _smart-text */
   letter-spacing: 0.02em;
@@ -46,7 +48,7 @@
   position: relative;
   z-index: 9;
   cursor: pointer;
-  height: calc(14 * var(--u)); /* item pitch — tracks font-size, keeps the 2rem row gap */
+  height: calc(16 * var(--u)); /* item pitch — tracks font-size, keeps the 2rem row gap */
 
   /* entrance + collapse share this transition */
   transform: translateY(calc(-125 * var(--u)));

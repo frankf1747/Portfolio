@@ -1,0 +1,142 @@
+@use "sketch" as *;
+
+/* ============================================================
+   LIVE DOT — the site-wide way in to /progress. Behaviour and the
+   touch rule in components/LiveDot.tsx.
+
+   Chrome, like the nav: sized on --u, so it holds its size on a large
+   monitor instead of damping with the reading type.
+
+   Built right-to-left (row-reverse): the dot is pinned at the edge and
+   the label grows out of it toward the page, so opening never moves the
+   dot the eye is already on.
+   ============================================================ */
+
+.live-dot {
+  @include sketch-edge(wob2, 1.5px, 99rem);
+
+  /* the mixin sets relative; this lives on the viewport */
+  position: fixed;
+  top: 50%;
+  right: calc(16 * var(--u));
+  /* over the page and the dog (900), under the cursor (999) */
+  z-index: 950;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  padding: calc(9 * var(--u));
+  border-radius: 99rem;
+  translate: 0 -50%;
+  color: var(--ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: calc(11 * var(--u));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: transparent;
+  transition: background-color 0.5s var(--ease);
+
+  /* the drawn outline only exists while open */
+  &::before {
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  /* not part of the overture — arrives with the nav */
+  opacity: 0;
+  pointer-events: none;
+}
+
+html[data-nav="in"] .live-dot {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 1s var(--ease), background-color 0.5s var(--ease);
+}
+
+.live-dot__dot {
+  position: relative;
+  flex: none;
+  width: calc(10 * var(--u));
+  height: calc(10 * var(--u));
+  border-radius: 50%;
+  background: var(--accent);
+  filter: url(#wobS);
+
+  /* the pulse — a ring that swells out and fades, like a recording light */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgb(242 36 122 / 0.45);
+    animation: live-pulse 2.2s var(--ease) infinite;
+  }
+}
+
+.live-dot__label {
+  display: block;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width 0.6s var(--ease),
+    opacity 0.35s var(--ease),
+    margin 0.6s var(--ease);
+
+  b {
+    font-weight: 500;
+    color: var(--accent);
+  }
+}
+
+/* ---------- open: hover, keyboard focus, or a first tap ---------- */
+
+.live-dot:hover,
+.live-dot:focus-visible,
+.live-dot.is-open {
+  background: var(--paper);
+
+  &::before {
+    opacity: 1;
+  }
+
+  .live-dot__label {
+    max-width: calc(260 * var(--u));
+    margin-right: calc(10 * var(--u));
+    opacity: 1;
+    transition-delay: 0s, 0.12s, 0s;
+  }
+}
+
+/* the site's focus ring would double the drawn outline */
+.live-dot:focus-visible {
+  outline: none;
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(242 36 122 / 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 calc(10 * var(--u)) rgb(242 36 122 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot__dot::after {
+    animation: none;
+  }
+
+  .live-dot,
+  .live-dot::before,
+  .live-dot__label {
+    transition: none;
+  }
+}
+
+@media print {
+  .live-dot {
+    display: none;
+  }
+}

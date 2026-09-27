@@ -12,6 +12,7 @@ import Studies from "@/components/sections/Studies";
 import Contact from "@/components/sections/Contact";
 import SketchFilters from "@/components/SketchFilters";
 import Dog from "@/components/Dog";
+import LiveDot from "@/components/LiveDot";
 
 /* The whole site, as one composition. It lives here rather than in
    app/page.tsx because it is rendered at more than one path: "/" and each
@@ -29,6 +30,8 @@ export default function Landing() {
       <SketchFilters />
       {/* wanders the screen after the intro — see Dog.tsx */}
       <Dog />
+      {/* the site-wide way in to /progress — see LiveDot.tsx */}
+      <LiveDot />
 
       <main>
         <Hero />
