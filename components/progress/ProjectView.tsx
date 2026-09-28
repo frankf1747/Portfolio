@@ -76,6 +76,13 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
         <div>
           <h1 className="h2 pg__title">{project.name}</h1>
           <p className="pg-detail__desc">{project.description}</p>
+          {project.stack?.length > 0 && (
+            <ul className="small pg-stack" aria-label="Built with">
+              {project.stack.map((tag) => (
+                <li key={tag}>{tag}</li>
+              ))}
+            </ul>
+          )}
           <p className="small pg-detail__facts">
             <span className="pg-chip">{project.status}</span>
             <span>UPDATED {relativeTime(project.updated_at, now).toUpperCase()}</span>

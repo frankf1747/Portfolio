@@ -13,6 +13,8 @@ export interface TrackedProject {
   status: ProjectStatus;
   start_date: string;
   target_date: string | null;
+  /** What it is built with; shown as chips under the description. */
+  stack: string[];
   created_at: string;
   updated_at: string;
 }

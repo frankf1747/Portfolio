@@ -196,6 +196,24 @@
   margin: 0;
 }
 
+/* What the project is built with. Ink, not the mark — the same move the
+   breadcrumb makes for the current page — so the tags read as reference
+   under a pink headline rather than as more headline. */
+.pg-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rem;
+  margin: 20rem 0 0;
+  color: var(--ink);
+
+  li {
+    padding: 4rem 10rem;
+    border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    border-radius: 999rem;
+    white-space: nowrap;
+  }
+}
+
 .pg-detail__facts {
   display: flex;
   flex-wrap: wrap;
