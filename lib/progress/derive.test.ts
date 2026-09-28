@@ -10,6 +10,20 @@ describe("percentComplete", () => {
     expect(percentComplete([ms("done", 1, 100), ms("in_progress", 2, 50), ms("planned", 3, 0)])).toBe(50);
     expect(percentComplete([ms("done", 1, 100), ms("planned", 2, 0), ms("planned", 3, 0)])).toBe(33);
   });
+  it("weights each milestone by its size", () => {
+    // Brain: 13 + 3 + 6 + 8 + 7 = 37 tasks; 13 done, and 1 of the next 3.
+    const brain = [
+      { progress: 100, weight: 13 },
+      { progress: 33, weight: 3 },
+      { progress: 0, weight: 6 },
+      { progress: 0, weight: 8 },
+      { progress: 0, weight: 7 }
+    ];
+    expect(percentComplete(brain)).toBe(38);
+  });
+  it("treats a missing weight as 1", () => {
+    expect(percentComplete([{ progress: 100 }, { progress: 0, weight: 3 }])).toBe(25);
+  });
 });
 
 describe("currentMilestone", () => {

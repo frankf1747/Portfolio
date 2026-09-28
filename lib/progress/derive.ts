@@ -7,9 +7,15 @@ export const STATUS_LABEL: Record<MilestoneStatus, string> = {
   blocked: "Blocked"
 };
 
-export function percentComplete(ms: Pick<TrackedMilestone, "progress">[]): number {
-  if (!ms.length) return 0;
-  return Math.round(ms.reduce((sum, m) => sum + m.progress, 0) / ms.length);
+/* Weighted by each milestone's size, so finishing a 13-task milestone moves
+   the project further than finishing a 3-task one. A missing weight counts
+   as 1, which reduces to the plain average. */
+export function percentComplete(
+  ms: (Pick<TrackedMilestone, "progress"> & { weight?: number })[]
+): number {
+  const total = ms.reduce((sum, m) => sum + (m.weight ?? 1), 0);
+  if (!total) return 0;
+  return Math.round(ms.reduce((sum, m) => sum + m.progress * (m.weight ?? 1), 0) / total);
 }
 
 /* What is being worked on: the first in-progress milestone; else the first

@@ -30,6 +30,8 @@ export interface TrackedMilestone {
   due_date: string;
   completed_at: string | null;
   sort_order: number;
+  /** Size relative to the project's other milestones (e.g. task count). */
+  weight: number;
 }
 
 export interface TrackedUpdate {
