@@ -2,182 +2,67 @@
 
 import { useEffect, useRef } from "react";
 import SmartText from "../SmartText";
+import { scrambleText } from "@/lib/smartText";
+import { mountAboutFigure } from "@/lib/aboutFigure";
 
-/* §7 — the statement, with the credentials that back it.
+/* §7 — the statement, and the figure that makes it literal.
 
-   The paragraph claims both halves of one job. The two rows underneath are
-   the receipt for that claim, and the Toronto line is the load-bearing one:
-   Applied Statistics AND UX design, taken together, is why "both halves"
-   reads as a fact rather than as a story.
+   The headline says it: I build the thing the analysis points to. The figure
+   under it then does exactly that — four sketches of the kinds of thing the
+   work turns into (a model, a dashboard, an agent, an app), each with a pink
+   arrow running from the sketch out to its name. "The thing" is set in the
+   same pink as that arrow, so the headline and the figure read as one claim.
 
-   The paragraph decodes ONCE, on scroll-in, through SmartText's default view
-   trigger. A per-letter hover SCRAMBLE was built here and removed: this text
-   already has its scramble, and giving it a second one meant the same
-   gesture-of-the-site fired twice on one block, which diluted both.
+   The paragraph keeps the prose voice; the figure carries the evidence. The
+   education rows are the figure's sources — set as a chart footnote, since
+   that is literally what they are to the analysis above them.
 
-   What hover does instead is REPEL. Letters near the cursor are pushed along
-   the vector away from it, strongest under the pointer and falling to
-   nothing at the radius, then drifting back when it leaves. It is a
-   different gesture from the decode rather than a second helping of it, and
-   it leaves the text readable throughout.
+   All the drawing lives in lib/aboutFigure (one module per sketch); this
+   component only lays out the stage and hands it the elements. */
 
-   Transform only. The scramble had to pin every glyph's width because .h2 is
-   the one proportional class on the site and swapping an i for an M reflowed
-   the paragraph; transforms do not participate in layout, so displacement
-   cannot change the line count no matter how far a letter travels.
-
-   The education rows are set as a spec table, not as prose. Three columns on
-   a fixed grid so the dates and the institutions align down the block rather
-   than tracking each degree's length, and hairlines top and bottom so it
-   reads as a record rather than as more paragraph. */
-
-const EDU = [
-  {
-    degree: "MASTER OF BUSINESS ANALYTICS",
-    dates: "2509-2612",
-    school: "UCLA ANDERSON SCHOOL OF MANAGEMENT"
-  },
-  {
-    degree: "APPLIED STATISTICS & UX DESIGN",
-    dates: "2109-2505",
-    school: "UNIVERSITY OF TORONTO"
-  }
+const OUTPUTS: { label: string; icon: React.ReactNode }[] = [
+  { label: "A model", icon: <><path d="M6 40 H44 M6 40 V6" /><path d="M8 36 C20 36 22 12 42 10" /></> },
+  { label: "A dashboard", icon: <><rect x="5" y="7" width="38" height="34" rx="3" /><path d="M14 33 V24 M22 33 V16 M30 33 V21 M38 33 V13" /></> },
+  { label: "An agent", icon: <><rect x="15" y="4" width="18" height="11" rx="2" /><circle cx="8" cy="38" r="4" /><circle cx="24" cy="38" r="4" /><circle cx="40" cy="38" r="4" /><path d="M20 15 L9 34 M24 15 V34 M28 15 L39 34" /></> },
+  { label: "An app", icon: <><rect x="4" y="7" width="40" height="34" rx="3" /><path d="M4 15 H44 M13 15 V41 M19 22 H38 M19 29 H32 M19 35 H36" /></> }
 ];
 
-/* Falloff radius and travel, in DESIGN px — 1440-artboard units, the same
-   ones the stylesheet is written in. They are multiplied by the live root
-   unit before use.
-
-   They used to be raw screen px, and that was the bug behind "on a big
-   screen they barely move". The paragraph scales with the viewport; these
-   did not. On a 2560 monitor the glyphs were 78% larger while the push
-   stayed 22px — a nudge worth 26% of a letter instead of 46% — and the
-   field covered ~44% less of the block. Read in design px, the gesture is
-   now identical at every width.
-
-   Radius roughly a word wide, so the effect reads as local to the cursor
-   rather than as the paragraph breathing. LERP is the fraction of remaining
-   distance covered per frame: high enough to feel attached to the pointer,
-   low enough that letters settle rather than snap. */
-const RADIUS = 130;
-const PUSH = 22;
-const LERP = 0.18;
-
-/* px per design px. 1 at 1440 and below; ~1.19 on a 2560 monitor, where the
-   reading unit is damped. Read fresh on every measure() rather than cached
-   at mount, so it is already correct after a resize — measure() is the one
-   thing that runs on both mount and resize. */
-const rootUnit = () =>
-  parseFloat(getComputedStyle(document.documentElement).fontSize) || 1;
+const SOURCES = [
+  { degree: "MASTER OF BUSINESS ANALYTICS", school: "UCLA ANDERSON SCHOOL OF MANAGEMENT", dates: "2025.09 — 2026.12" },
+  { degree: "APPLIED STATISTICS & UX DESIGN", school: "UNIVERSITY OF TORONTO", dates: "2021.09 — 2025.05" }
+];
 
 export default function About() {
-  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const headRef = useRef<HTMLHeadingElement | null>(null);
+  const thingRef = useRef<HTMLElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const capRef = useRef<HTMLSpanElement | null>(null);
+  const readRef = useRef<HTMLSpanElement | null>(null);
+  const outRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  /* the headline rises in, and "the thing" decodes as it lands */
+  useEffect(() => {
+    const h = headRef.current;
+    if (!h) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        if (!es.some((e) => e.isIntersecting)) return;
+        h.classList.add("is-in");
+        if (thingRef.current) scrambleText(thingRef.current, { duration: 900 });
+        io.disconnect();
+      },
+      { threshold: 0 }
+    );
+    io.observe(h);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
-    const root = bodyRef.current;
-    if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const para = root.querySelector<HTMLElement>(".h2");
-    if (!para) return;
-
-    type Cell = { el: HTMLElement; x: number; y: number; cx: number; cy: number };
-    let cells: Cell[] = [];
-    let px = -9999;
-    let py = -9999;
-    let raf = 0;
-    let radius = RADIUS;
-    let push = PUSH;
-
-    /* Positions are cached because reading 340 rects per frame is the one
-       thing that would make this expensive. They are stored RELATIVE to the
-       container, so scrolling does not invalidate them — only a reflow does.
-
-       Rebuilt on every enter rather than once on mount: the engine rewrites
-       these nodes on resplit and on its reveal, and an enter is both rare
-       and the exact moment the cache needs to be right. */
-    const measure = () => {
-      const u = rootUnit();
-      radius = RADIUS * u;
-      push = PUSH * u;
-
-      const box = para.getBoundingClientRect();
-      cells = Array.from(
-        para.querySelectorAll<HTMLElement>(".letter-inner")
-      ).map((el) => {
-        const r = el.getBoundingClientRect();
-        return {
-          el,
-          x: 0,
-          y: 0,
-          cx: r.left - box.left + r.width / 2,
-          cy: r.top - box.top + r.height / 2
-        };
-      });
-    };
-
-    const onEnter = () => measure();
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") return;
-      const box = para.getBoundingClientRect();
-      px = e.clientX - box.left;
-      py = e.clientY - box.top;
-    };
-
-    const onLeave = () => {
-      px = -9999;
-      py = -9999;
-    };
-
-    const frame = () => {
-      raf = requestAnimationFrame(frame);
-
-      for (const c of cells) {
-        const dx = c.cx - px;
-        const dy = c.cy - py;
-        const dist = Math.hypot(dx, dy);
-
-        let tx = 0;
-        let ty = 0;
-        if (dist < radius && dist > 0.01) {
-          /* Squared falloff rather than linear: linear makes the whole
-             radius feel equally active and the edge of the field visible as
-             a ring. */
-          const f = (1 - dist / radius) ** 2;
-          tx = (dx / dist) * f * push;
-          ty = (dy / dist) * f * push;
-        }
-
-        c.x += (tx - c.x) * LERP;
-        c.y += (ty - c.y) * LERP;
-
-        /* Skip the write once a letter is home. Most of the paragraph is at
-           rest at any moment, and this keeps the per-frame cost proportional
-           to what is actually moving. */
-        if (Math.abs(c.x) < 0.01 && Math.abs(c.y) < 0.01) {
-          if (c.el.style.transform) c.el.style.transform = "";
-          continue;
-        }
-        c.el.style.transform = `translate(${c.x.toFixed(2)}px, ${c.y.toFixed(2)}px)`;
-      }
-    };
-
-    measure();
-    raf = requestAnimationFrame(frame);
-    para.addEventListener("pointerenter", onEnter);
-    para.addEventListener("pointermove", onMove);
-    para.addEventListener("pointerleave", onLeave);
-    window.addEventListener("resize", measure);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      para.removeEventListener("pointerenter", onEnter);
-      para.removeEventListener("pointermove", onMove);
-      para.removeEventListener("pointerleave", onLeave);
-      window.removeEventListener("resize", measure);
-      cells.forEach((c) => (c.el.style.transform = ""));
-    };
+    const stage = stageRef.current, svg = svgRef.current, caption = capRef.current, readout = readRef.current;
+    const outputs = outRefs.current.filter((b): b is HTMLButtonElement => !!b);
+    if (!stage || !svg || !caption || !readout || outputs.length !== OUTPUTS.length) return;
+    return mountAboutFigure({ stage, svg, outputs, caption, readout });
   }, []);
 
   return (
@@ -186,30 +71,57 @@ export default function About() {
         <SmartText className="small index">01 — ABOUT</SmartText>
         <SmartText className="small">LOS ANGELES, CA</SmartText>
       </div>
-      <div className="about__body" ref={bodyRef}>
-        <SmartText as="h2" className="h2" isBody>
-          I build the thing the analysis points to. Finding the cause is half
-          the job. The other half is deciding what&apos;s worth fixing and
-          shipping something people will actually use: a model, a dashboard, an
-          agent, an app. The best ones stop being tools and become how the work
-          runs.
-        </SmartText>
 
-        <ul className="about__edu" role="list">
-          {EDU.map((e) => (
-            <li className="about__eduRow" key={e.school}>
-              <SmartText as="span" className="small about__eduDegree">
-                {e.degree}
-              </SmartText>
-              <SmartText as="span" className="small about__eduDates">
-                {e.dates}
-              </SmartText>
-              <SmartText as="span" className="small about__eduSchool">
-                {e.school}
-              </SmartText>
+      <div className="about__top">
+        <h2 className="about__h" ref={headRef}>
+          <span className="about__hl">
+            I build <em ref={thingRef}>the thing</em>
+          </span>
+          <span className="about__hl">the analysis points to.</span>
+        </h2>
+        <SmartText as="p" className="about__p" isBody>
+          Finding the cause is half the job. The other half is deciding what&apos;s
+          worth fixing and shipping something people will actually use: a model, a
+          dashboard, an agent, an app. The best ones stop being tools and become how
+          the work runs.
+        </SmartText>
+      </div>
+
+      <div className="about__stage" ref={stageRef}>
+        <span className="about__cap" ref={capRef} aria-hidden="true" />
+        <span className="about__read" ref={readRef} aria-hidden="true" />
+        <svg className="about__svg" ref={svgRef} aria-hidden="true" focusable="false" />
+        <ul className="about__outs" aria-label="What the analysis turns into">
+          {OUTPUTS.map((o, i) => (
+            <li key={o.label}>
+              <button
+                type="button"
+                className={`about__out${i === 0 ? " is-on" : ""}`}
+                aria-pressed={i === 0}
+                ref={(el) => {
+                  outRefs.current[i] = el;
+                }}
+              >
+                <svg className="about__outIcon" viewBox="0 0 48 48" aria-hidden="true">
+                  <g>{o.icon}</g>
+                </svg>
+                <span className="about__outLabel">{o.label}</span>
+              </button>
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="about__src">
+        <SmartText as="span" className="small about__srcHead">SOURCES</SmartText>
+        <ol className="about__srcList">
+          {SOURCES.map((s, i) => (
+            <li className="about__srcRow" key={s.school}>
+              <SmartText as="span" className="small about__srcName">{`[${i + 1}] ${s.degree} — ${s.school}`}</SmartText>
+              <SmartText as="span" className="small about__srcDates">{s.dates}</SmartText>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );

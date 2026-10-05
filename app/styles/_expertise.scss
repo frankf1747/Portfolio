@@ -1,0 +1,311 @@
+@use "sketch" as *;
+
+/* ============================================================
+   §8 EXPERTISE — a notebook cell and the frame it returns.
+   Logic in components/sections/Capabilities.tsx.
+   ============================================================ */
+
+$mono: var(--font-mono), ui-monospace, monospace;
+$mute: rgb(38 32 72 / 0.55);
+$faint: rgb(38 32 72 / 0.18);
+
+.caps {
+  padding: 170rem 0;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 var(--margin) 64rem;
+  }
+}
+
+/* In [ ]: / Out[ ]: sit in the left margin — the 118rem the rest of the
+   site already leaves before its content column */
+.nb__cell {
+  display: grid;
+  grid-template-columns: 118rem 1fr;
+  margin: 0 var(--margin);
+
+  &--out {
+    margin-top: 30rem;
+  }
+}
+
+.nb__gutter {
+  padding-top: 30rem;
+  font-family: $mono;
+  font-weight: 500;
+  font-size: 14rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+  color: var(--accent);
+
+  .nb__cell--out & {
+    padding-top: 14rem;
+  }
+}
+
+/* the input cell: drawn, like every frame on the page */
+.nb__in {
+  @include sketch-edge(wob2, 1.5px, 6rem);
+
+  padding: 26rem 30rem 24rem;
+  background: rgb(38 32 72 / 0.03);
+}
+
+.nb__code {
+  margin: 0;
+  min-height: calc(4 * 1.42em);
+  overflow-x: auto;
+  font-family: $mono;
+  font-weight: 500;
+  font-size: 27rem;
+  line-height: 1.42;
+  letter-spacing: -0.02em;
+  white-space: pre;
+  color: var(--ink);
+}
+
+.nb__kw {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.nb__cm {
+  font-weight: 400;
+  color: $mute;
+}
+
+.nb__str {
+  color: var(--accent);
+}
+
+.nb__caret {
+  display: inline-block;
+  width: 0.58em;
+  height: 1.05em;
+  margin-left: 1rem;
+  vertical-align: -0.17em;
+  background: var(--ink);
+  animation: nb-blink 1.05s steps(1) infinite;
+}
+
+@keyframes nb-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.nb__chips {
+  position: absolute;
+  right: 30rem;
+  bottom: 24rem;
+  display: flex;
+  align-items: center;
+  gap: 8rem;
+  font-family: $mono;
+  font-weight: 500;
+  font-size: 12rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $mute;
+}
+
+.nb__chipsLabel {
+  margin-right: 6rem;
+}
+
+.nb__chip {
+  @include sketch-edge(wob3, 1px, 99rem, var(--accent));
+
+  padding: 7rem 13rem;
+  font: inherit;
+  color: var(--accent);
+  transition: color 0.3s var(--ease);
+
+  &::before {
+    transition: background-color 0.3s var(--ease);
+  }
+
+  span {
+    position: relative;
+  }
+
+  &:hover::before {
+    background: rgb(242 36 122 / 0.1);
+  }
+
+  &.is-on {
+    color: var(--paper);
+
+    &::before {
+      background: var(--accent);
+    }
+  }
+}
+
+/* ---------- the frame ---------- */
+
+.nb__df {
+  color: var(--ink);
+}
+
+.nb__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64rem 380rem minmax(0, 1fr) 110rem;
+  column-gap: 24rem;
+  align-items: baseline;
+  padding: 17rem 4rem 18rem;
+
+  /* `hidden` loses to the grid above without this */
+  &[hidden] {
+    display: none;
+  }
+
+  &::after {
+    @include sketch-rule(bottom, wob1, 1.2px, $faint);
+  }
+
+  &:nth-child(3n + 2)::after {
+    filter: url(#wob3);
+  }
+
+  &--head {
+    padding-top: 0;
+    padding-bottom: 14rem;
+    font-family: $mono;
+    font-weight: 700;
+    font-size: 13rem;
+    line-height: 1;
+
+    &::after {
+      @include sketch-rule(bottom, wob2, 1.6px, var(--ink));
+    }
+  }
+}
+
+.nb__row:not(.nb__row--head):hover .nb__name {
+  color: var(--accent);
+}
+
+.nb__i {
+  font-family: $mono;
+  font-size: 14rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: $mute;
+}
+
+.nb__name {
+  font-family: $mono;
+  font-weight: 700;
+  font-size: 28rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  transition: color 0.35s var(--ease);
+}
+
+.nb__tools {
+  font-family: $mono;
+  font-weight: 500;
+  font-size: 14rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+
+  i {
+    font-style: normal;
+    color: $faint;
+  }
+
+  b {
+    font-weight: inherit;
+    white-space: nowrap;
+  }
+}
+
+.nb__domain {
+  font-family: $mono;
+  font-weight: 500;
+  font-size: 13rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--accent);
+
+  /* a column header, like its neighbours — not a value */
+  .nb__row--head & {
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+  }
+}
+
+.nb__foot {
+  margin: 20rem 0 0 4rem;
+  font-family: $mono;
+  font-size: 13rem;
+  color: $mute;
+}
+
+@media (max-width: 1024px) {
+  .nb__code {
+    font-size: 22rem;
+  }
+
+  .nb__row {
+    grid-template-columns: 48rem 300rem minmax(0, 1fr) 90rem;
+  }
+}
+
+/* a phone: the gutter goes above the cell, the chips drop under the query,
+   and each row becomes index | name over its tools and domain */
+@media (max-width: 720px) {
+  .nb__cell {
+    grid-template-columns: 1fr;
+  }
+
+  .nb__gutter,
+  .nb__cell--out .nb__gutter {
+    padding: 0 0 8rem;
+  }
+
+  .nb__in {
+    padding: 18rem 18rem 16rem;
+  }
+
+  .nb__code {
+    font-size: 15rem;
+  }
+
+  .nb__chips {
+    position: static;
+    flex-wrap: wrap;
+    margin-top: 16rem;
+  }
+
+  .nb__row {
+    grid-template-columns: 36rem minmax(0, 1fr);
+    row-gap: 8rem;
+  }
+
+  .nb__row--head > :nth-child(n + 3) {
+    display: none;
+  }
+
+  .nb__name {
+    font-size: 22rem;
+  }
+
+  .nb__tools,
+  .nb__domain {
+    grid-column: 2;
+    text-align: left;
+  }
+}

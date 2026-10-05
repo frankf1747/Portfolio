@@ -1,168 +1,272 @@
 "use client";
 
-import { useRef } from "react";
-import SmartText, { type SmartTextHandle } from "../SmartText";
+import { useEffect, useRef } from "react";
+import SmartText from "../SmartText";
 import { scrambleText } from "@/lib/smartText";
 
-/* §8 — capability plus the tools it is actually practised with.
+/* §8 — expertise, as a notebook cell you can query.
 
-   The bare eight-word list this replaced is on every portfolio and nobody
-   believes any of it; the tool line is the part a reader can verify.
+   The bare list of capability words this replaced is on every portfolio and
+   nobody believes it; the tools are the part a reader can verify, so the
+   tools are never hidden. The form is the one a data person actually works
+   in: a cell that types its own query, and the frame it returns.
 
-   TWO FACES IN ONE SLOT. At rest you see the capability; on hover the
-   capability leaves and the tools take its place. The scramble carries the
-   swap — not a 3D flip, because the decode is already the site's transition
-   of record and a rotate would be the only keyframe-shaped move on the page.
+   The chips rewrite the WHERE clause — backspacing to where the old query
+   and the new one diverge, then typing the rest — the gutter shows In [*]
+   while it "runs", and the matching rows decode in. Filtered rows keep
+   their original index, the way a filtered frame does.
 
-   The reverse is a COLUMN-WRAPPED LIST, not a run of body copy. Set as a
-   sentence at small size it read as leftover text under a 76rem word rather
-   than as the other side of the same card: the two faces have to look like
-   peers. Each tool is its own element at 24rem, and the list wraps into
-   however many columns the reserved height needs.
+   The server render is the finished state (full query, every row), so the
+   section reads with no script at all. The first time it scrolls into view
+   it replays: clears the cell, types the query, decodes the rows. */
 
-   Tools scramble through scrambleText rather than SmartText. One engine
-   instance per tool would be ~40 across the section for an effect that only
-   ever plays on hover. */
+type Domain = "DATA" | "AI" | "PRODUCT";
+const FILTERS = ["ALL", "DATA", "AI", "PRODUCT"] as const;
+type Filter = (typeof FILTERS)[number];
 
-const ITEMS: { t: string; tools: string[] }[] = [
-  { t: "DATA ANALYTICS", tools: ["SQL", "Python", "Databricks", "Fabric", "Medallion ETL", "Semantic modeling"] },
-  { t: "MACHINE LEARNING", tools: ["scikit-learn", "Random forest", "XGBoost", "Feature engineering", "Cross-validation", "Clustering"] },
-  /* "Prompt engineering" left when AI ENGINEERING arrived carrying "Context
-     engineering", which has largely superseded it as the term of art — one
-     skill should not be claimed twice.
-
-     "Evals" and AI ENGINEERING's "Eval loop" DO both stand, deliberately, and
-     are not the duplicate they look like: this one is the graders you write
-     for an agent you are building, that one is the measure-and-feed-back cycle
-     that keeps a shipped agent honest. Different work, different category.
-     Orchestration is what LangGraph is actually for and was missing.
-
-     RAG left for AI ENGINEERING, which is the right side of the line: retrieval
-     is about what a model is allowed to REACH, alongside MCP, not about how an
-     agent is assembled. Skills took its place — packaged capabilities are how
-     an agent gets built now, and that is squarely this category. */
-  { t: "AGENTIC DEV", tools: ["LangGraph", "LLM APIs", "Skills", "Evals", "Orchestration"] },
-  { t: "OPTIMIZATION", tools: ["Gurobi", "Integer programming", "Forecasting"] },
-  { t: "EXPERIMENTATION", tools: ["A/B testing", "Causal inference", "RDD"] },
-  { t: "VISUALIZATION", tools: ["Power BI", "DAX", "Tableau", "GA4"] },
-  { t: "PRODUCT", tools: ["PRDs", "User flows", "Figma", "Agile"] },
-  { t: "FRONTEND/BACKEND", tools: ["React", "Next.js", "APIs"] },
-  { t: "PRODUCTIVITY", tools: ["Microsoft 365", "Genie Space", "Power Automate"] },
-  /* Separate from AGENTIC DEV on purpose: that one is BUILDING an agent, this
-     is what makes one fit to ship — how it is governed, what it is allowed to
-     reach (MCP for tools, RAG for knowledge), what goes in its context, and
-     how it is measured over time. MCP
-     moved here from PRODUCTIVITY, where it never belonged: it is a developer
-     protocol for giving models tools and context, not an office tool sitting
-     next to Microsoft 365.
-
-     "Tool use", "Guardrails" and "Tracing" were all cut. The first is table
-     stakes — every API has it, so claiming it says nothing. The other two name
-     products you buy rather than work you do. */
-  { t: "AI ENGINEERING", tools: ["AI governance", "MCP", "RAG", "Context engineering", "Eval loop"] },
+/* Order is the original capability order. Domain is one word on purpose:
+   it is a column value, and the chips filter on it. */
+const SKILLS: { t: string; d: Domain; tools: string[] }[] = [
+  { t: "Data analytics", d: "DATA", tools: ["SQL", "Python", "Databricks", "Fabric", "Medallion ETL", "Semantic modeling"] },
+  { t: "Machine learning", d: "DATA", tools: ["scikit-learn", "Random forest", "XGBoost", "Feature engineering", "Cross-validation", "Clustering"] },
+  { t: "Agentic dev", d: "AI", tools: ["LangGraph", "LLM APIs", "Skills", "Evals", "Orchestration"] },
+  { t: "Optimization", d: "DATA", tools: ["Gurobi", "Integer programming", "Forecasting"] },
+  { t: "Experimentation", d: "DATA", tools: ["A/B testing", "Causal inference", "RDD"] },
+  { t: "Visualization", d: "DATA", tools: ["Power BI", "DAX", "Tableau", "GA4"] },
+  { t: "Product", d: "PRODUCT", tools: ["PRDs", "User flows", "Figma", "Agile"] },
+  { t: "Frontend/backend", d: "PRODUCT", tools: ["React", "Next.js", "APIs"] },
+  { t: "Productivity", d: "PRODUCT", tools: ["Microsoft 365", "Genie Space", "Power Automate"] },
+  { t: "AI engineering", d: "AI", tools: ["AI governance", "MCP", "RAG", "Context engineering", "Eval loop"] }
 ];
 
-/* THREE ROWS, 4 / 4 / 2 — the first two filled, the last short.
-
-   TWO CONSTRAINTS, and the second is easy to miss. The obvious one is that a
-   row's items must fit the 1400rem budget. The other is that a hover PANEL is
-   wider than its item and grows RIGHTWARD, so `item.left + panel.width` has to
-   stay on the grid too. AI ENGINEERING has the widest panel in the set at
-   433rem; sitting last in row one it started at 1068 and ran to 1536, nearly
-   100rem off the screen. It is last in the list now, where row three's short
-   span gives it room to open into.
-
-   Measured at 1440: rows 1322 / 1276 / 607, and every panel's right edge
-   inside 1400 — the widest is FRONTEND/BACKEND reaching 1261. */
-const ROWS = [4, 4, 2];
+/* the query as tokens; the typewriter works on the plain string and the
+   highlighter re-colours whatever prefix is currently showing */
+type Tok = [kind: "" | "kw" | "cm" | "str", text: string];
+const query = (d: Filter): Tok[] => {
+  const t: Tok[] = [
+    ["cm", "-- what I work with, and the tools behind it\n"],
+    ["kw", "SELECT "], ["", "capability, tools, domain\n"],
+    ["kw", "  FROM "], ["", "frank.expertise"]
+  ];
+  if (d !== "ALL") t.push(["", "\n"], ["kw", " WHERE "], ["", "domain = "], ["str", `'${d}'`]);
+  t.push(["", ";"]);
+  return t;
+};
+const plain = (t: Tok[]) => t.map((x) => x[1]).join("");
+const markup = (t: Tok[], n: number) => {
+  let out = "", left = n;
+  for (const [k, s] of t) {
+    if (left <= 0) break;
+    const part = s.slice(0, left);
+    left -= part.length;
+    out += k ? `<span class="nb__${k}">${part}</span>` : part;
+  }
+  return out + '<span class="nb__caret"></span>';
+};
+const FULL = query("ALL");
 
 export default function Capabilities() {
-  const names = useRef<(SmartTextHandle | null)[]>([]);
-  const faces = useRef<(HTMLSpanElement | null)[]>([]);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const codeRef = useRef<HTMLPreElement | null>(null);
+  const inRef = useRef<HTMLSpanElement | null>(null);
+  const outRef = useRef<HTMLSpanElement | null>(null);
+  const footRef = useRef<HTMLParagraphElement | null>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  /* Only the arriving face decodes. Scrambling the one on its way out reads
-     as two things failing at once rather than one turning over. */
-  const onEnter = (i: number) =>
-    faces.current[i]
-      ?.querySelectorAll<HTMLElement>(".caps__tool")
-      .forEach((el) => scrambleText(el, { duration: 460 }));
+  useEffect(() => {
+    const section = sectionRef.current, code = codeRef.current, inG = inRef.current, outG = outRef.current, foot = footRef.current;
+    const rows = rowRefs.current.filter((r): r is HTMLDivElement => !!r);
+    const chips = chipRefs.current.filter((c): c is HTMLButtonElement => !!c);
+    if (!section || !code || !inG || !outG || !foot) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const onLeave = (i: number) => names.current[i]?.play({ scrambleOnly: true });
+    let cur: Filter = "ALL";
+    let shown = plain(FULL);
+    let runs = 1;
+    let busy = 0;
+    const timers = new Set<number>();
+    const wait = (ms: number) =>
+      new Promise<void>((res) => {
+        const id = window.setTimeout(() => {
+          timers.delete(id);
+          res();
+        }, ms);
+        timers.add(id);
+      });
+
+    const type = async (toks: Tok[], my: number) => {
+      const target = plain(toks);
+      let k = 0;
+      while (k < shown.length && k < target.length && shown[k] === target[k]) k++;
+      if (reduced) {
+        code.innerHTML = markup(toks, target.length);
+        shown = target;
+        return true;
+      }
+      const prev = query(cur);
+      let n = shown.length;
+      while (n > k) {
+        if (busy !== my) return false;
+        n--;
+        code.innerHTML = markup(prev, n);
+        await wait(14);
+      }
+      while (n < target.length) {
+        if (busy !== my) return false;
+        n++;
+        code.innerHTML = markup(toks, n);
+        await wait(target[n - 1] === "\n" ? 90 : 24);
+      }
+      shown = target;
+      return true;
+    };
+
+    const decode = (row: HTMLElement) => {
+      const name = row.querySelector<HTMLElement>(".nb__name");
+      if (name) scrambleText(name, { duration: 480 });
+      row.querySelectorAll<HTMLElement>(".nb__tool").forEach((b) => scrambleText(b, { duration: 420 }));
+    };
+
+    const run = async (d: Filter) => {
+      const my = ++busy;
+      chips.forEach((c) => {
+        const on = c.dataset.filter === d;
+        c.classList.toggle("is-on", on);
+        c.setAttribute("aria-pressed", String(on));
+      });
+      if (!(await type(query(d), my))) return;
+      cur = d;
+      inG.textContent = "In [*]:";
+      await wait(reduced ? 0 : 380);
+      if (busy !== my) return;
+      runs++;
+      inG.textContent = `In [${runs}]:`;
+      outG.textContent = `Out[${runs}]:`;
+      let n = 0;
+      rows.forEach((r) => {
+        const on = d === "ALL" || r.dataset.domain === d;
+        r.hidden = !on;
+        if (on) {
+          const delay = n++ * 55;
+          const id = window.setTimeout(() => {
+            timers.delete(id);
+            decode(r);
+          }, delay);
+          timers.add(id);
+        }
+      });
+      foot.textContent = `[${n} rows x 3 columns]`;
+    };
+
+    const onChip = (e: Event) => {
+      const f = (e.currentTarget as HTMLElement).dataset.filter as Filter;
+      if (f) run(f);
+    };
+    chips.forEach((c) => c.addEventListener("click", onChip));
+    const onRow = (e: Event) =>
+      (e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(".nb__tool").forEach((b) => scrambleText(b, { duration: 380 }));
+    rows.forEach((r) => r.addEventListener("mouseenter", onRow));
+
+    /* first sight: replay the cell from empty */
+    const io = new IntersectionObserver(
+      (es) => {
+        if (!es.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        if (reduced) return;
+        shown = "";
+        runs = 0;
+        code.innerHTML = markup(FULL, 0);
+        inG.textContent = "In [ ]:";
+        run("ALL");
+      },
+      { threshold: 0 }
+    );
+    io.observe(code);
+
+    return () => {
+      busy = -1;
+      io.disconnect();
+      timers.forEach((id) => window.clearTimeout(id));
+      chips.forEach((c) => c.removeEventListener("click", onChip));
+      rows.forEach((r) => r.removeEventListener("mouseenter", onRow));
+    };
+  }, []);
 
   return (
-    <section className="caps" id="capabilities">
+    <section className="caps" id="capabilities" ref={sectionRef}>
       <div className="caps__head">
         <SmartText className="small index">02 — EXPERTISE</SmartText>
-        <SmartText className="small">WHAT I WORK WITH</SmartText>
+        <SmartText className="small">QUERY ME</SmartText>
       </div>
 
-      <div className="caps__strip" role="list">
-        {ROWS.map((n, r, arr) => ITEMS.slice(
-          arr.slice(0, r).reduce((a, b) => a + b, 0),
-          arr.slice(0, r + 1).reduce((a, b) => a + b, 0)
-        )).map((row, r) => (
-          /* Alternating, so the class still means something if the inset is
-             ever given a rule. It has none on .caps__row today — both rows
-             measured padding-left 0 — so this is currently inert here; the
-             padding it implies belongs to .subjects__row. */
-          <div className={`caps__row${r % 2 ? " is-inset" : ""}`} key={r}>
-            {row.map((it) => {
-              const i = ITEMS.indexOf(it);
-              return (
-                <div
-                  className="caps__item"
-                  role="listitem"
-                  key={it.t}
-                  onMouseEnter={() => onEnter(i)}
-                  onMouseLeave={() => onLeave(i)}
+      <div className="nb">
+        <div className="nb__cell">
+          <span className="nb__gutter" ref={inRef} aria-hidden="true">In [1]:</span>
+          <div className="nb__in">
+            <pre
+              className="nb__code"
+              ref={codeRef}
+              aria-label="SQL query: select capability, tools and domain from frank.expertise"
+              dangerouslySetInnerHTML={{ __html: markup(FULL, plain(FULL).length) }}
+            />
+            <div className="nb__chips" role="group" aria-label="Filter by domain">
+              <span className="nb__chipsLabel" aria-hidden="true">domain</span>
+              {FILTERS.map((f, i) => (
+                <button
+                  type="button"
+                  key={f}
+                  className={`nb__chip${f === "ALL" ? " is-on" : ""}`}
+                  data-filter={f}
+                  aria-pressed={f === "ALL"}
+                  ref={(el) => {
+                    chipRefs.current[i] = el;
+                  }}
                 >
-                  <SmartText as="span" className="small caps__idx">
-                    {String(i + 1).padStart(2, "0")}
-                  </SmartText>
-
-                  <span className="caps__face">
-                    <SmartText
-                      className="h1 caps__name"
-                      trigger="view"
-                      pace="hover"
-                      instanceRef={{
-                        get current() {
-                          return names.current[i] ?? null;
-                        },
-                        set current(v: SmartTextHandle | null) {
-                          names.current[i] = v;
-                        }
-                      }}
-                    >
-                      {it.t}
-                    </SmartText>
-
-                    <span
-                      className="caps__tools"
-                      /* Two columns again, now that the panel sizes to its
-                         content rather than to the name. The earlier spill was
-                         not the column count on its own — it was two columns
-                         inside a box pinned to the name width, which gave
-                         PRODUCT a 46rem column for a 100rem label. With the
-                         width free, two columns keep the panel short, which is
-                         what keeps the row gap tight. */
-                      style={{ columnCount: it.tools.length > 3 ? 2 : 1 }}
-                      ref={(el) => {
-                        faces.current[i] = el;
-                      }}
-                    >
-                      {it.tools.map((x) => (
-                        <span className="caps__tool" key={x}>
-                          {x}
-                        </span>
-                      ))}
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
+                  <span>{f === "ALL" ? "All" : f === "AI" ? "AI" : f[0] + f.slice(1).toLowerCase()}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
+
+        <div className="nb__cell nb__cell--out">
+          <span className="nb__gutter" ref={outRef} aria-hidden="true">Out[1]:</span>
+          <div className="nb__out">
+          <div className="nb__df" role="table" aria-label="Expertise: capability, tools, domain">
+            <div className="nb__row nb__row--head" role="row">
+              <span role="columnheader" aria-label="Index" />
+              <span role="columnheader">capability</span>
+              <span role="columnheader">tools</span>
+              <span role="columnheader" className="nb__domain">domain</span>
+            </div>
+            {SKILLS.map((s, i) => (
+              <div
+                className="nb__row"
+                role="row"
+                key={s.t}
+                data-domain={s.d}
+                ref={(el) => {
+                  rowRefs.current[i] = el;
+                }}
+              >
+                <span className="nb__i" role="cell">{i}</span>
+                <span className="nb__name" role="rowheader">{s.t}</span>
+                <span className="nb__tools" role="cell">
+                  {s.tools.map((x, k) => (
+                    <span key={x}>
+                      {k > 0 && <i aria-hidden="true"> / </i>}
+                      <b className="nb__tool">{x}</b>
+                    </span>
+                  ))}
+                </span>
+                <span className="nb__domain" role="cell">{s.d}</span>
+              </div>
+            ))}
+          </div>
+          <p className="nb__foot" ref={footRef}>[10 rows x 3 columns]</p>
+          </div>
+        </div>
       </div>
     </section>
   );

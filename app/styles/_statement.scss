@@ -1,0 +1,42 @@
+/* ============================================================
+   §11 STATEMENT — ? → !  (yellow inversion; drawing in lib/mosaic)
+   ============================================================ */
+
+.statement {
+  padding: 70rem var(--margin) 40rem;
+
+  &__cv {
+    display: block;
+    width: 100%;
+    height: 660rem;
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 26rem;
+  }
+
+  /* where the loop is: the word on show is at full ink */
+  &__seq [data-step] {
+    opacity: 0.4;
+    transition: opacity 0.4s var(--ease);
+
+    &.is-on {
+      opacity: 1;
+    }
+  }
+}
+
+/* the words stack on a phone (lib/mosaic switches layout under 640px), so
+   the band gets taller than it is wide */
+@media (max-width: 720px) {
+  .statement__cv {
+    height: min(118vw, 560px);
+  }
+
+  .statement__foot {
+    flex-direction: column;
+    gap: 8rem;
+  }
+}

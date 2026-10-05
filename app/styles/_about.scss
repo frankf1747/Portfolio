@@ -1,0 +1,372 @@
+@use "sketch" as *;
+
+/* ============================================================
+   §7 ABOUT — the headline, and the figure that makes it literal.
+   Drawing in lib/aboutFigure; layout here.
+   ============================================================ */
+
+/* The figure's labels are HTML laid over an SVG whose viewBox is in design
+   px. Sized in cqw against the stage — 1cqw is 14 design px on a 1400 stage —
+   they scale with the drawing at every width instead of drifting off the
+   arrow that points at them. */
+@function fig($n) {
+  @return calc(#{$n} * 1cqw / 14);
+}
+
+.about {
+  padding: 80rem 0 180rem;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 var(--margin) 60rem;
+  }
+
+  /* headline left, the prose beside it — the prose keeps the voice, the
+     figure underneath carries the evidence */
+  &__top {
+    display: grid;
+    grid-template-columns: 1fr 470rem;
+    column-gap: 60rem;
+    align-items: end;
+    margin: 0 var(--margin) 0 138rem;
+  }
+
+  &__h {
+    margin: 0;
+    font-family: var(--font-body), Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 70rem;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+
+    /* the same pink as the arrow the figure draws to its outputs */
+    em {
+      font-style: normal;
+      color: var(--accent);
+    }
+  }
+
+  &__hl {
+    display: block;
+    opacity: 0;
+    transform: translateY(40rem);
+    transition:
+      opacity 1s var(--ease),
+      transform 1.3s var(--ease-reveal);
+
+    & + & {
+      transition-delay: 0.1s;
+    }
+  }
+
+  &__h.is-in &__hl {
+    opacity: 1;
+    transform: none;
+  }
+
+  &__p {
+    margin: 0 0 4rem;
+    font-size: 20rem;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+
+  /* ---------- the figure ---------- */
+
+  &__stage {
+    position: relative;
+    width: 1400rem;
+    max-width: calc(100% - var(--margin) * 2);
+    margin: 96rem var(--margin) 0;
+    container-type: inline-size;
+    /* the model chart takes the pointer as a data point; vertical swipes
+       still scroll the page */
+    touch-action: pan-y;
+  }
+
+  &__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1400 / 540;
+    overflow: visible;
+
+    text {
+      font-family: var(--font-mono), ui-monospace, monospace;
+      text-transform: uppercase;
+    }
+  }
+
+  &__scene {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.9s var(--ease);
+    pointer-events: none;
+
+    &.is-on {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  &__cap,
+  &__read {
+    position: absolute;
+    top: 0;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 500;
+    font-size: fig(13);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  &__cap {
+    left: fig(118);
+    color: var(--accent);
+  }
+
+  &__read {
+    left: fig(818);
+    transform: translateX(-100%);
+    color: rgb(38 32 72 / 0.55);
+    font-variant-numeric: tabular-nums;
+
+    b {
+      color: var(--ink);
+      font-weight: 500;
+    }
+  }
+
+  /* the outputs: the band the arrow lands in */
+  &__outs {
+    position: absolute;
+    left: fig(1080);
+    right: 0;
+    top: fig(40);
+    height: fig(460);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+
+    li {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__out {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: fig(20);
+    padding: 0;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 700;
+    font-size: fig(40);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--ink);
+    opacity: 0.32;
+    transition:
+      color 0.5s var(--ease),
+      opacity 0.5s var(--ease);
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    &.is-on {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    /* the dwell: fills under the active output, then the next one takes over */
+    &::after {
+      content: "";
+      position: absolute;
+      left: fig(66);
+      width: fig(220);
+      top: calc(100% + #{fig(12)});
+      height: 2px;
+      background: currentColor;
+      transform: scaleX(var(--p, 0));
+      transform-origin: 0 50%;
+    }
+
+    &:not(.is-on)::after {
+      opacity: 0;
+    }
+  }
+
+  &__outIcon {
+    flex: none;
+    width: fig(46);
+    height: fig(46);
+    overflow: visible;
+
+    * {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    g {
+      filter: url(#wobS);
+    }
+  }
+
+  /* ---------- sources: the education, as the figure's footnote ---------- */
+
+  &__src {
+    position: relative;
+    display: grid;
+    grid-template-columns: 120rem 1fr;
+    margin: 56rem var(--margin) 0 138rem;
+    padding-top: 22rem;
+    color: var(--accent);
+
+    &::before {
+      @include sketch-rule(top, wob2);
+    }
+  }
+
+  &__srcList {
+    display: grid;
+    row-gap: 10rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__srcRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 24rem;
+  }
+
+  &__srcDates {
+    flex: none;
+    color: rgb(242 36 122 / 0.55);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (max-width: 1024px) {
+  .about__top {
+    grid-template-columns: 1fr;
+    row-gap: 28rem;
+    margin-left: var(--margin);
+  }
+
+  .about__p {
+    max-width: 560rem;
+  }
+
+  .about__src {
+    margin-left: var(--margin);
+  }
+}
+
+/* PHONE. Four outputs beside a 700-wide drawing do not fit, and the arrow
+   between them has nowhere to run. The outputs become a 2×2 set of buttons
+   above the figure, the caption and readout sit either side of it, the
+   viewBox crops to the drawing alone (lib/aboutFigure) and the arrow goes. */
+@media (max-width: 720px) {
+  .about__h {
+    font-size: 44rem;
+  }
+
+  .about__stage {
+    display: flex;
+    flex-direction: column;
+    margin-top: 56rem;
+  }
+
+  .about__outs {
+    position: static;
+    order: 1;
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: none;
+    gap: 14rem 12rem;
+    margin-bottom: 26rem;
+  }
+
+  .about__out {
+    gap: 10rem;
+    font-size: 22rem;
+
+    &::after {
+      left: 36rem;
+      width: 120rem;
+      top: calc(100% + 6rem);
+    }
+  }
+
+  .about__outIcon {
+    width: 26rem;
+    height: 26rem;
+  }
+
+  .about__cap,
+  .about__read {
+    position: static;
+    transform: none;
+    font-size: 12rem;
+  }
+
+  .about__cap {
+    order: 2;
+    margin-bottom: 12rem;
+  }
+
+  .about__svg {
+    order: 3;
+    aspect-ratio: 700 / 400;
+  }
+
+  .about__read {
+    order: 4;
+    margin-top: 12rem;
+  }
+
+  .about__arrow {
+    display: none;
+  }
+
+  .about__src {
+    grid-template-columns: 1fr;
+    row-gap: 10rem;
+  }
+
+  .about__srcRow {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about__hl,
+  .about__scene {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .about__scene:not(.is-on) {
+    opacity: 0;
+  }
+}

@@ -255,168 +255,6 @@
   }
 }
 
-/* ---------- ABOUT ---------- */
-
-.about {
-  padding: 80rem 0 200rem;
-
-  &__head {
-    display: flex;
-    justify-content: space-between;
-    margin: 0 var(--margin) 60rem;
-  }
-
-  &__body {
-    margin-left: 138rem;
-    /* 1000rem broke this paragraph to a 7th line carrying two words. The
-       copy is fixed, so the measure moves instead: 1060 fits it in six. */
-    max-width: 1060rem;
-    /* The paragraph was breaking to a 7th line carrying a single word, with
-       lines 2 and 4 running ~10% short of the rest. `pretty` lets the line
-       breaker look ahead and redistribute instead of greedily filling each
-       line, which is precisely the orphan case. */
-    text-wrap: pretty;
-  }
-
-  /* Education, set as a spec table rather than as prose.
-
-     Fixed columns, not `auto`: with auto sizing the dates and institutions
-     would sit at a different x on each row, tracking the length of the
-     degree beside them, and the block would read as two unrelated lines
-     instead of one record. Matching the paragraph's 1060rem measure keeps
-     the right edge flush with the text above it.
-
-     Hairlines top and bottom rather than between: the block reads as one
-     closed object that way, and a single rule between two rows makes the
-     second look like a footnote to the first. */
-  &__edu {
-    /* 64rem, then 104, now 124. The paragraph is set at 48rem with generous
-       leading, so a gap anywhere near its own line height read as the next
-       line of the statement rather than as a separate record. */
-    margin: 124rem 0 0;
-    padding: 0;
-    list-style: none;
-    max-width: 1060rem;
-
-    /* The three rules are drawn, not bordered — the one hand-drawn touch
-       in this section, echoing the sketched §9 cards further down. Each
-       uses a different wobble seed so the three never run in step. */
-    position: relative;
-
-    &::before {
-      @include sketch-rule(top, wob2);
-    }
-  }
-
-  &__eduRow {
-    display: grid;
-    /* Third column widened from 260rem: UCLA ANDERSON SCHOOL OF MANAGEMENT
-       is 34 characters and would have wrapped, breaking the single-line
-       rhythm the two rows depend on. The degree column is 1fr and absorbs
-       the difference. */
-    grid-template-columns: 1fr 140rem 350rem;
-    column-gap: 32rem;
-    align-items: baseline;
-    padding: 20rem 0;
-    position: relative;
-
-    &::after {
-      @include sketch-rule(bottom, wob3);
-    }
-
-    &:nth-child(2)::after {
-      filter: url(#wob1);
-    }
-  }
-
-  /* Tabular figures so 2509-2612 and 2109-2505 sit digit over digit. The
-     mono face gives this for free, but the declaration keeps it true if the
-     face ever changes. */
-  &__eduDates {
-    font-variant-numeric: tabular-nums;
-    opacity: 0.55;
-  }
-
-  &__eduSchool {
-    text-align: right;
-  }
-
-  /* The three supporting beats step down from the 48rem lead and sit in a
-     narrower measure, so the section reads as one statement with its
-     evidence under it rather than as four equal paragraphs. */
-  &__detail {
-    max-width: 700rem;
-    margin-top: 56rem;
-    display: flex;
-    flex-direction: column;
-    gap: 28rem;
-  }
-
-  &__para {
-    margin: 0;
-    font-size: 24rem;
-    line-height: 1.35;
-    letter-spacing: -0.01em;
-  }
-}
-
-/* ---------- STATEMENT (yellow inversion) ---------- */
-
-.statement {
-  /* was 200/220 with a 100 gutter between the two lines — 806rem tall at
-     1440, most of it empty yellow. Tightened ~15%. */
-  padding: 150rem var(--margin) 170rem;
-
-  &__a {
-    width: calc(var(--column) * 8 + var(--gap) * 7);
-  }
-
-  &__b {
-    width: calc(var(--column) * 7 + var(--gap) * 6);
-    margin-top: 80rem;
-    margin-left: auto;
-    text-align: right;
-  }
-}
-
-/* ---------- CAPABILITIES ---------- */
-
-.caps {
-  padding: 180rem 0;
-
-  &__head {
-    display: flex;
-    justify-content: space-between;
-    margin: 0 var(--margin) 60rem;
-  }
-
-  &__strip {
-    display: flex;
-    gap: 80rem;
-    overflow-x: auto;
-    padding: 0 var(--margin) 40rem;
-    scrollbar-width: none;
-    cursor: grab;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__item {
-    flex: none;
-    display: flex;
-    align-items: flex-start;
-    gap: 16rem;
-  }
-
-  &__idx {
-    font-family: var(--font-mono), ui-monospace, monospace;
-    font-size: 16rem;
-    padding-top: 12rem;
-  }
-}
-
 /* ---------- §9 WORK ---------- */
 
 .work {
@@ -757,7 +595,6 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
   .hero__title .smart-text.super { font-size: min(calc(245rem * var(--mono-fit)), 13.5vw); }
 
   .block,
-  .about__body,
   .approach__list {
     margin-left: var(--margin);
   }
@@ -850,20 +687,6 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
      someone how to use a phone. */
   .hero__cue {
     display: none;
-  }
-
-  .statement__a,
-  .statement__b {
-    width: auto;
-    text-align: left;
-    margin-left: 0;
-    /* The shared 26vw ceiling was tuned when this section said PROOF —
-       5 characters. CURIOSITY is 9, it is ONE word so it cannot wrap, and
-       at 26vw it ran 511px across a 390px screen: the only element on the
-       page that genuinely widened the phone viewport. 17vw puts the
-       9-character line inside the margins with a little air. Retune this
-       if the statement copy changes length again. */
-    font-size: min(150rem, 17vw);
   }
 
   .cards {

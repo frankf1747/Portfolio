@@ -1,19 +1,40 @@
-import SmartText from "../SmartText";
+"use client";
 
-/* §11 statement — two offset 245rem lines, 8 and 7 columns,
-   the second with margin-top 100rem. This is a --yellow ground
-   inversion: type and rules switch to --ink here. */
+import { useEffect, useRef } from "react";
+import { mountMosaic } from "@/lib/mosaic";
+
+/* §11 statement — ? → !
+
+   Still the yellow inversion, still two words: CURIOSITY, LEARN. But set as
+   a riso dot-grid poster in the mono — the first in question marks, the
+   second in exclamation marks — and on repeat the ?s fly down and land as
+   the !s, then back. Ink only, so the band keeps to one ground and one mark.
+
+   The canvas is decorative; the words are in the section's label and in the
+   visually-hidden line for anything that cannot see it. All the drawing is
+   in lib/mosaic. */
 
 export default function Statement() {
+  const cvRef = useRef<HTMLCanvasElement | null>(null);
+  const seqRef = useRef<HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    const cv = cvRef.current, seq = seqRef.current;
+    if (!cv || !seq) return;
+    return mountMosaic(cv, Array.from(seq.querySelectorAll<HTMLElement>("[data-step]")));
+  }, []);
+
   return (
-    <section className="statement is-invert-yellow" aria-label="Statement">
-      {/* length-tuned to the column spans: at super scale an 8-column
-          line holds ~7 characters and a 7-column line ~6. Written to the
-          metric first, then for meaning. */}
-      <SmartText className="super statement__a">CURIOSITY</SmartText>
-      <SmartText className="super statement__b" delay={120}>
-        LEARN.
-      </SmartText>
+    <section className="statement is-invert-yellow" aria-label="Curiosity, then learn, on repeat">
+      <p className="u-sr">Curiosity. Learn. On repeat.</p>
+      <canvas className="statement__cv" ref={cvRef} aria-hidden="true" />
+      <div className="statement__foot" aria-hidden="true">
+        <span className="small">FIG. 2 — ? → !</span>
+        <span className="small statement__seq" ref={seqRef}>
+          <span data-step="0" className="is-on">CURIOSITY</span> → <span data-step="1">LEARN.</span> →{" "}
+          <span data-step="2">REPEAT</span>
+        </span>
+      </div>
     </section>
   );
 }
