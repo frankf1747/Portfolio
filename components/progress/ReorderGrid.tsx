@@ -17,24 +17,27 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useRef, useState } from "react";
-import { progressClient } from "@/lib/progress/client";
 import { moveItem, positionChanges } from "@/lib/progress/order";
+import { callVerdict, verdictMessage } from "@/lib/progress/passcode";
 import type { ProjectSummary } from "@/lib/progress/types";
 import ProjectCard from "./ProjectCard";
 import "./reorder.scss";
 
 /* The overview in the owner's edit mode. Cards keep their normal look; a bar
    above each adds a drag handle and ↑ ↓ buttons (keyboard, and phones where
-   dragging is fiddly). Every move is saved at once: only the rows whose
-   position changed are written, and realtime brings everyone's page along. */
+   dragging is fiddly). Every move is saved at once through reorder_projects,
+   which checks the passcode in the database and writes only the rows whose
+   position changed; realtime brings everyone's page along. */
 export default function ReorderGrid({
   projects,
   now,
+  passcode,
   onSaving,
   onError
 }: {
   projects: ProjectSummary[];
   now: Date;
+  passcode: string;
   onSaving: (saving: boolean) => void;
   onError: (message: string | null) => void;
 }) {
@@ -56,29 +59,19 @@ export default function ReorderGrid({
   );
 
   const save = async (next: string[]) => {
-    const db = progressClient();
-    if (!db) return;
     const current = Object.fromEntries(projects.map((s) => [s.project.slug, s.project.position]));
-    const changes = positionChanges(next, current);
-    if (!changes.length) return;
+    if (!positionChanges(next, current).length) return;
     setOrder(next);
     saving.current = true;
     onSaving(true);
     onError(null);
-    try {
-      for (const { slug, position } of changes) {
-        const { data, error } = await db.from("projects").update({ position }).eq("slug", slug).select("slug");
-        if (error) throw new Error(error.message);
-        // RLS filters rather than errors: no row back means the write was refused.
-        if (!data?.length) throw new Error("The database refused the change. Are you signed in as the owner?");
-      }
-    } catch (e) {
-      onError(e instanceof Error ? e.message : String(e));
+    const message = verdictMessage(await callVerdict("reorder_projects", { p_passcode: passcode, p_order: next }));
+    if (message) {
+      onError(message);
       setOrder(incoming);
-    } finally {
-      saving.current = false;
-      onSaving(false);
     }
+    saving.current = false;
+    onSaving(false);
   };
 
   const move = (from: number, to: number) => save(moveItem(order, from, to));

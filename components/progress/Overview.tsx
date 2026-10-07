@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { fetchOverview } from "@/lib/progress/load";
 import { useLive, useNow } from "@/lib/progress/useLive";
-import { useOwner } from "@/lib/progress/useOwner";
+import { usePasscode } from "@/lib/progress/passcode";
 import Crumb from "./Crumb";
 import LoadGate from "./LoadGate";
 import OwnerBar from "./OwnerBar";
 import ProjectCard from "./ProjectCard";
 import ReorderGrid from "./ReorderGrid";
 
-/* `editing` is /progress?edit: the owner's sign-in and reorder mode. Every
+/* `editing` is /progress?edit: the owner's passcode and reorder mode. Every
    other visitor gets the plain grid, in the owner's saved order. */
 export default function Overview({ editing = false }: { editing?: boolean }) {
   const { state, retry, live } = useLive(fetchOverview, "overview");
@@ -57,17 +57,17 @@ function EditMode({
   retry: () => void;
   now: Date;
 }) {
-  const owner = useOwner();
+  const { passcode, unlock, lock } = usePasscode();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   return (
     <>
-      <OwnerBar owner={owner} saving={saving} error={error} />
+      <OwnerBar unlocked={!!passcode} unlock={unlock} lock={lock} saving={saving} error={error} />
       <LoadGate state={state} retry={retry}>
         {(projects) =>
-          owner.isOwner ? (
-            <ReorderGrid projects={projects} now={now} onSaving={setSaving} onError={setError} />
+          passcode ? (
+            <ReorderGrid projects={projects} now={now} passcode={passcode} onSaving={setSaving} onError={setError} />
           ) : (
             <div className="pg-grid">
               {projects.map((s) => (
