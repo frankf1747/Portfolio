@@ -1,0 +1,106 @@
+/* ============================================================
+   REORDER — the owner's edit mode on /progress?edit
+   Kept out of progress.scss so the visitor page carries none of it.
+   ============================================================ */
+
+.pg-owner {
+  display: grid;
+  gap: 8rem;
+  margin: 0 0 32rem;
+  padding: 16rem 20rem;
+  border: 1px dashed currentColor;
+
+  p {
+    margin: 0;
+  }
+}
+
+.pg-owner__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rem 20rem;
+
+  input {
+    min-width: 260rem;
+    padding: 6rem 10rem;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-transform: none;
+  }
+}
+
+.pg-owner__actions {
+  display: flex;
+  gap: 24rem;
+}
+
+.pg-owner__error {
+  color: var(--ink);
+}
+
+.pg-reorder {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pg-sort {
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+  touch-action: manipulation;
+
+  &.is-dragging {
+    position: relative;
+    z-index: 2;
+    opacity: 0.85;
+  }
+}
+
+.pg-sort__bar {
+  display: flex;
+  align-items: center;
+  gap: 12rem;
+
+  button {
+    padding: 2rem 8rem;
+    border: 1px solid currentColor;
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+}
+
+.pg-sort__handle {
+  cursor: grab;
+  touch-action: none;
+
+  .is-dragging & {
+    cursor: grabbing;
+  }
+}
+
+.pg-sort__pos {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.pg-sort__arrows {
+  display: flex;
+  gap: 6rem;
+}
+
+/* The card keeps its look but stops behaving like a link while arranging. */
+.pg-sort__card .pg-card {
+  height: 100%;
+  cursor: default;
+}
+
+.pg-sort__card {
+  flex: 1;
+}

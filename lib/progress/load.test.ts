@@ -69,6 +69,19 @@ describe("fetchOverview ordering", () => {
       ["order", ["id"]]
     ]);
   });
+
+  it("lists projects in the owner's order, unplaced ones first, then by last update", async () => {
+    const projects = makeQuery([]);
+    const other = makeQuery([]);
+    const db = { from: (table: string) => (table === "projects" ? projects.builder : other.builder) } as unknown as SupabaseClient;
+
+    await fetchOverview(db);
+
+    expect(projects.calls.filter(([name]) => name === "order")).toEqual([
+      ["order", ["position", { ascending: true, nullsFirst: true }]],
+      ["order", ["updated_at", { ascending: false }]]
+    ]);
+  });
 });
 
 describe("fetchProject ordering", () => {

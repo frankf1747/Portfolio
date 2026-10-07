@@ -1,12 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { fetchOverview } from "@/lib/progress/load";
 import { useLive, useNow } from "@/lib/progress/useLive";
+import { useOwner } from "@/lib/progress/useOwner";
 import Crumb from "./Crumb";
 import LoadGate from "./LoadGate";
+import OwnerBar from "./OwnerBar";
 import ProjectCard from "./ProjectCard";
+import ReorderGrid from "./ReorderGrid";
 
-export default function Overview() {
+/* `editing` is /progress?edit: the owner's sign-in and reorder mode. Every
+   other visitor gets the plain grid, in the owner's saved order. */
+export default function Overview({ editing = false }: { editing?: boolean }) {
   const { state, retry, live } = useLive(fetchOverview, "overview");
   const now = useNow();
 
@@ -21,16 +27,53 @@ export default function Overview() {
         <h1 className="h2 pg__title">What I&apos;m building, live.</h1>
       </header>
 
+      {editing ? (
+        <EditMode state={state} retry={retry} now={now} />
+      ) : (
+        <LoadGate state={state} retry={retry}>
+          {(projects) =>
+            projects.length ? (
+              <div className="pg-grid">
+                {projects.map((s) => (
+                  <ProjectCard key={s.project.slug} summary={s} now={now} />
+                ))}
+              </div>
+            ) : (
+              <p className="small pg__note">NO TRACKED PROJECTS YET. THEY APPEAR HERE AS WORK STARTS.</p>
+            )
+          }
+        </LoadGate>
+      )}
+    </>
+  );
+}
+
+function EditMode({
+  state,
+  retry,
+  now
+}: {
+  state: ReturnType<typeof useLive<Awaited<ReturnType<typeof fetchOverview>>>>["state"];
+  retry: () => void;
+  now: Date;
+}) {
+  const owner = useOwner();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <>
+      <OwnerBar owner={owner} saving={saving} error={error} />
       <LoadGate state={state} retry={retry}>
         {(projects) =>
-          projects.length ? (
+          owner.isOwner ? (
+            <ReorderGrid projects={projects} now={now} onSaving={setSaving} onError={setError} />
+          ) : (
             <div className="pg-grid">
               {projects.map((s) => (
                 <ProjectCard key={s.project.slug} summary={s} now={now} />
               ))}
             </div>
-          ) : (
-            <p className="small pg__note">NO TRACKED PROJECTS YET. THEY APPEAR HERE AS WORK STARTS.</p>
           )
         }
       </LoadGate>

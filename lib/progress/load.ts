@@ -24,7 +24,12 @@ export function groupOverview(
 
 export async function fetchOverview(db: SupabaseClient): Promise<ProjectSummary[]> {
   const [p, m, u] = await Promise.all([
-    db.from("projects").select("*").order("updated_at", { ascending: false }),
+    /* The owner's order (position) first. Projects not placed yet come
+       before it, so new work shows at the top until it is dragged into
+       place; ties fall back to most recently updated. */
+    db.from("projects").select("*")
+      .order("position", { ascending: true, nullsFirst: true })
+      .order("updated_at", { ascending: false }),
     /* sort_order alone is not unique, so a tie renders in whatever order
        the database happens to return it — start_date, then id, make the
        order deterministic instead. */
