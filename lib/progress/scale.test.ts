@@ -62,3 +62,55 @@ describe("monthTicks", () => {
     expect(monthTicks(d).map((t) => t.label)).toEqual(["SEP", "OCT"]);
   });
 });
+
+describe("the weighted axis", () => {
+  /* One long quiet phase between two short busy ones, like a project that
+     was piloted, paused for months, then picked back up. */
+  const ms = [m("2026-01-01", "2026-01-07"), m("2026-01-08", "2026-06-30"), m("2026-07-01", "2026-07-07")];
+  const d = ganttDomain(ms, "2026-07-07");
+  const width = (i: number) => barSpan(ms[i], d).width;
+
+  it("keeps the domain's ends at 0 and 100", () => {
+    expect(xPct(d.start, d)).toBeCloseTo(0);
+    expect(xPct(d.end, d)).toBeCloseTo(100);
+  });
+
+  it("gives a long milestone far less than its share of calendar time", () => {
+    const linear = ((parseDay("2026-07-01") - parseDay("2026-01-08")) / (d.end - d.start)) * 100;
+    expect(linear).toBeGreaterThan(90);
+    expect(width(1)).toBeLessThan(60);
+  });
+
+  it("lets a one-week milestone stay readable next to a six-month one", () => {
+    expect(width(0)).toBeGreaterThan(15);
+    expect(width(1) / width(0)).toBeLessThan(3);
+  });
+
+  it("keeps bars in order without overlapping their neighbours", () => {
+    const spans = ms.map((x) => barSpan(x, d));
+    expect(spans[0].left + spans[0].width).toBeCloseTo(spans[1].left);
+    expect(spans[1].left + spans[1].width).toBeCloseTo(spans[2].left);
+  });
+
+  it("only ever moves forward", () => {
+    let prev = -1;
+    for (let t = d.start; t <= d.end; t += DAY / 2) {
+      const x = xPct(t, d);
+      expect(x).toBeGreaterThan(prev);
+      prev = x;
+    }
+  });
+});
+
+describe("monthTicks on a squeezed axis", () => {
+  it("blanks labels that would overprint, keeping the tick and the year", () => {
+    const ms = [m("2025-12-16", "2025-12-24"), m("2025-12-25", "2026-01-03"), m("2026-01-04", "2026-09-30"), m("2026-10-01", "2026-10-06")];
+    const ticks = monthTicks(ganttDomain(ms, "2026-10-07"));
+    expect(ticks.map((t) => t.pct)).toHaveLength(10);
+    expect(ticks.find((t) => t.label === "JAN 2026")).toBeTruthy();
+    const shown = ticks.filter((t) => t.label);
+    for (let i = 1; i < shown.length; i++) {
+      expect(shown[i].pct - shown[i - 1].pct).toBeGreaterThanOrEqual(shown[i - 1].label.length * 1.1 + 1.5);
+    }
+  });
+});
