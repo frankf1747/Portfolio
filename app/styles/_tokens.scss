@@ -23,7 +23,17 @@
      drawn on a 1440 artboard — or on a phone — changes. */
   --u: calc(100vw / 1440);
 
-  --margin: 20rem;
+  /* THE CONTENT MARGIN — every section's text and figures sit inside it.
+     Was a flat 20rem, which ran copy to 1.4% of the screen edge and put it
+     in the same 20px lane as the fixed chrome (the nav ring, the menu, the
+     Live dot), so content slid under all three. 5vw clears that chrome at
+     every width (the menu ends at 53u, the ring and the dot start ~58u from
+     the right). Floored at 20px for a phone; past ~1920 the content stops
+     at 1760px wide and centres, so an ultrawide gets air, not 3000px lines.
+
+     Not the cover: the hero, the top bar and the Live dot are composition
+     on the poster unit, and keep --margin-u below. */
+  --margin: max(clamp(20px, 5vw, 96px), calc((100vw - 1760px) / 2));
   /* the site margin on the poster unit, for the pinned top bar and hero */
   --margin-u: calc(20 * var(--u));
   --gap: 20rem;
@@ -31,6 +41,11 @@
      `100vw*100/12 - …`, which resolves to 8.3 viewport widths; the
      intended reading is the standard column formula below.) */
   --column: calc((100vw - var(--margin) * 2 - var(--gap) * 11) / 12);
+  /* From the margin to column 2, and from the screen edge to it. Section
+     labels hang in column 1; headlines and body start at column 2. Was a
+     literal 138rem, which only matched column 2 at a 20rem margin. */
+  --hang: calc(var(--column) + var(--gap));
+  --indent: calc(var(--margin) + var(--hang));
 
   /* §3 metric correction. The literal display sizes assume GT Pressura
      Mono's ~0.5em advance. IBM Plex Mono is 0.6em, so a 13-character

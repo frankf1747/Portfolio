@@ -2,37 +2,34 @@
 
 /* ============================================================
    §7 ABOUT — the headline, and the figure that makes it literal.
-   Drawing in lib/aboutFigure; layout here.
+   Drawing and scroll logic in lib/aboutFigure; layout here.
+
+   Everything is on the 12 columns: the section label hangs in column 1,
+   the headline, the figure and the sources start on column 2 (--indent),
+   the paragraph takes columns 9–12.
    ============================================================ */
 
-/* The figure's labels are HTML laid over an SVG whose viewBox is in design
-   px. Sized in cqw against the stage — 1cqw is 14 design px on a 1400 stage —
-   they scale with the drawing at every width instead of drifting off the
-   arrow that points at them. */
-@function fig($n) {
-  @return calc(#{$n} * 1cqw / 14);
-}
-
 .about {
-  padding: 80rem 0 180rem;
+  padding: 80rem 0 140rem;
 
   &__head {
     display: flex;
     justify-content: space-between;
-    margin: 0 var(--margin) 60rem;
+    margin: 0 var(--margin) 56rem;
   }
 
   /* headline left, the prose beside it — the prose keeps the voice, the
      figure underneath carries the evidence */
-  &__top {
+  &__intro {
     display: grid;
-    grid-template-columns: 1fr 470rem;
-    column-gap: 60rem;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    column-gap: var(--gap);
     align-items: end;
-    margin: 0 var(--margin) 0 138rem;
+    margin: 0 var(--margin) 0 var(--indent);
   }
 
   &__h {
+    grid-column: 1 / 8;
     margin: 0;
     font-family: var(--font-body), Helvetica, Arial, sans-serif;
     font-weight: 700;
@@ -66,31 +63,97 @@
     transform: none;
   }
 
-  &__p {
-    margin: 0 0 4rem;
+  /* the unit the dock moves: shrink-wrapped, scaled from its top-left */
+  &__line {
+    display: inline-block;
+    transform-origin: 0 0;
+    white-space: nowrap;
+  }
+
+  &__lede {
+    grid-column: 8 / 12;
+  }
+
+  /* The lede in three beats. The claim at full ink, the middle set back,
+     the outputs in the figure's mono, and the payoff on its own line with
+     a drawn underline — ink, not pink: the accent belongs to "the thing". */
+  &__p,
+  &__close {
+    margin: 0;
     font-size: 20rem;
     line-height: 1.45;
+    text-wrap: pretty;
+  }
+
+  &__p {
+    color: rgb(38 32 72 / 0.72);
+
+    strong {
+      font-weight: 600;
+      color: var(--ink);
+    }
+  }
+
+  &__k {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.82em;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: uppercase;
     color: var(--ink);
+    white-space: nowrap;
+
+    sup {
+      margin-left: 2rem;
+      font-size: 0.6em;
+      font-weight: 500;
+      color: rgb(38 32 72 / 0.5);
+    }
+  }
+
+  &__close {
+    margin-top: 16rem;
+    font-weight: 600;
+    color: var(--ink);
+
+    em {
+      position: relative;
+      font-style: normal;
+      white-space: nowrap;
+
+      &::after {
+        @include sketch-rule(bottom, wob3, 2px);
+        bottom: -8rem;
+      }
+    }
   }
 
   /* ---------- the figure ---------- */
 
+  &__fig {
+    margin: 96rem var(--margin) 0 var(--indent);
+  }
+
+  /* the drawing and its outputs, side by side; the drawing's size is
+     written by lib/aboutFigure from the room the stage has */
   &__stage {
-    position: relative;
-    width: 1400rem;
-    max-width: calc(100% - var(--margin) * 2);
-    margin: 96rem var(--margin) 0;
-    container-type: inline-size;
+    display: flex;
+    align-items: center;
     /* the model chart takes the pointer as a data point; vertical swipes
        still scroll the page */
     touch-action: pan-y;
   }
 
+  &__plate {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    row-gap: 12rem;
+    min-width: 0;
+  }
+
   &__svg {
     display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1400 / 540;
     overflow: visible;
 
     text {
@@ -113,28 +176,28 @@
     }
   }
 
-  &__cap,
-  &__read {
-    position: absolute;
-    top: 0;
+  /* The live readout above the drawing, the caption under it. Each has a
+     row of its own, so they cannot run into each other at any scale. Ink,
+     not pink: the accent is spent on "the thing", the arrow and the active
+     output. */
+  &__read,
+  &__cap {
+    display: block;
+    /* the sketch's left edge, not the box's padding */
+    padding-left: 6rem;
     font-family: var(--font-mono), ui-monospace, monospace;
     font-weight: 500;
-    font-size: fig(13);
-    line-height: 1;
+    font-size: 12rem;
+    line-height: 1.2;
     letter-spacing: 0.02em;
     text-transform: uppercase;
     white-space: nowrap;
-  }
-
-  &__cap {
-    left: fig(118);
-    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: rgb(38 32 72 / 0.6);
   }
 
   &__read {
-    left: fig(818);
-    transform: translateX(-100%);
-    color: rgb(38 32 72 / 0.55);
     font-variant-numeric: tabular-nums;
 
     b {
@@ -143,82 +206,71 @@
     }
   }
 
-  /* the outputs: the band the arrow lands in */
+  /* ---------- the outputs ----------
+     A compact list right beside the drawing, so the arrow is a short,
+     legible run and the four read as one group with it. */
+  &__rail {
+    flex: none;
+    width: 250rem;
+  }
+
   &__outs {
-    position: absolute;
-    left: fig(1080);
-    right: 0;
-    top: fig(40);
-    height: fig(460);
+    display: grid;
+    row-gap: 4rem;
     margin: 0;
     padding: 0;
     list-style: none;
-    display: grid;
-    grid-template-rows: repeat(4, 1fr);
-
-    li {
-      display: flex;
-      align-items: center;
-    }
   }
 
   &__out {
-    position: relative;
     display: flex;
     align-items: center;
-    gap: fig(20);
-    padding: 0;
+    gap: 12rem;
+    width: 100%;
+    padding: 12rem 0 12rem 10rem;
     font-family: var(--font-mono), ui-monospace, monospace;
-    font-weight: 700;
-    font-size: fig(40);
+    font-weight: 600;
+    font-size: 19rem;
     line-height: 1;
-    letter-spacing: -0.05em;
+    letter-spacing: 0;
     text-transform: uppercase;
     text-align: left;
     white-space: nowrap;
+    /* secondary, but plainly readable and plainly a control — the old
+       32% grey read as disabled */
     color: var(--ink);
-    opacity: 0.32;
+    opacity: 0.5;
     transition:
       color 0.5s var(--ease),
       opacity 0.5s var(--ease);
 
     &:hover {
-      opacity: 0.7;
+      opacity: 0.85;
     }
 
     &.is-on {
       color: var(--accent);
       opacity: 1;
     }
+  }
 
-    /* the dwell: fills under the active output, then the next one takes over */
-    &::after {
-      content: "";
-      position: absolute;
-      left: fig(66);
-      width: fig(220);
-      top: calc(100% + #{fig(12)});
-      height: 2px;
-      background: currentColor;
-      transform: scaleX(var(--p, 0));
-      transform-origin: 0 50%;
-    }
-
-    &:not(.is-on)::after {
-      opacity: 0;
-    }
+  &__outN {
+    flex: none;
+    width: 22rem;
+    font-size: 12rem;
+    font-weight: 500;
   }
 
   &__outIcon {
     flex: none;
-    width: fig(46);
-    height: fig(46);
+    width: 24rem;
+    height: 24rem;
     overflow: visible;
 
     * {
       fill: none;
       stroke: currentColor;
-      stroke-width: 2.2;
+      stroke-width: 2.4;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -228,15 +280,76 @@
     }
   }
 
+  /* where the reader is: "02 / 04" and one segment per output */
+  &__steps {
+    display: flex;
+    align-items: center;
+    gap: 14rem;
+    margin: 18rem 0 0 10rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 12rem;
+    letter-spacing: 0.02em;
+    color: rgb(38 32 72 / 0.6);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* the autoplay's off switch — quiet, but always there, so motion that
+     started on its own can be stopped */
+  &__auto {
+    flex: none;
+    padding: 4rem 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: uppercase;
+    color: inherit;
+    transition: color 0.3s var(--ease);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--ink);
+    }
+
+    &::before {
+      content: "❚❚ ";
+      font-size: 0.8em;
+    }
+
+    &.is-off::before {
+      content: "▶ ";
+    }
+  }
+
+  &__track {
+    display: flex;
+    flex: 1;
+    gap: 6rem;
+
+    i {
+      position: relative;
+      flex: 1;
+      height: 2px;
+      background: rgb(38 32 72 / 0.16);
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--accent);
+        transform: scaleX(var(--p, 0));
+        transform-origin: 0 50%;
+      }
+    }
+  }
+
   /* ---------- sources: the education, as the figure's footnote ---------- */
 
   &__src {
     position: relative;
     display: grid;
     grid-template-columns: 120rem 1fr;
-    margin: 56rem var(--margin) 0 138rem;
+    margin: 72rem var(--margin) 0 var(--indent);
     padding-top: 22rem;
-    color: var(--accent);
+    color: var(--ink);
 
     &::before {
       @include sketch-rule(top, wob2);
@@ -259,20 +372,141 @@
 
   &__srcDates {
     flex: none;
-    color: rgb(242 36 122 / 0.55);
+    color: rgb(38 32 72 / 0.55);
     font-variant-numeric: tabular-nums;
   }
 }
 
+/* PINNED — laptop and up, tall enough to hold the frame. One screen, held
+   while the reader scrolls through it in parts (lib/aboutFigure): hold the
+   statement, dock it, then one stretch per output. 15 + 45 + 4 × 50 =
+   260svh of scroll; keep in step with HOLD / DOCK / STEP there, and the
+   query with PINNED.
+
+   The label row sits in the top bar's band, level with the menu and the
+   ring, which is otherwise dead height — the docked headline joins it
+   there, so the figure gets everything below. The statement is centred in
+   the frame; the figure's top is set by JS under the docked line. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1025px) and (min-height: 700px) {
+  .about__pin {
+    height: calc(100svh + 260svh);
+  }
+
+  .about__frame {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+  }
+
+  .about__head {
+    position: absolute;
+    top: calc(32 * var(--u));
+    left: var(--margin);
+    right: var(--margin);
+    margin: 0;
+  }
+
+  .about__intro {
+    position: absolute;
+    inset: 0 var(--margin) 0 var(--indent);
+    margin: 0;
+    align-content: center;
+  }
+
+  .about__line {
+    will-change: transform;
+  }
+
+  /* The top band is the nav's whenever it is open — scrolled back up, or
+     the menu or the ring hovered. Held in that band, the label row (and,
+     once docked, the headline) steps out of the way instead of running
+     into the menu and the wordmark, and comes back as the nav folds. */
+  .about__head,
+  .about__h {
+    transition: opacity 0.4s var(--ease);
+  }
+
+  html:not(.is-down) .about__head,
+  html:not(.is-down) .about__frame.is-docked .about__h,
+  html:has(.nav__items:is(:hover, :focus-within), .nav__contact:is(:hover, :focus-visible)) .about__head,
+  html:has(.nav__items:is(:hover, :focus-within), .nav__contact:is(:hover, :focus-visible)) .about__frame.is-docked .about__h {
+    opacity: 0;
+  }
+
+  .about__fig {
+    position: absolute;
+    left: var(--indent);
+    right: var(--margin);
+    top: 50%;
+    bottom: calc(28 * var(--u));
+    margin: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+  }
+
+  .about__stage {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* COMPACT — tablets and phones. The outputs move above the drawing as a
+   row of tabs, the viewBox crops to the drawing alone (lib/aboutFigure)
+   and the arrow goes: beside a drawing this narrow it has nowhere to run. */
 @media (max-width: 1024px) {
-  .about__top {
+  .about__intro {
     grid-template-columns: 1fr;
     row-gap: 28rem;
     margin-left: var(--margin);
   }
 
+  .about__h,
+  .about__lede {
+    grid-column: 1;
+  }
+
   .about__p {
     max-width: 560rem;
+  }
+
+  .about__fig {
+    margin-left: var(--margin);
+  }
+
+  .about__stage {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .about__plate {
+    order: 2;
+    width: 100%;
+  }
+
+  .about__rail {
+    order: 1;
+    width: auto;
+    margin-bottom: 26rem;
+  }
+
+  .about__outs {
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+    column-gap: 28rem;
+  }
+
+  .about__out {
+    padding-left: 0;
+  }
+
+  .about__steps {
+    margin-left: 0;
+    max-width: 560rem;
+  }
+
+  .about__arrow {
+    display: none;
   }
 
   .about__src {
@@ -280,70 +514,26 @@
   }
 }
 
-/* PHONE. Four outputs beside a 700-wide drawing do not fit, and the arrow
-   between them has nowhere to run. The outputs become a 2×2 set of buttons
-   above the figure, the caption and readout sit either side of it, the
-   viewBox crops to the drawing alone (lib/aboutFigure) and the arrow goes. */
 @media (max-width: 720px) {
   .about__h {
     font-size: 44rem;
   }
 
-  .about__stage {
-    display: flex;
-    flex-direction: column;
-    margin-top: 56rem;
+  .about__fig {
+    margin-top: 64rem;
   }
 
   .about__outs {
-    position: static;
-    order: 1;
-    height: auto;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: none;
-    gap: 14rem 12rem;
-    margin-bottom: 26rem;
+    gap: 6rem 12rem;
   }
 
   .about__out {
     gap: 10rem;
-    font-size: 22rem;
-
-    &::after {
-      left: 36rem;
-      width: 120rem;
-      top: calc(100% + 6rem);
-    }
+    font-size: 17rem;
   }
 
-  .about__outIcon {
-    width: 26rem;
-    height: 26rem;
-  }
-
-  .about__cap,
-  .about__read {
-    position: static;
-    transform: none;
-    font-size: 12rem;
-  }
-
-  .about__cap {
-    order: 2;
-    margin-bottom: 12rem;
-  }
-
-  .about__svg {
-    order: 3;
-    aspect-ratio: 700 / 400;
-  }
-
-  .about__read {
-    order: 4;
-    margin-top: 12rem;
-  }
-
-  .about__arrow {
+  .about__outN {
     display: none;
   }
 
@@ -359,6 +549,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* nothing plays on its own here, so there is nothing to pause */
+  .about__auto {
+    display: none;
+  }
+
   .about__hl,
   .about__scene {
     opacity: 1;

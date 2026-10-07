@@ -297,6 +297,20 @@ export default function ScrollProvider({
     window.addEventListener("site:lock", lock);
     window.addEventListener("site:unlock", relock);
 
+    /* Programmatic scroll, for components that need to move the page —
+       the About figure's labels glide to their stretch of the pinned frame,
+       and its autoplay walks the page on a little every frame (`immediate`).
+       Asked through an event for the same reason as the lock: Lenis lives
+       in this effect, and a native scrollTo underneath it would fight its
+       own smoothing. A stopped Lenis (the intro, an overlay) ignores it. */
+    const scrollTo = (e: Event) => {
+      const d = (e as CustomEvent<{ y: number; immediate?: boolean }>).detail;
+      if (typeof d?.y !== "number") return;
+      if (lenis) lenis.scrollTo(d.y, d.immediate ? { immediate: true } : { duration: 1.1 });
+      else window.scrollTo({ top: d.y, behavior: d.immediate || reduced ? "auto" : "smooth" });
+    };
+    window.addEventListener("site:scroll-to", scrollTo);
+
     /* §6 nav state is DIRECTION, not depth — scrolling up re-expands the
        nav wherever you are, rather than only at the top.
 
@@ -330,6 +344,7 @@ export default function ScrollProvider({
       window.removeEventListener("site:intro-end", unlock);
       window.removeEventListener("site:lock", lock);
       window.removeEventListener("site:unlock", relock);
+      window.removeEventListener("site:scroll-to", scrollTo);
       html.removeAttribute("data-locked");
       if (lenis) {
         lenis.off("scroll", onScroll);

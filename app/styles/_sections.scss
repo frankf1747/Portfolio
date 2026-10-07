@@ -1,12 +1,12 @@
 @use "sketch" as *;
 
 /* ============================================================
-   SECTIONS — content blocks start at x:138rem, full-bleed at
-   x:20rem / width:1400rem
+   SECTIONS — content blocks start at column 2 (--indent), full-bleed
+   at the margin (--margin). Both in _tokens.
    ============================================================ */
 
 .block {
-  margin-left: 138rem;
+  margin-left: var(--indent);
   margin-right: var(--margin);
 }
 
@@ -115,9 +115,17 @@
   }
 
   /* .h1 damps with the reading unit everywhere else on the site; this one
-     line is part of the cover, so it holds the poster scale. */
+     line is part of the cover, so it holds the poster scale.
+
+     Capped so it never wraps. The line is 30 mono characters at a 0.56em
+     pitch (0.6em advance less the -0.04em tracking) — 16.8em, so 16.9 with
+     a hair of slack — and it starts 138 poster units in and ends at the 20
+     unit margin. Uncapped, anything from a tablet to a phone held sideways
+     broke it in two at .h1's 0.7 leading and the lines nearly collided;
+     the phone tier's two-line treatment only reached 720px. At 1440 the
+     cap and the poster size agree, so the cover is unchanged there. */
   .h1 {
-    font-size: calc(95 * var(--mono-fit) * var(--u));
+    font-size: min(calc(95 * var(--mono-fit) * var(--u)), calc((100vw - 158 * var(--u)) / 16.9));
   }
 }
 
@@ -270,11 +278,10 @@
     display: flex;
     align-items: flex-start;
     gap: 10rem;
-    /* Deliberately off the left margin, pulled back twice from an earlier
-       220rem which read as adrift. 140rem sat exactly on card 03's left
-       edge (.cards has the same 20rem margin, card 03 is at --x: 120rem);
-       130rem gives up that alignment by 10rem because it looked better. */
-    margin: 0 var(--margin) 80rem 130rem;
+    /* On column 2, like every other section's headline. It was a literal
+       130rem, tuned by eye against the parked scatter wall's card 03; the
+       bento is on the 12 columns, so the heading is too. */
+    margin: 0 var(--margin) 80rem var(--indent);
     font-weight: 700;
     /* Ink, not the mark. Expertise sits directly above in pink at display
        size, and with both headings in the same colour the two sections read
@@ -422,22 +429,28 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     margin: 0 var(--margin) 80rem;
   }
 
+  /* From the margin, so the rule numbers hang in column 1 and the titles
+     start on column 2 with every other section's content. Inside a 20rem
+     margin the numbers could share column 2; at the real margin they ate
+     the title's width and "A NUMBER ISN'T AN ANSWER" broke in two. */
   &__list {
-    margin-left: 138rem;
+    margin-left: var(--margin);
     margin-right: var(--margin);
 
     li {
       position: relative;
       display: grid;
-      grid-template-columns: 80rem 1fr 460rem;
+      grid-template-columns: calc(var(--hang) - var(--gap)) 1fr 460rem;
       gap: var(--gap);
       align-items: start;
       padding: 40rem 0;
 
       /* the dividers are drawn (see _sketch). Seeds rotate down the list so
-         no two neighbouring rules share a wobble. */
+         no two neighbouring rules share a wobble. They start on column 2,
+         under the titles; the numbers hang outside them. */
       &::before {
         @include sketch-rule(top, wob1, 2px);
+        left: var(--hang);
       }
 
       &:nth-child(3n + 2)::before {
@@ -599,8 +612,14 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     margin-left: var(--margin);
   }
 
+  /* the cover keeps the poster margin, not the content one */
   .hero__sub {
-    left: var(--margin);
+    left: var(--margin-u);
+  }
+
+  /* the subtitle starts at the margin here, so the cap gets that room back */
+  .hero__sub .h1 {
+    font-size: min(calc(95 * var(--mono-fit) * var(--u)), calc((100vw - 48 * var(--u)) / 16.9));
   }
 
   .cards {
@@ -623,6 +642,10 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
 
   .approach__list li {
     grid-template-columns: 60rem 1fr;
+
+    &::before {
+      left: 0;
+    }
   }
 
   .approach__d {
@@ -655,7 +678,7 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
   .hero__title .smart-text.super { font-size: min(150rem, 12vw); }
 
   .nav {
-    padding: 14rem var(--margin);
+    padding: 14rem var(--margin-u);
   }
 
   .nav__logo {

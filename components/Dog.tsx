@@ -15,6 +15,11 @@ import { useEffect, useRef } from "react";
    you company down the whole scroll instead of living in one section.
    pointer-events: none throughout — it walks over links, never blocks them.
 
+   It is a paper cut-out, so whatever it stands on is hidden. Over CONTENT —
+   type, a figure, a card — it fades to a ghost (.is-over) and you read
+   straight through it; back on empty paper it fills in again. It used to
+   park on the About headline, the figure caption, the email link.
+
    BEHAVIOUR. With a mouse on the page it FOLLOWS the cursor: walks to it,
    trotting when it has fallen far behind, and stops a little short so it
    is never underneath it. Once there it watches — turning to face the
@@ -65,6 +70,16 @@ const SLEEP_FOR: [number, number] = [6, 10];
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
+/* What counts as content the dog must not cover. Blocks as well as type:
+   a drawing or a card is read too. The top bar and the Live dot are chrome,
+   and the hero's grass is the ground it walks on. */
+const CONTENT =
+  "main :is(h1, h2, h3, p, li, a, button, em, .small, .h1, .h2, .super, canvas, img, video, .about__svg, .bento__cell, .nb__cell, .hero__meta > span)";
+const CHROME = ".nav, .live-dot, .dog, .hero__grass";
+/* how often it checks what it is standing on, and re-reads the page */
+const OVER_EVERY = 200;
+const SCAN_EVERY = 2000;
+
 export default function Dog() {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -88,6 +103,9 @@ export default function Dog() {
     let lastMove = 0;
     let tiredness = 0;
     let sleepUntil = 0;
+    let content: Element[] = [];
+    let scanned = 0;
+    let checked = 0;
 
     const unit = () => parseFloat(getComputedStyle(document.documentElement).fontSize) || 1;
 
@@ -134,6 +152,27 @@ export default function Dog() {
     const place = () => {
       el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       el.style.setProperty("--face", String(face));
+    };
+
+    /* Is it standing on something you would be reading? Tested against the
+       body, not the whole box — the box has air round the drawing. Only
+       elements that actually overlap pay for the visibility check. */
+    const over = (now: number) => {
+      if (now - checked < OVER_EVERY) return;
+      checked = now;
+      if (now - scanned > SCAN_EVERY) {
+        scanned = now;
+        content = [...document.querySelectorAll(CONTENT)].filter((c) => !c.closest(CHROME));
+      }
+      const r = el.getBoundingClientRect();
+      const l = r.left + r.width * 0.22, rt = r.right - r.width * 0.06;
+      const t = r.top + r.height * 0.15, b = r.bottom - r.height * 0.15;
+      const hit = content.some((c) => {
+        const q = c.getBoundingClientRect();
+        if (q.right < l || q.left > rt || q.bottom < t || q.top > b || !q.width) return false;
+        return c.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) ?? true;
+      });
+      el.classList.toggle("is-over", hit);
     };
 
     /* Next destination. Tries for a stretch of moderate length — long enough
@@ -246,6 +285,7 @@ export default function Dog() {
       /* capped, so a backgrounded tab does not teleport it on return */
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
+      over(now);
 
       /* stamina — spent moving, recovered resting */
       if (mode === "walk") tiredness += dt * (el.dataset.pace === "run" ? 2.5 : 1);

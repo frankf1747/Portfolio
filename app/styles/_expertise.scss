@@ -19,11 +19,11 @@ $faint: rgb(38 32 72 / 0.18);
   }
 }
 
-/* In [ ]: / Out[ ]: sit in the left margin — the 118rem the rest of the
-   site already leaves before its content column */
+/* In [ ]: / Out[ ]: hang in column 1, so the cell itself starts on
+   column 2 with every other section's content */
 .nb__cell {
   display: grid;
-  grid-template-columns: 118rem 1fr;
+  grid-template-columns: var(--hang) 1fr;
   margin: 0 var(--margin);
 
   &--out {
@@ -255,6 +255,11 @@ $faint: rgb(38 32 72 / 0.18);
 }
 
 @media (max-width: 1024px) {
+  /* a tablet's column 1 is narrower than "Out[1]:" */
+  .nb__cell {
+    grid-template-columns: 96rem 1fr;
+  }
+
   .nb__code {
     font-size: 22rem;
   }

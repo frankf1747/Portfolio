@@ -59,7 +59,9 @@
 
 .subjects__row {
   display: flex;
-  gap: 80rem;
+  /* 80rem inside a 20rem margin; tightened with the wider margin so both
+     rows still end inside it at rest */
+  gap: 56rem;
   /* Sizes to its own contents rather than to the strip. As a flex item in a
      column strip the row would otherwise be capped at the container width,
      and items overflowing it would not extend the scroll area — the strip
@@ -74,8 +76,9 @@
        replaced, which pushed the row 90rem past the viewport and cut the
        last study in half at rest. Pulled back by exactly that. The row still
        reads as inset against row one's 20rem; it just no longer lines up
-       with anything above it. */
-    padding-left: 130rem;
+       with anything above it. 72rem since the margin widened to 5vw, for
+       the same reason: at 130 the row ran 31px off a 1470 screen. */
+    padding-left: 72rem;
   }
 }
 

@@ -27,16 +27,16 @@ type Filter = (typeof FILTERS)[number];
 /* Order is the original capability order. Domain is one word on purpose:
    it is a column value, and the chips filter on it. */
 const SKILLS: { t: string; d: Domain; tools: string[] }[] = [
-  { t: "Data analytics", d: "DATA", tools: ["SQL", "Python", "Databricks", "Fabric", "Medallion ETL", "Semantic modeling"] },
+  { t: "Data analytics", d: "DATA", tools: ["SQL", "Python", "R", "Excel"] },
+  { t: "Data engineering", d: "DATA", tools: ["Databricks", "Snowflake", "Fabric", "PySpark", "Medallion ETL", "Semantic modeling"] },
   { t: "Machine learning", d: "DATA", tools: ["scikit-learn", "Random forest", "XGBoost", "Feature engineering", "Cross-validation", "Clustering"] },
-  { t: "Agentic dev", d: "AI", tools: ["LangGraph", "LLM APIs", "Skills", "Evals", "Orchestration"] },
   { t: "Optimization", d: "DATA", tools: ["Gurobi", "Integer programming", "Forecasting"] },
-  { t: "Experimentation", d: "DATA", tools: ["A/B testing", "Causal inference", "RDD"] },
-  { t: "Visualization", d: "DATA", tools: ["Power BI", "DAX", "Tableau", "GA4"] },
+  { t: "Experimentation", d: "DATA", tools: ["A/B testing", "Causal inference", "RDD", "GA4"] },
+  { t: "Visualization", d: "DATA", tools: ["Power BI", "DAX", "Tableau"] },
+  { t: "AI engineering", d: "AI", tools: ["LangGraph", "LLM APIs", "RAG", "MCP", "Evals", "AI governance"] },
   { t: "Product", d: "PRODUCT", tools: ["PRDs", "User flows", "Figma", "Agile"] },
-  { t: "Frontend/backend", d: "PRODUCT", tools: ["React", "Next.js", "APIs"] },
-  { t: "Productivity", d: "PRODUCT", tools: ["Microsoft 365", "Genie Space", "Power Automate"] },
-  { t: "AI engineering", d: "AI", tools: ["AI governance", "MCP", "RAG", "Context engineering", "Eval loop"] }
+  { t: "Web apps", d: "PRODUCT", tools: ["React", "Next.js", "Azure", "APIs"] },
+  { t: "Automation", d: "PRODUCT", tools: ["Power Automate", "Power Query", "Databricks Genie"] }
 ];
 
 /* the query as tokens; the typewriter works on the plain string and the

@@ -76,6 +76,12 @@ export const el = <K extends keyof SVGElementTagNameMap>(
 export const rr = (x: number, y: number, w: number, h: number, r: number) =>
   `M${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x + r} Q${x},${y + h} ${x},${y + h - r} V${y + r} Q${x},${y} ${x + r},${y} Z`;
 
+/* The smallest text a sketch may set, in design units. At the scale the
+   figure gets on a laptop (~1.2) this renders at 11px; the sketches used to
+   go down to 6.5, which rendered under 5px. A label that does not fit at
+   this size is a label to cut, not to shrink. */
+export const TEXT_MIN = 9;
+
 export const tx = (
   parent: Element,
   x: number,
@@ -86,7 +92,7 @@ export const tx = (
   const t = el(parent, "text", {
     x,
     y,
-    "font-size": o.size ?? 11,
+    "font-size": Math.max(TEXT_MIN, o.size ?? 11),
     "font-weight": o.weight ?? 500,
     fill: o.fill ?? INK,
     "text-anchor": o.anchor ?? "start",

@@ -157,8 +157,8 @@ export function modelScene(g: SVGGElement, reduced: boolean): Scene {
   el(g, "path", { d: head([MP.x - 3, 236], 0, 7), stroke: INK, "stroke-width": 1.2, fill: "none" });
 
   /* the model panel — the heaviest thing here */
-  const pf = el(g, "path", { d: rr(MP.x, MP.y, MP.w, MP.h, 10), fill: PAPER, stroke: INK, "stroke-width": 1.8, filter: "url(#wob2)" });
-  const pi = el(g, "path", { d: rr(MP.x + 5, MP.y + 5, MP.w - 10, MP.h - 10, 8), fill: "none", stroke: INK, "stroke-width": 1, filter: "url(#wobS)" });
+  el(g, "path", { d: rr(MP.x, MP.y, MP.w, MP.h, 10), fill: PAPER, stroke: INK, "stroke-width": 1.8, filter: "url(#wob2)" });
+  el(g, "path", { d: rr(MP.x + 5, MP.y + 5, MP.w - 10, MP.h - 10, 8), fill: "none", stroke: INK, "stroke-width": 1, filter: "url(#wobS)" });
   tx(g, MP.x + 18, MP.y + 26, "05", { size: 9, fill: MUTE });
   const ph = tx(g, MP.x + 40, MP.y + 26, "Analyze — advanced models", { size: 12.5, weight: 700 });
   tx(g, MP.x + 18, MP.y + 41, "Add a data point: all three refit · 5-fold CV", { size: 8, fill: MUTE });
@@ -286,8 +286,8 @@ export function modelScene(g: SVGGElement, reduced: boolean): Scene {
       /* the flow chart runs first, the report goes out last */
       flow.forEach((n, i) => lit(n, inW(tt, i * 400, i * 400 + 500)));
       const analysing = inW(tt, 1650, 5650);
-      pf.setAttribute("stroke", analysing ? PINK : INK);
-      pi.setAttribute("stroke", analysing ? PINK : INK);
+      /* only the title lights: a pink double frame this size was the
+         heaviest mark on the screen, louder than the headline's own pink */
       ph.setAttribute("fill", analysing ? PINK : INK);
       lit(rpt, tt >= 6100);
       sent.setAttribute("opacity", tt >= 6200 ? "1" : "0");
