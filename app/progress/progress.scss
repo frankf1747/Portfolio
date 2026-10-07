@@ -207,9 +207,14 @@
   min-width: 0;
 }
 
+/* The project page's opening paragraph: italic, a little larger and with
+   room to breathe, so it reads as the pitch rather than as metadata. */
 .pg-detail__desc {
-  max-width: 720rem;
-  margin: 0;
+  max-width: 760rem;
+  margin: 4rem 0 0;
+  font-size: 22rem;
+  font-style: italic;
+  line-height: 1.5;
 }
 
 /* What the project is built with. Ink, not the mark — the same move the

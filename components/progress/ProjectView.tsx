@@ -75,7 +75,9 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
       <header className="pg-detail__head">
         <div>
           <h1 className="h2 pg__title">{project.name}</h1>
-          <p className="pg-detail__desc">{project.description}</p>
+          {/* The card carries the one-liner; the page opens with the fuller
+              overview, falling back to the one-liner until one is written. */}
+          <p className="pg-detail__desc">{project.overview?.trim() || project.description}</p>
           {project.stack?.length > 0 && (
             <ul className="small pg-stack" aria-label="Built with">
               {project.stack.map((tag) => (
