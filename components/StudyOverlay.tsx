@@ -5,6 +5,13 @@ import { createPortal } from "react-dom";
 import SmartText from "./SmartText";
 import type { Study } from "@/data/studies";
 import StarbucksDemo from "./studies/StarbucksDemo";
+import CedarsDemo from "./studies/CedarsDemo";
+import DoorDashDemo from "./studies/DoorDashDemo";
+import MetaDemo from "./studies/MetaDemo";
+import DellDemo from "./studies/DellDemo";
+import AppleDemo from "./studies/AppleDemo";
+import MicrosoftDemo from "./studies/MicrosoftDemo";
+import AADemo from "./studies/AADemo";
 
 /* §12 — the study window.
 
@@ -212,6 +219,13 @@ export default function StudyOverlay({
           </section>
 
           {study.demo === "starbucks" && <StarbucksDemo />}
+          {study.demo === "cedars" && <CedarsDemo />}
+          {study.demo === "doordash" && <DoorDashDemo />}
+          {study.demo === "meta" && <MetaDemo />}
+          {study.demo === "dell" && <DellDemo />}
+          {study.demo === "apple" && <AppleDemo />}
+          {study.demo === "microsoft" && <MicrosoftDemo />}
+          {study.demo === "american" && <AADemo />}
 
           {!study.draft && !study.demo && (
             <>

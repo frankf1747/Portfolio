@@ -40,7 +40,7 @@ export type Study = {
   stats?: { value: string; label: string }[];
   figures?: StudyFigure[];
   /** A live demo replaces the problem / solution / takeaway blocks. */
-  demo?: "starbucks";
+  demo?: "starbucks" | "cedars" | "doordash" | "meta" | "dell" | "apple" | "microsoft" | "american";
 };
 
 const DRAFT_COPY = "This one has not been written up yet. The source material is in hand; the report follows.";
@@ -82,33 +82,35 @@ export const studies: Study[] = [
     slug: "doordash",
     n: "02",
     name: "DOORDASH",
-    descriptor: "CAUSAL INFERENCE — RDD",
+    descriptor: "CAUSAL INFERENCE — REGRESSION DISCONTINUITY",
     year: "2026",
-    role: "Analyst",
-    context: "Source: DoorDash_RDD.pptx and RDD_Overview_DoorDash.docx",
+    role: "Causal design, in a team of five",
+    context: "UCLA MSBA 409 final proposal, Team 18, spring 2026.",
     brand: "#FF3008",
-    topic: "FEE THRESHOLD RDD",
-    draft: true,
-    what: DRAFT_COPY,
+    topic: "PROMO EMAIL RDD",
+    what:
+      "What is one $5 win-back email worth? DoorDash sends it to lapsed users whose re-order score clears a cutoff, so we priced it exactly there: a fuzzy regression discontinuity that turns the estimate into a move on the cutoff.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "doordash"
   },
   {
     slug: "meta",
     n: "03",
     name: "META",
-    descriptor: "AI ENTRY POINTS — STRATEGY",
+    descriptor: "PRODUCT ANALYTICS — AI ENTRY POINTS",
     year: "2026",
-    role: "Analyst",
-    context: "Source: UCLA MSBA Seminar Meta deck, script and data",
+    role: "Product view: where AI belongs, in a team of six",
+    context: "UCLA MSBA × Meta data science seminar. The case data is synthetic, provided by Meta.",
     brand: "#0064E0",
     topic: "AI ENTRY POINTS",
-    draft: true,
-    what: DRAFT_COPY,
+    what:
+      "Meta AI lived on one Instagram surface. Should it spread, and where? Yes, in stages: Explore, then Search, then Feed and Reels only if the guardrails hold. I owned the product view: which surface fits which intent, and what each one would cannibalize.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "meta"
   },
   {
     slug: "dell",
@@ -116,15 +118,16 @@ export const studies: Study[] = [
     name: "DELL",
     descriptor: "AGENTIC SYSTEMS — MEETING PREP",
     year: "2026",
-    role: "Analyst",
-    context: "UCLA MSBA seminar, Group 4. A project-manager agent coordinating expert worker agents for research, deck building and role-play Q&A.",
+    role: "Presentation and Q&A agents, in a team of six",
+    context: "UCLA MSBA seminar, Group 4.",
     brand: "#0076CE",
     topic: "MULTI-AGENT MEETING PREP",
-    draft: true,
-    what: DRAFT_COPY,
+    what:
+      "Meeting prep is research, checking, a deck and rehearsal, usually done in a hurry. We designed a five-agent team that does it, with one agent checking another and a human approving what ships. I designed the presentation and Q&A agents.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "dell"
   },
   {
     slug: "apple",
@@ -132,15 +135,16 @@ export const studies: Study[] = [
     name: "APPLE",
     descriptor: "EXPERIMENTATION — WINBACK OFFERS",
     year: "2026",
-    role: "Analyst",
-    context: "UCLA MSBA industry seminar, MA Team 7. An A/B test on winback offers across 180,000 returning subscribers.",
-    brand: "#1D1D1F",
+    role: "The recommendation, in a team of five",
+    context: "UCLA MSBA industry seminar 2026, MA Team 7. The product is anonymised in the case.",
+    brand: "#0071E3",
     topic: "SUBSCRIPTION WINBACK TEST",
-    draft: true,
-    what: DRAFT_COPY,
+    what:
+      "Free trial or $0.99 to win back lapsed subscribers? An A/B test on 180,000 users called it a tie. Split by how long users had been gone, it wasn't: route the offer by tenure for 10% more paying customers. I wrote the recommendation.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "apple"
   },
   {
     slug: "microsoft",
@@ -148,33 +152,51 @@ export const studies: Study[] = [
     name: "MICROSOFT",
     descriptor: "PRODUCTIZATION — REVIEW MINING",
     year: "2026",
-    role: "Analyst",
-    context: "UCLA MSBA seminar, MA Team 3. Turning a notebook-based Amazon review analyzer into a marketing intelligence system.",
+    role: "Productization plan, in a team of six",
+    context: "UCLA MSBA seminar, MA Team 3.",
     brand: "#0078D4",
     topic: "REVIEW MINING TO PERSONAS",
-    draft: true,
-    what: DRAFT_COPY,
+    what:
+      "A notebook that mined Amazon reviews could say what customers were saying, but not what to do. We planned its next life with Copilot: modular code, narrow agents with a validator, personas that carry an action, and a loop that ends as someone's task.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "microsoft"
   },
   {
     slug: "cedars-sinai",
     n: "07",
     name: "CEDARS-SINAI",
-    descriptor: "WORKFORCE ANALYTICS — STAFFING",
+    descriptor: "WORKFORCE ANALYTICS — NURSE BURNOUT",
     year: "2026",
-    role: "Analyst",
-    context: "Cedars-Sinai. Nurse attrition and burnout, and an AI staffing and demand-forecasting response.",
-    // Cedars-Sinai institutional blue. Approximate: taken from their
-    // public brand rather than a spec sheet, so worth checking against the
-    // real mark before launch.
-    brand: "#00539B",
+    role: "Root-cause analysis, in a team of six",
+    context: "UCLA Anderson × Cedars-Sinai case, January 2026.",
+    // Cedars-Sinai red (Pantone 186 C, as in their deck and wordmark).
+    brand: "#C8102E",
     topic: "NURSE BURNOUT & STAFFING",
-    draft: true,
-    what: DRAFT_COPY,
+    what:
+      "Annual surveys tell a hospital its nurses are burning out a year too late, and not why. We designed a weekly check-in that turns “burnout” into specific operational causes, each with an owner, a fix and a test. I led the root-cause analysis.",
     problem: "",
     solution: [],
-    takeaway: ""
+    takeaway: "",
+    demo: "cedars"
+  },
+  {
+    slug: "american-airlines",
+    n: "08",
+    name: "AMERICAN",
+    descriptor: "PREDICTIVE MODELING — CREW SEQUENCE RISK",
+    year: "2026",
+    role: "Results & impact, in a team of four",
+    context: "UCLA Anderson × American Airlines case, Group 9.",
+    // American Airlines blue, from the flight symbol.
+    brand: "#0078D2",
+    topic: "PILOT SEQUENCE RISK",
+    what:
+      "A pilot flies A → DFW → B, and one late leg cascades into duty-time limits and re-crewing. We scored every leg with a random forest on 2024 flight data and combined them into a sequence risk, so schedulers can buffer the risky ones before the storm. I led results and impact.",
+    problem: "",
+    solution: [],
+    takeaway: "",
+    demo: "american"
   }
 ];

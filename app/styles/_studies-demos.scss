@@ -1,0 +1,654 @@
+/* ============================================================
+   The remaining study reports — DoorDash (.ddx), Apple (.apx), Meta
+   (.mtx), Microsoft (.msx), Dell (.dlx). Components in
+   components/studies/. Same report language as .sbx / .cdx in
+   _studies.scss: 1px rules, mono labels, --brand as the one accent.
+   ============================================================ */
+
+$mono: var(--font-mono), ui-monospace, monospace;
+
+/* shared additions to the .cdx kit */
+.cdx__phase.is-live {
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+}
+
+.cdx__rules.is-limits li::before {
+  content: "– ";
+}
+
+/* ---------- DoorDash: the RDD ---------- */
+
+.ddx {
+  &__pair {
+    display: grid;
+    grid-template-columns: 150rem 150rem 1fr;
+    gap: 14rem;
+    align-items: stretch;
+
+    p {
+      margin: 0;
+      align-self: center;
+      font-size: 16rem;
+      line-height: 1.45;
+
+      em {
+        font-style: normal;
+        color: var(--brand);
+      }
+    }
+  }
+
+  &__user {
+    display: flex;
+    flex-direction: column;
+    gap: 6rem;
+    padding: 16rem 18rem;
+    border: 1px solid currentColor;
+
+    b {
+      font-family: $mono;
+      font-size: 28rem;
+      font-weight: 500;
+    }
+
+    span:last-child {
+      font-size: 15rem;
+      opacity: 0.7;
+    }
+
+    &.is-on {
+      border-color: var(--brand);
+
+      b,
+      span:last-child {
+        color: var(--brand);
+        opacity: 1;
+      }
+    }
+  }
+
+  &__plot {
+    margin: 4rem 0 0;
+    padding: 8rem 6rem 0;
+    border: 1px solid currentColor;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    circle {
+      fill: currentColor;
+      opacity: 0.35;
+
+      &.is-hi {
+        fill: var(--brand);
+        opacity: 0.6;
+      }
+    }
+  }
+
+  &__band {
+    fill: color-mix(in srgb, var(--brand) 8%, transparent);
+  }
+
+  &__axis {
+    stroke: currentColor;
+    opacity: 0.4;
+  }
+
+  &__cut {
+    stroke: currentColor;
+    stroke-dasharray: 4 4;
+  }
+
+  &__fit {
+    stroke: currentColor;
+    stroke-width: 2.5;
+
+    &.is-hi {
+      stroke: var(--brand);
+    }
+  }
+
+  &__jump {
+    stroke: var(--brand);
+    stroke-width: 2;
+  }
+
+  &__t {
+    font-family: $mono;
+    font-size: 11px;
+    fill: currentColor;
+    opacity: 0.7;
+
+    &.is-hi {
+      fill: var(--brand);
+      opacity: 1;
+      font-weight: 600;
+    }
+  }
+
+  &__bw {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10rem;
+    margin: 14rem 0;
+  }
+
+  &__chip {
+    padding: 5rem 12rem;
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    font-family: $mono;
+    font-size: 13rem;
+
+    &.is-on {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+  }
+
+  &__n {
+    margin-left: auto;
+    opacity: 0.5;
+  }
+
+  &__table {
+    border: 1px solid currentColor;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 170rem 1fr 190rem;
+    gap: 16rem;
+    padding: 14rem 18rem;
+    font-size: 16rem;
+    line-height: 1.35;
+    opacity: 0.5;
+    transition: opacity 0.3s var(--ease), background 0.3s var(--ease);
+
+    & + & {
+      border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    }
+
+    &.is-on {
+      opacity: 1;
+      background: color-mix(in srgb, var(--brand) 8%, transparent);
+    }
+  }
+
+  &__k {
+    font-family: $mono;
+    font-size: 13rem;
+    text-transform: uppercase;
+  }
+
+  &__imp {
+    font-family: $mono;
+    font-size: 14rem;
+    text-align: right;
+    color: var(--brand);
+  }
+}
+
+/* ---------- Apple: the offer duel ---------- */
+
+.apx {
+  &__funnel {
+    margin-top: 28rem;
+    gap: 22rem;
+  }
+
+  &__duel {
+    display: grid;
+    gap: 8rem;
+  }
+
+  &__bar {
+    display: grid;
+    grid-template-columns: 70rem minmax(0, 1fr) 70rem;
+    align-items: center;
+    gap: 14rem;
+    font-size: 15rem;
+    opacity: 0.55;
+
+    &.is-win {
+      opacity: 1;
+      font-weight: 600;
+    }
+  }
+
+  &__l {
+    font-family: $mono;
+    font-size: 14rem;
+  }
+
+  &__note {
+    opacity: 0.6;
+  }
+
+  &__route {
+    display: grid;
+    gap: 10rem;
+    padding: 20rem;
+    border: 1px solid currentColor;
+  }
+
+  &__routeRow {
+    display: grid;
+    grid-template-columns: 180rem 1fr 120rem;
+    align-items: center;
+    gap: 14rem;
+    font-size: 17rem;
+    opacity: 0.55;
+    transition: opacity 0.3s var(--ease);
+
+    i {
+      position: relative;
+      height: 1px;
+      background: currentColor;
+
+      &::after {
+        content: "▸";
+        position: absolute;
+        right: -2rem;
+        top: -9rem;
+        font-size: 12rem;
+        font-style: normal;
+      }
+    }
+
+    b {
+      color: var(--brand);
+    }
+
+    &.is-on {
+      opacity: 1;
+    }
+  }
+
+  &__pay {
+    display: flex;
+    align-items: baseline;
+    gap: 16rem;
+    margin-top: 10rem;
+    padding-top: 16rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+
+    .study__statV {
+      color: var(--brand);
+    }
+  }
+}
+
+/* the duel sets bar widths itself (0 until seen), so lift .cdx's
+   max-width grow-in off them and animate the width instead */
+.apx__bar .cdx__barT i {
+  max-width: none;
+  transition: width 0.9s var(--ease);
+}
+
+/* ---------- Meta: the prompt wall ---------- */
+
+.mtx__wall {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rem;
+  margin-top: 14rem;
+
+  span {
+    padding: 6rem 11rem;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 99rem;
+    font-size: 13.5rem;
+    animation: cdx-in 0.5s var(--ease) both;
+    animation-delay: calc(var(--k) * 30ms);
+  }
+}
+
+/* ---------- Microsoft: the gap, the agents, the loop ---------- */
+
+.msx {
+  &__stages {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-bottom: 24rem;
+    border: 1px solid currentColor;
+
+    span {
+      padding: 16rem 18rem;
+      font-family: $mono;
+      font-size: 15rem;
+      text-transform: uppercase;
+      opacity: 0.45;
+
+      & + span {
+        border-left: 1px solid currentColor;
+      }
+
+      &.is-done {
+        opacity: 1;
+        background: color-mix(in srgb, var(--brand) 10%, transparent);
+      }
+
+      em {
+        display: block;
+        margin-top: 6rem;
+        font-family: var(--font-body), sans-serif;
+        font-size: 12.5rem;
+        font-style: normal;
+        text-transform: none;
+        color: var(--brand);
+      }
+    }
+  }
+
+  &__agents {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10rem;
+    margin-top: 14rem;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 6rem;
+      padding: 14rem;
+      border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+      font-size: 14rem;
+      line-height: 1.35;
+
+      &.is-key {
+        border-color: var(--brand);
+
+        b {
+          color: var(--brand);
+        }
+      }
+    }
+
+    b {
+      font-size: 15rem;
+    }
+  }
+
+  &__loop {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    border: 1px solid currentColor;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 8rem;
+      padding: 16rem;
+      font-size: 14.5rem;
+      line-height: 1.35;
+      opacity: 0.4;
+      transition: opacity 0.4s var(--ease), background 0.4s var(--ease);
+
+      & + div {
+        border-left: 1px solid currentColor;
+      }
+
+      &.is-past {
+        opacity: 0.75;
+      }
+
+      &.is-on {
+        opacity: 1;
+        background: color-mix(in srgb, var(--brand) 12%, transparent);
+      }
+    }
+  }
+}
+
+/* ---------- Dell: the run ---------- */
+
+.dlx {
+  &__run {
+    border: 1px solid currentColor;
+  }
+
+  &__step {
+    display: grid;
+    grid-template-columns: 230rem 1fr;
+    gap: 20rem;
+    padding: 14rem 18rem;
+    opacity: 0;
+    transform: translateY(6rem);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+
+    & + & {
+      border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    }
+
+    &.is-in {
+      opacity: 1;
+      transform: none;
+    }
+
+    &.is-mine {
+      background: color-mix(in srgb, var(--brand) 9%, transparent);
+    }
+  }
+
+  &__who {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+  }
+
+  &__role {
+    font-size: 13.5rem;
+    opacity: 0.6;
+  }
+
+  &__out {
+    font-size: 15.5rem;
+    line-height: 1.45;
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 18rem;
+    }
+
+    em {
+      font-style: normal;
+      opacity: 0.55;
+    }
+  }
+
+  &__flag {
+    color: var(--brand);
+  }
+}
+
+/* ---------- American Airlines: the sequence ---------- */
+
+.aax {
+  /* A → DFW → B, the second leg running late */
+  &__path {
+    display: flex;
+    align-items: center;
+    gap: 12rem;
+    margin: 4rem 0 26rem;
+    font-family: $mono;
+    font-size: 18rem;
+
+    span,
+    b {
+      flex: none;
+      padding: 8rem 14rem;
+      border: 1px solid currentColor;
+      border-radius: 99rem;
+    }
+
+    b {
+      font-weight: 600;
+      color: var(--brand);
+      border-color: var(--brand);
+    }
+
+    i {
+      flex: 1;
+      height: 2px;
+      background: currentColor;
+
+      &.is-late {
+        background: repeating-linear-gradient(90deg, var(--brand) 0 10rem, transparent 10rem 16rem);
+        background-size: 32rem 2px;
+        animation: aax-run 1.2s linear infinite;
+      }
+    }
+  }
+
+  &__controls {
+    display: grid;
+    gap: 12rem;
+    margin-bottom: 20rem;
+  }
+
+  &__seg {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8rem;
+
+    .sbx__stepK {
+      width: 130rem;
+    }
+  }
+
+  &__calc {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    margin-bottom: 14rem;
+    border: 1px solid currentColor;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 6rem;
+      padding: 16rem 18rem;
+    }
+
+    > div + div {
+      border-left: 1px solid currentColor;
+    }
+
+    b {
+      font-family: $mono;
+      font-size: calc(56rem * var(--mono-fit));
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    span:last-child {
+      font-size: 14rem;
+      opacity: 0.7;
+    }
+  }
+
+  &__total {
+    background: color-mix(in srgb, var(--brand) 6%, transparent);
+
+    b {
+      color: var(--brand);
+    }
+
+    &.is-b2 {
+      background: color-mix(in srgb, var(--brand) 14%, transparent);
+    }
+  }
+
+  &__meter {
+    display: block;
+    height: 8rem;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    opacity: 1 !important;
+
+    i {
+      display: block;
+      height: 100%;
+      background: var(--brand);
+      transition: width 0.5s var(--ease);
+    }
+  }
+}
+
+@keyframes aax-run {
+  to {
+    background-position: 32rem 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .aax__calc {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .aax__total {
+    grid-column: 1 / -1;
+    border-left: 0 !important;
+    border-top: 1px solid currentColor;
+  }
+
+  .aax__seg .sbx__stepK {
+    width: 100%;
+  }
+
+  .ddx__pair {
+    grid-template-columns: 1fr 1fr;
+
+    p {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .ddx__row {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+
+  .ddx__imp {
+    text-align: left;
+  }
+
+  .apx__routeRow {
+    grid-template-columns: 1fr 40rem 1fr;
+  }
+
+  .msx__stages,
+  .msx__agents,
+  .msx__loop {
+    grid-template-columns: 1fr;
+  }
+
+  .msx__stages span + span,
+  .msx__loop div + div {
+    border-left: 0;
+    border-top: 1px solid currentColor;
+  }
+
+  .dlx__step {
+    grid-template-columns: 1fr;
+    gap: 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mtx__wall span,
+  .aax__path i.is-late {
+    animation: none;
+  }
+
+  .dlx__step,
+  .msx__loop div,
+  .apx__bar .cdx__barT i {
+    transition: none;
+  }
+}

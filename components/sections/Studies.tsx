@@ -27,7 +27,17 @@ import { studies } from "@/data/studies";
    as one unbroken string — which is exactly the wrong behaviour for the one
    line on the site that exists to be read literally. */
 
-const SPLIT = 4;
+/* Where each row ends. Eight names don't fit two rows at this size — the
+   second ran 400px off a 1470 screen and hid AMERICAN — so three rows, the
+   middle one inset, everything visible at rest. Four on the first row
+   pushed DELL off the edge, so DELL sits on the last row beside AMERICAN.
+   Grouped by slug rather than by index, so the rows do not follow the
+   numbering. */
+const ROWS = [
+  ["starbucks", "doordash", "meta"],
+  ["apple", "microsoft", "cedars-sinai"],
+  ["dell", "american-airlines"]
+].map((row) => row.map((slug) => studies.find((s) => s.slug === slug)!));
 
 export default function Studies() {
   const [open, setOpen] = useState<string | null>(null);
@@ -158,8 +168,8 @@ export default function Studies() {
       </div>
 
       <div className="subjects__strip" role="list" ref={wrapRef}>
-        {[studies.slice(0, SPLIT), studies.slice(SPLIT)].map((row, r) => (
-          <div className={`subjects__row${r ? " is-inset" : ""}`} key={r}>
+        {ROWS.map((row, r) => (
+          <div className={`subjects__row${r === 1 ? " is-inset" : ""}`} key={r}>
             {row.map((s) => {
               const i = studies.indexOf(s);
               return (

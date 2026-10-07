@@ -205,6 +205,10 @@ html.is-study-open {
     padding: 48rem 56rem 40rem;
     background: var(--ground);
     border: 1px solid currentColor;
+    /* Ink, so the subject's colour is the only accent in the report. In
+       the site's pink, every green, blue and red accent clashed with the
+       text around it. */
+    color: var(--ink);
 
     /* mounted first, flipped on the next frame — a transition needs two
        states and there is no keyframe to fall back on */
@@ -310,7 +314,7 @@ html.is-study-open {
   &__label {
     display: block;
     margin: 0 0 20rem;
-    color: var(--mark);
+    color: var(--brand, var(--mark));
   }
 
   &__body {
@@ -359,7 +363,7 @@ html.is-study-open {
     font-size: calc(64rem * var(--mono-fit));
     line-height: 0.9;
     letter-spacing: -0.04em;
-    color: var(--mark);
+    color: var(--brand, var(--mark));
   }
 
   &__statL {
@@ -444,7 +448,7 @@ html.is-study-open {
 
     &--a {
       flex: 78;
-      background: var(--mark);
+      background: var(--brand, var(--mark));
       color: var(--ground);
     }
 
@@ -1162,5 +1166,267 @@ html.is-study-open {
 
   .sbx__live {
     display: none;
+  }
+}
+
+/* ============================================================
+   CEDARS-SINAI DEMO — components/studies/CedarsDemo.tsx. Same report
+   language as the Starbucks demo (.sbx), in the subject's blue.
+   ============================================================ */
+
+.cdx {
+  $mono: var(--font-mono), ui-monospace, monospace;
+
+  /* why nurses consider leaving — the bars grow in once seen */
+  &__bars {
+    display: grid;
+    gap: 10rem;
+  }
+
+  &__bar {
+    display: grid;
+    grid-template-columns: 220rem minmax(0, 1fr) 56rem;
+    align-items: center;
+    gap: 14rem;
+    font-size: 15rem;
+    opacity: 0.55;
+
+    &.is-lead {
+      opacity: 1;
+      font-weight: 600;
+    }
+  }
+
+  &__barT {
+    height: 14rem;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+
+    i {
+      display: block;
+      height: 100%;
+      max-width: 0;
+      background: var(--brand);
+      transition: max-width 0.9s var(--ease);
+      transition-delay: calc(var(--k) * 90ms);
+    }
+  }
+
+  &__bars.is-in &__barT i {
+    max-width: 100%;
+  }
+
+  &__barV {
+    font-family: $mono;
+    font-size: 13rem;
+    text-align: right;
+  }
+
+  &__gaps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 28rem;
+    border: 1px solid currentColor;
+
+    > div {
+      padding: 18rem 20rem;
+    }
+
+    > div + div {
+      border-left: 1px solid currentColor;
+    }
+
+    p {
+      margin: 8rem 0 0;
+      font-size: 16rem;
+      line-height: 1.4;
+    }
+  }
+
+  /* said → cause → owner → fix → measure */
+  &__chain {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.6fr 1.2fr;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid currentColor;
+
+    li {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8rem;
+      padding: 18rem 20rem;
+      animation: cdx-in 0.5s var(--ease) both;
+      animation-delay: calc(var(--k) * 140ms);
+    }
+
+    li + li {
+      border-left: 1px solid currentColor;
+    }
+
+    /* the arrow between steps */
+    li + li::before {
+      content: "▸";
+      position: absolute;
+      left: -7rem;
+      top: 18rem;
+      font-size: 12rem;
+      line-height: 1;
+      color: var(--brand);
+      background: var(--ground);
+    }
+  }
+
+  &__cause {
+    font-size: 20rem;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  &__v {
+    font-size: 16rem;
+    line-height: 1.4;
+  }
+
+  /* units × causes, the selected cause's column outlined */
+  &__map {
+    display: grid;
+    grid-template-columns: 90rem repeat(4, minmax(0, 1fr));
+    gap: 6rem;
+    margin-top: 14rem;
+  }
+
+  &__mapRow {
+    display: contents;
+  }
+
+  &__mapH {
+    opacity: 0.6;
+  }
+
+  &__mapU {
+    align-self: center;
+  }
+
+  &__map i {
+    height: 34rem;
+    background: var(--brand);
+    opacity: 0;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: opacity 0.6s var(--ease), outline-color 0.3s var(--ease);
+    transition-delay: calc(var(--k) * 25ms), 0s;
+
+    &.is-col {
+      outline-color: currentColor;
+    }
+  }
+
+  &__map.is-in i {
+    opacity: calc(0.12 + var(--v) * 0.88);
+  }
+
+  /* the pilot: three phases, widths in proportion to their length */
+  &__time {
+    display: flex;
+    border: 1px solid currentColor;
+  }
+
+  &__phase {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6rem;
+    min-width: 0;
+    padding: 16rem 18rem;
+
+    & + & {
+      border-left: 1px solid currentColor;
+    }
+
+    /* the live phase is marked .is-live (see _studies-demos) */
+
+    b {
+      font-family: $mono;
+      font-size: 18rem;
+      font-weight: 500;
+    }
+
+    span:last-child {
+      font-size: 14rem;
+      line-height: 1.35;
+      opacity: 0.7;
+    }
+  }
+
+  &__rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10rem 28rem;
+    margin: 14rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 16rem;
+    line-height: 1.4;
+
+    li {
+      padding-left: 18rem;
+      text-indent: -18rem;
+
+      &::before {
+        content: "✓ ";
+        color: var(--brand);
+      }
+    }
+  }
+}
+
+@keyframes cdx-in {
+  from {
+    opacity: 0;
+    transform: translateY(8rem);
+  }
+}
+
+@media (max-width: 720px) {
+  .cdx__bar {
+    grid-template-columns: 120rem minmax(0, 1fr) 44rem;
+  }
+
+  .cdx__gaps,
+  .cdx__chain,
+  .cdx__rules {
+    grid-template-columns: 1fr;
+  }
+
+  .cdx__gaps > div + div,
+  .cdx__chain li + li {
+    border-left: 0;
+    border-top: 1px solid currentColor;
+  }
+
+  .cdx__chain li + li::before {
+    display: none;
+  }
+
+  .cdx__time {
+    flex-direction: column;
+  }
+
+  .cdx__phase + .cdx__phase {
+    border-left: 0;
+    border-top: 1px solid currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cdx__chain li {
+    animation: none;
+  }
+
+  .cdx__barT i,
+  .cdx__map i {
+    transition: none;
   }
 }

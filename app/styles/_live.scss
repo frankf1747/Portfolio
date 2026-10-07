@@ -50,7 +50,10 @@
 html[data-nav="in"] .live-dot {
   opacity: 1;
   pointer-events: auto;
-  transition: opacity 1s var(--ease), background-color 0.5s var(--ease);
+  transition:
+    opacity 1s var(--ease),
+    background-color 0.5s var(--ease),
+    translate 0.8s var(--ease);
 }
 
 .live-dot__dot {
@@ -89,11 +92,13 @@ html[data-nav="in"] .live-dot {
   }
 }
 
-/* ---------- open: hover, keyboard focus, or a first tap ---------- */
+/* ---------- open: hover, keyboard focus, a first tap, or the Projects
+   section in view (is-cued, see LiveDot.tsx) ---------- */
 
 .live-dot:hover,
 .live-dot:focus-visible,
-.live-dot.is-open {
+.live-dot.is-open,
+html[data-nav="in"] .live-dot.is-cued {
   background: var(--paper);
 
   &::before {
@@ -105,6 +110,35 @@ html[data-nav="in"] .live-dot {
     margin-right: calc(10 * var(--u));
     opacity: 1;
     transition-delay: 0s, 0.12s, 0s;
+  }
+}
+
+/* Cued: the pill unfolds on its own, and gives one small nudge toward
+   the page so the eye catches the movement at the edge. */
+html[data-nav="in"] .live-dot.is-cued {
+  animation: live-nudge 0.9s var(--ease) 0.25s 1;
+}
+
+/* Tucked: after the nudge the open pill slides half behind the right
+   edge, so a sliver of "LIVE · WHAT I'M" stays as a tab and the cards
+   keep their space. 50% is of the pill's own width; the extra 16u takes
+   up its offset from the edge. Hover or focus pulls it back out. */
+html[data-nav="in"] .live-dot.is-cued.is-tucked:not(:hover):not(:focus-visible) {
+  translate: calc(50% + 16 * var(--u)) -50%;
+}
+
+@keyframes live-nudge {
+  0% {
+    translate: 0 -50%;
+  }
+  35% {
+    translate: calc(-8 * var(--u)) -50%;
+  }
+  65% {
+    translate: calc(2 * var(--u)) -50%;
+  }
+  100% {
+    translate: 0 -50%;
   }
 }
 
@@ -124,7 +158,8 @@ html[data-nav="in"] .live-dot {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-dot__dot::after {
+  .live-dot__dot::after,
+  html[data-nav="in"] .live-dot.is-cued {
     animation: none;
   }
 
