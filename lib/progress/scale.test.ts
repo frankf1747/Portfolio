@@ -103,14 +103,39 @@ describe("the weighted axis", () => {
 });
 
 describe("monthTicks on a squeezed axis", () => {
-  it("blanks labels that would overprint, keeping the tick and the year", () => {
+  it("never lets labels overprint, and keeps the year", () => {
     const ms = [m("2025-12-16", "2025-12-24"), m("2025-12-25", "2026-01-03"), m("2026-01-04", "2026-09-30"), m("2026-10-01", "2026-10-06")];
     const ticks = monthTicks(ganttDomain(ms, "2026-10-07"));
-    expect(ticks.map((t) => t.pct)).toHaveLength(10);
     expect(ticks.find((t) => t.label === "JAN 2026")).toBeTruthy();
     const shown = ticks.filter((t) => t.label);
     for (let i = 1; i < shown.length; i++) {
       expect(shown[i].pct - shown[i - 1].pct).toBeGreaterThanOrEqual(shown[i - 1].label.length * 1.1 + 1.5);
     }
+  });
+});
+
+describe("monthTicks range labels", () => {
+  /* Short steps, then three long phases, then short steps again. */
+  const ms = [
+    m("2025-12-16", "2025-12-24"), m("2025-12-25", "2026-01-03"), m("2026-01-04", "2026-01-09"),
+    m("2026-01-10", "2026-01-18"), m("2026-01-19", "2026-02-20"), m("2026-02-21", "2026-05-20"),
+    m("2026-05-21", "2026-07-15"), m("2026-07-15", "2026-08-08"), m("2026-09-13", "2026-09-17"),
+    m("2026-09-29", "2026-09-30"), m("2026-10-01", "2026-10-06"), m("2026-10-06", "2026-10-20")
+  ];
+  const ticks = monthTicks(ganttDomain(ms, "2026-10-07"));
+
+  it("labels months squeezed inside long phases as one range", () => {
+    expect(ticks.map((t) => t.label)).toContain("FEB-JUL");
+    for (const name of ["MAR", "APR", "MAY", "JUN", "JUL"]) expect(ticks.map((t) => t.label)).not.toContain(name);
+  });
+
+  it("keeps months outside long phases as their own ticks", () => {
+    expect(ticks.map((t) => t.label)).toContain("JAN 2026");
+    expect(ticks.map((t) => t.label)).toContain("OCT");
+  });
+
+  it("leaves a plain linear axis month by month", () => {
+    const d = { start: parseDay("2026-01-20"), end: parseDay("2026-05-10") };
+    expect(monthTicks(d).map((t) => t.label)).toEqual(["FEB", "MAR", "APR", "MAY"]);
   });
 });

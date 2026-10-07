@@ -20,7 +20,14 @@ export interface Domain {
   /** Width carried by each whole day of the domain, from its start. Absent
       means a plain linear axis. */
   dayWeights?: number[];
+  /** Stretches covered by long milestones, [start, end) in UTC ms. Months
+      squeezed inside one are labelled as a single range. */
+  longSpans?: [number, number][];
 }
+
+/* A milestone this long is a phase, not a step: its months get squeezed by
+   the weighted axis and are better read as one range than month by month. */
+const LONG_MILESTONE_DAYS = 30;
 
 /* Share of the width every day gets regardless of milestones, as a fraction
    of what the milestones bring in total. Keeps empty stretches (padding,
@@ -66,7 +73,10 @@ export function ganttDomain(ms: Spanned[], today: string, padDays = 3): Domain {
     const len = last - first + 1;
     for (let i = first; i <= last; i++) dayWeights[i] += 1 / len;
   }
-  return { ...domain, dayWeights };
+  const longSpans = ms
+    .map((m): [number, number] => [parseDay(m.start_date), parseDay(m.due_date) + DAY])
+    .filter(([a, b]) => b - a >= LONG_MILESTONE_DAYS * DAY);
+  return { ...domain, dayWeights, longSpans };
 }
 
 export function xPct(day: number, d: Domain): number {
@@ -92,31 +102,58 @@ export function barSpan(m: Spanned, d: Domain): { left: number; width: number } 
 const PCT_PER_CHAR = 1.1;
 const LABEL_GAP_PCT = 1.5;
 
-/** Month starts inside the domain. Where two would overprint, the earlier
-    label is blanked (its tick line stays) unless the later is the plainer
-    one; a January label, which carries the year, always wins. */
+/* A month narrower than this, inside a long phase, counts as squeezed. */
+const SQUEEZED_PCT = 9;
+
+const monthName = (t: number) => new Date(t).toLocaleString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
+
+/** Month starts inside the domain. Two or more squeezed months in a row
+    inside a long phase become one tick with a range label ("FEB-JUL").
+    Where labels would still overprint, the later one wins (see below). */
 export function monthTicks(d: Domain): { pct: number; label: string }[] {
   const first = new Date(d.start);
-  const ticks: { pct: number; label: string }[] = [];
+  const months: number[] = [];
   for (let i = 0; ; i++) {
     const t = Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + i, 1);
     if (t > d.end) break;
-    if (t < d.start) continue;
+    if (t >= d.start) months.push(t);
+  }
+  const pctOf = (t: number) => xPct(Math.min(t, d.end), d);
+  const nextMonth = (t: number) => {
     const date = new Date(t);
-    const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
-    ticks.push({ pct: xPct(t, d), label: date.getUTCMonth() === 0 ? `${month} ${date.getUTCFullYear()}` : month });
-  }
-  let shown = -1;
-  for (let i = 0; i < ticks.length; i++) {
-    if (shown >= 0 && ticks[i].pct - ticks[shown].pct < ticks[shown].label.length * PCT_PER_CHAR + LABEL_GAP_PCT) {
-      const keepLater = ticks[i].label.length > ticks[shown].label.length;
-      if (keepLater) ticks[shown] = { ...ticks[shown], label: "" };
-      else {
-        ticks[i] = { ...ticks[i], label: "" };
-        continue;
-      }
+    return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
+  };
+  const squeezed = (t: number) =>
+    pctOf(nextMonth(t)) - pctOf(t) < SQUEEZED_PCT && (d.longSpans ?? []).some(([a, b]) => t >= a && t < b);
+  const withYear = (t: number, label: string) => (new Date(t).getUTCMonth() === 0 ? `${label} ${new Date(t).getUTCFullYear()}` : label);
+
+  const ticks: { pct: number; label: string }[] = [];
+  for (let i = 0; i < months.length; i++) {
+    let j = i;
+    while (squeezed(months[i]) && j + 1 < months.length && squeezed(months[j + 1])) j++;
+    if (j > i) {
+      const crossesYear = months.slice(i + 1, j + 1).some((t) => new Date(t).getUTCMonth() === 0);
+      const label = `${monthName(months[i])}-${monthName(months[j])}`;
+      ticks.push({ pct: pctOf(months[i]), label: crossesYear ? `${label} ${new Date(months[j]).getUTCFullYear()}` : label });
+      i = j;
+    } else {
+      ticks.push({ pct: pctOf(months[i]), label: withYear(months[i], monthName(months[i])) });
     }
-    shown = i;
   }
-  return ticks;
+  /* On a collision the later label wins and the earlier keeps only its
+     line, which then sits left of the surviving text instead of through it.
+     A year label is the exception: the tick crowding it goes entirely. */
+  const hasYear = (label: string) => /\d/.test(label);
+  const out: { pct: number; label: string }[] = [];
+  let shown = -1;
+  for (const tick of ticks) {
+    const prev = shown >= 0 ? out[shown] : null;
+    if (prev && tick.pct - prev.pct < prev.label.length * PCT_PER_CHAR + LABEL_GAP_PCT) {
+      if (hasYear(prev.label) && !hasYear(tick.label)) continue;
+      out[shown] = { ...prev, label: "" };
+    }
+    out.push(tick);
+    shown = out.length - 1;
+  }
+  return out;
 }
