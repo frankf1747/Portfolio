@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import SmartText from "./SmartText";
 import type { Study } from "@/data/studies";
+import StarbucksDemo from "./studies/StarbucksDemo";
 
 /* §12 — the study window.
 
@@ -210,7 +211,9 @@ export default function StudyOverlay({
             <p className="study__body">{study.what}</p>
           </section>
 
-          {!study.draft && (
+          {study.demo === "starbucks" && <StarbucksDemo />}
+
+          {!study.draft && !study.demo && (
             <>
               <section className="study__block">
                 <SmartText as="h3" className="small study__label">PROBLEM</SmartText>

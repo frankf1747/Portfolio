@@ -39,6 +39,8 @@ export type Study = {
   takeaway: string;
   stats?: { value: string; label: string }[];
   figures?: StudyFigure[];
+  /** A live demo replaces the problem / solution / takeaway blocks. */
+  demo?: "starbucks";
 };
 
 const DRAFT_COPY = "This one has not been written up yet. The source material is in hand; the report follows.";
@@ -55,7 +57,7 @@ export const studies: Study[] = [
     brand: "#00704A",
     topic: "CONSTRAINED PRODUCT SEARCH",
     what:
-      "Take a customer's sentence, return every Starbucks product that fits it, ranked best first. I owned the pipeline: constraint extraction, filtering, and ranking.",
+      "Say what you want in your own words; get every Starbucks drink that fits, best first. I owned the pipeline: constraint extraction, filtering and ranking.",
     problem:
       "People don't order in fields. They say “trying to be healthy, got some cold brew that's under $4.0 and strong?” That one sentence carries a category, a price ceiling, a caffeine preference and a health intent, none of them labelled. The catalog on the other side is 115 products with clean structured attributes. The gap between those two things is the entire problem, and the 100 test queries arrive with every constraint column empty.",
     solution: [
@@ -71,7 +73,8 @@ export const studies: Study[] = [
       { value: "115", label: "PRODUCTS" },
       { value: "100", label: "TEST QUERIES" }
     ],
-    figures: ["pipeline", "latency"]
+    figures: ["pipeline", "latency"],
+    demo: "starbucks"
   },
 
   /* ---- not yet written. Source material noted per entry. ---- */

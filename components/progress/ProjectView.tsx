@@ -94,7 +94,7 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
             )}
           </p>
         </div>
-        <p className="pg-detail__pct">{percentComplete(milestones)}%</p>
+        <p className={`pg-detail__pct${percentComplete(milestones) === 100 ? " is-done" : ""}`}>{percentComplete(milestones)}%</p>
       </header>
 
       <h2 className="small index pg-section-title">MILESTONES</h2>

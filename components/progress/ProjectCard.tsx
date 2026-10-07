@@ -7,9 +7,11 @@ export default function ProjectCard({ summary, now }: { summary: ProjectSummary;
   const { project, milestones, latest } = summary;
   const current = currentMilestone(milestones);
   const nowLine = !milestones.length ? "No milestones yet" : current ? current.title : "All milestones done";
+  const pct = percentComplete(milestones);
 
+  /* Finished projects drop to ink; the mark is kept for work still moving. */
   return (
-    <Link className="pg-card" href={`/progress?p=${project.slug}`}>
+    <Link className={`pg-card${pct === 100 ? " is-done" : ""}`} href={`/progress?p=${project.slug}`}>
       <div className="small pg-card__top">
         <span className="pg-chip">{project.status}</span>
         <span className="pg-card__time">
@@ -21,7 +23,7 @@ export default function ProjectCard({ summary, now }: { summary: ProjectSummary;
       </div>
 
       <div className="pg-card__body">
-        <Ring pct={percentComplete(milestones)} />
+        <Ring pct={pct} />
         <div>
           <h2 className="pg-card__name">{project.name}</h2>
           <p className="small pg-card__desc">{project.description}</p>

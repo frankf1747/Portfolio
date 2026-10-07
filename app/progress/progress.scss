@@ -83,6 +83,22 @@
   }
 }
 
+/* 100%: done, so it steps back to ink and leaves the mark to what is
+   still in progress */
+.pg-card.is-done {
+  color: var(--ink);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--ink);
+    color: var(--ground);
+  }
+
+  &:focus-visible {
+    outline-color: var(--ink);
+  }
+}
+
 .pg-card__top {
   display: flex;
   justify-content: space-between;
@@ -228,6 +244,10 @@
   font-size: calc(95rem * var(--mono-fit));
   line-height: 0.8;
   letter-spacing: -0.04em;
+}
+
+.pg-detail__pct.is-done {
+  color: var(--ink);
 }
 
 .pg-section-title {

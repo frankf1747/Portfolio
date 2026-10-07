@@ -5,7 +5,7 @@ import SmartText from "../SmartText";
 
 const ITEMS = [
   { n: "01", t: "WHAT, WHY NOW, SO WHAT", d: "Three questions before I open anything. If I can't answer why now and so what, I'm not ready to start." },
-  { n: "02", t: "REBUILD, DON'T PATCH", d: "Adding another layer to a broken workflow just makes it heavier. The spreadsheet didn't need macros. It needed to stop being a spreadsheet." },
+  { n: "02", t: "FIX THE CAUSE", d: "Patching the symptom just makes a workflow heavier. I trace the problem to where it starts and fix it there, even when that means rebuilding the thing." },
   { n: "03", t: "A NUMBER ISN'T AN ANSWER", d: "A status figure says what happened. I don't hand it over until it also says why, and what to do about it." },
   { n: "04", t: "ADOPTION IS THE PROOF", d: "Delivery isn't the finish line. I'd rather measure whether people came back to the thing than whether I shipped it on time." },
   { n: "05", t: "SHIP, LEARN, ITERATE", d: "Shipping is how I learn what I built. Version one is a hypothesis. I rebuild it on what people do with it, not what they say about it." }

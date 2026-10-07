@@ -37,7 +37,7 @@ const SKILLS: { t: string; d: Domain; tools: string[] }[] = [
   { t: "Visualization", d: "DATA", tools: ["Power BI", "DAX", "Tableau"] },
   { t: "AI engineering", d: "AI", tools: ["LangGraph", "LLM APIs", "RAG", "MCP", "Evals", "AI governance"] },
   { t: "Product", d: "PRODUCT", tools: ["PRDs", "User flows", "Figma", "Agile"] },
-  { t: "Web apps", d: "PRODUCT", tools: ["React", "Next.js", "Azure", "APIs"] },
+  { t: "Frontend/backend", d: "PRODUCT", tools: ["React", "Next.js", "Azure", "APIs"] },
   { t: "Automation", d: "PRODUCT", tools: ["Power Automate", "Power Query", "Databricks Genie"] }
 ];
 
