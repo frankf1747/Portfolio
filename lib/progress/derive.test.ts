@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { currentMilestone, isFresh, localDay, percentComplete, relativeTime } from "./derive";
+import { currentMilestone, isFresh, localDay, percentComplete, projectStatusLabel, relativeTime } from "./derive";
+
+describe("projectStatusLabel", () => {
+  it("calls a finished project completed", () => expect(projectStatusLabel("done")).toBe("Completed"));
+  it("keeps active and paused as they are", () => {
+    expect(projectStatusLabel("active")).toBe("Active");
+    expect(projectStatusLabel("paused")).toBe("Paused");
+  });
+});
 
 const ms = (status: string, sort_order: number, progress = 0) =>
   ({ status, sort_order, progress }) as { status: "planned" | "in_progress" | "done" | "blocked"; sort_order: number; progress: number };

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { currentMilestone, isFresh, percentComplete, relativeTime } from "@/lib/progress/derive";
+import { currentMilestone, isFresh, percentComplete, projectStatusLabel, relativeTime } from "@/lib/progress/derive";
 import type { ProjectSummary } from "@/lib/progress/types";
 import Ring from "./Ring";
 
@@ -13,7 +13,7 @@ export default function ProjectCard({ summary, now }: { summary: ProjectSummary;
   return (
     <Link className={`pg-card${pct === 100 ? " is-done" : ""}`} href={`/progress?p=${project.slug}`}>
       <div className="small pg-card__top">
-        <span className="pg-chip">{project.status}</span>
+        <span className="pg-chip">{projectStatusLabel(project.status)}</span>
         <span className="pg-card__time">
           {isFresh(project.updated_at, now) && (
             <i className="pg-pulse" role="img" aria-label="Updated in the last hour" />

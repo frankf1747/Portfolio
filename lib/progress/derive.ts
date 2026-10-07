@@ -1,4 +1,17 @@
-import type { MilestoneStatus, TrackedMilestone } from "./types";
+import type { MilestoneStatus, ProjectStatus, TrackedMilestone } from "./types";
+
+/* How a project's status reads on the page. The database says "done"; the
+   page says "Completed". A project becomes done by itself when its last
+   milestone is done (see progress-mcp's milestones trigger). */
+const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+  active: "Active",
+  paused: "Paused",
+  done: "Completed"
+};
+
+export function projectStatusLabel(status: ProjectStatus): string {
+  return PROJECT_STATUS_LABEL[status] ?? status;
+}
 
 export const STATUS_LABEL: Record<MilestoneStatus, string> = {
   planned: "Planned",

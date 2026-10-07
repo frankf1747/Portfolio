@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useCallback, useEffect } from "react";
-import { localDay, percentComplete, relativeTime } from "@/lib/progress/derive";
+import { localDay, percentComplete, projectStatusLabel, relativeTime } from "@/lib/progress/derive";
 import { fetchProject } from "@/lib/progress/load";
 import type { ProjectDetail } from "@/lib/progress/types";
 import { useLive, useNow } from "@/lib/progress/useLive";
@@ -84,7 +84,7 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
             </ul>
           )}
           <p className="small pg-detail__facts">
-            <span className="pg-chip">{project.status}</span>
+            <span className="pg-chip">{projectStatusLabel(project.status)}</span>
             <span>UPDATED {relativeTime(project.updated_at, now).toUpperCase()}</span>
             {project.target_date && <span>TARGET {project.target_date}</span>}
             {project.repo_url && (
