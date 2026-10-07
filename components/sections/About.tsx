@@ -186,12 +186,56 @@ export default function About() {
         </div>
       </div>
 
+      {/* Toronto to LA, drawn on the sources' rule: the CN Tower on the
+          left, the beach and a palm on the right, and a little car driving
+          the road between them. Decoration only. */}
+      <div className="about__trip" aria-hidden="true">
+        <svg className="about__cn" viewBox="0 0 70 150">
+          <g>
+            <path d="M24,149 L32,62 M46,149 L38,62" />
+            <path d="M23,57 Q35,49 47,57 L44,64 L26,64 Z" />
+            <path d="M33,50 L34,27 M37,50 L36,27" />
+            <path d="M31,21 h8 v6 h-8 Z" />
+            <path d="M35,21 V2" />
+            <path d="M2,149 V128 h14 V149 M52,149 V118 h14 V149 M56,124 h6 M56,132 h6 M6,134 h6" />
+          </g>
+        </svg>
+        <svg className="about__car" viewBox="-18 0 88 36">
+          <g>
+            <path className="about__carBody" d="M4,26 L4,18 Q6,14 12,13 L20,12 L28,4 L46,4 L54,12 L63,14 Q67,15 67,20 L67,26 Z" />
+            <path className="about__carGlass" d="M30,7 L44,7 L50,12 L25,12 Z" />
+            <path d="M37,7 L37,12" />
+            <path className="about__carFx" d="M-16,16 h10 M-13,21 h8 M-16,26 h11" />
+            <g className="about__wheel"><circle cx="18" cy="27" r="5.5" /><path d="M18,23 V31" /></g>
+            <g className="about__wheel"><circle cx="54" cy="27" r="5.5" /><path d="M54,23 V31" /></g>
+          </g>
+        </svg>
+        <svg className="about__palm" viewBox="0 0 170 100">
+          <g>
+            <circle cx="122" cy="40" r="13" />
+            <path d="M68,92 q8,-6 16,0 t16,0 t16,0 t16,0 t16,0 t16,0" />
+            <path d="M84,82 q6,-4 12,0 t12,0 t12,0" />
+            <path d="M8,99 Q34,90 66,99" />
+            <path d="M40,99 C43,76 47,56 58,37" />
+            <path d="M43,86 l5,1 M45,74 l5,1.5 M48,62 l5,2 M52,50 l5,2" />
+            <path d="M58,37 C48,27 34,27 23,36 M58,37 C54,23 44,17 33,17 M58,37 C64,23 76,19 87,24 M58,37 C70,31 82,34 90,45 M58,37 C60,26 64,19 70,13" />
+            <circle cx="55" cy="41" r="2.6" />
+            <circle cx="61" cy="41.5" r="2.6" />
+          </g>
+        </svg>
+      </div>
+
       <div className="about__src">
         <SmartText as="span" className="small about__srcHead">SOURCES</SmartText>
         <ol className="about__srcList">
           {SOURCES.map((s, i) => (
             <li className="about__srcRow" key={s.school}>
-              <SmartText as="span" className="small about__srcName">{`[${i + 1}] ${s.degree} — ${s.school}`}</SmartText>
+              {/* plain inline text, not the scramble engine: it lays each
+                  part out as its own block line, which pushed the school
+                  below the degree whenever the row ran short of room */}
+              <span className="small about__srcName">
+                <span className="about__srcDeg">{`[${i + 1}] ${s.degree}`}</span> — {s.school}
+              </span>
               <SmartText as="span" className="small about__srcDates">{s.dates}</SmartText>
             </li>
           ))}

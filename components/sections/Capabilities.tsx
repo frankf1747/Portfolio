@@ -20,13 +20,15 @@ import { scrambleText } from "@/lib/smartText";
    section reads with no script at all. The first time it scrolls into view
    it replays: clears the cell, types the query, decodes the rows. */
 
-type Domain = "DATA" | "AI" | "PRODUCT";
+/* "ALL" is a row that belongs to every domain, so every filter returns it */
+type Domain = "DATA" | "AI" | "PRODUCT" | "ALL";
 const FILTERS = ["ALL", "DATA", "AI", "PRODUCT"] as const;
 type Filter = (typeof FILTERS)[number];
 
 /* Order is the original capability order. Domain is one word on purpose:
    it is a column value, and the chips filter on it. */
 const SKILLS: { t: string; d: Domain; tools: string[] }[] = [
+  { t: "Problem solving", d: "ALL", tools: ["Coffee", "Ask why ×5", "Jot it down", "Solve the real one"] },
   { t: "Data analytics", d: "DATA", tools: ["SQL", "Python", "R", "Excel"] },
   { t: "Data engineering", d: "DATA", tools: ["Databricks", "Snowflake", "Fabric", "PySpark", "Medallion ETL", "Semantic modeling"] },
   { t: "Machine learning", d: "DATA", tools: ["scikit-learn", "Random forest", "XGBoost", "Feature engineering", "Cross-validation", "Clustering"] },
@@ -145,7 +147,7 @@ export default function Capabilities() {
       outG.textContent = `Out[${runs}]:`;
       let n = 0;
       rows.forEach((r) => {
-        const on = d === "ALL" || r.dataset.domain === d;
+        const on = d === "ALL" || r.dataset.domain === d || r.dataset.domain === "ALL";
         r.hidden = !on;
         if (on) {
           const delay = n++ * 55;
@@ -264,7 +266,7 @@ export default function Capabilities() {
               </div>
             ))}
           </div>
-          <p className="nb__foot" ref={footRef}>[10 rows x 3 columns]</p>
+          <p className="nb__foot" ref={footRef}>[11 rows x 3 columns]</p>
           </div>
         </div>
       </div>

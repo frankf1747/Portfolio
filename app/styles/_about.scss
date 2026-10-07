@@ -343,11 +343,81 @@
 
   /* ---------- sources: the education, as the figure's footnote ---------- */
 
+  /* Toronto → LA, standing on the sources' rule */
+  &__trip {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 150rem;
+    margin: 72rem var(--margin) 0 var(--indent);
+
+    svg {
+      display: block;
+      overflow: visible;
+    }
+
+    g {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    > svg > g {
+      filter: url(#wobS);
+    }
+  }
+
+  /* mirrored, so the palm stands at the outer edge with the sea inland */
+  &__palm {
+    width: 170rem;
+    height: 100rem;
+    transform: scaleX(-1);
+  }
+
+  &__cn {
+    width: 70rem;
+    height: 150rem;
+  }
+
+  /* the one accent in the scene: the car is the one on the move */
+  &__car {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    width: 88rem;
+    height: 36rem;
+    translate: -50% 0;
+  }
+
+  &__carBody {
+    fill: var(--accent);
+  }
+
+  &__carGlass {
+    fill: var(--paper);
+  }
+
+  &__wheel {
+    fill: var(--paper);
+  }
+
+  &__carFx {
+    stroke-width: 1.2;
+    opacity: 0.5;
+  }
+
+  &__srcDeg {
+    color: var(--accent);
+  }
+
   &__src {
     position: relative;
     display: grid;
     grid-template-columns: 120rem 1fr;
-    margin: 72rem var(--margin) 0 var(--indent);
+    margin: 0 var(--margin) 0 var(--indent);
     padding-top: 22rem;
     color: var(--ink);
 
@@ -509,7 +579,8 @@
     display: none;
   }
 
-  .about__src {
+  .about__src,
+  .about__trip {
     margin-left: var(--margin);
   }
 }
@@ -542,9 +613,68 @@
     row-gap: 10rem;
   }
 
+  .about__trip {
+    height: 110rem;
+    margin-top: 56rem;
+  }
+
+  .about__palm {
+    width: 120rem;
+    height: 70rem;
+  }
+
+  .about__cn {
+    width: 50rem;
+    height: 108rem;
+  }
+
   .about__srcRow {
     flex-direction: column;
     gap: 2rem;
+  }
+}
+
+/* The drive: tower to palm, a pause at each end, wheels turning while it
+   moves. Static in the middle under reduced motion (the default above). */
+@media (prefers-reduced-motion: no-preference) {
+  .about__car {
+    translate: 0 0;
+    animation: about-drive 11s var(--ease-lift) infinite;
+  }
+
+  .about__wheel {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: about-wheel 0.5s linear infinite;
+  }
+}
+
+@keyframes about-drive {
+  0%,
+  6% {
+    left: 90rem;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  72% {
+    left: calc(100% - 280rem);
+    opacity: 1;
+  }
+
+  80%,
+  100% {
+    left: calc(100% - 280rem);
+    opacity: 0;
+  }
+}
+
+@keyframes about-wheel {
+  to {
+    transform: rotate(360deg);
   }
 }
 

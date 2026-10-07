@@ -6,14 +6,7 @@ import Link from "next/link";
 import SmartText from "../SmartText";
 import { ArrowOut } from "../SketchFilters";
 import ProjectsHeading from "../progress/ProjectsHeading";
-import {
-  BioVisual,
-  CompVisual,
-  DispatchVisual,
-  MooVisual,
-  NextVisual,
-  UclaVisual
-} from "../works/visuals";
+import { BioVisual, BrainVisual, ClinVisual, MooVisual, NextVisual, UclaVisual } from "../works/visuals";
 
 /* §9 — projects as a staggered bento.
 
@@ -29,7 +22,7 @@ import {
      ┌─────────────┬─────────────┐
      │ 01          │ 02          │   halves
      ├────────┬────┴───┬────────┤
-     │ 03     │ 05     │ 04     │   thirds
+     │ 03     │ 04     │ 05     │   thirds
      ├────────┴────────┤ tall   │
      │ 06              │        │
      └─────────────────┴────────┘
@@ -71,22 +64,21 @@ const CARDS: Card[] = [
   {
     n: "01",
     client: "BIOMARIN",
-    headline: "Eleven partners. One definition of a record.",
-    summary: "Supply chain data keyed to a single batch ID, so the monthly leadership pack arrives with causes instead of assembly.",
-    services: ["ENTITY RESOLUTION", "SEMANTIC MODELING", "AGENTIC REPORTING"],
+    headline: "The scorecard that builds itself.",
+    summary: "SAP data piped bronze to gold and refreshed on schedule. An agent team runs the root cause analysis and writes the actions into the scorecard. Build time cut 85%.",
+    services: ["MEDALLION ETL", "POWER AUTOMATE", "AGENT TEAM", "EVALS"],
     col: "1 / 7",
     row: "1",
     visual: <BioVisual />,
     status: "UPLOADING",
-    href: "/works/biomarin",
     big: true
   },
   {
     n: "02",
     client: "MOOBOX",
-    headline: "Three systems. One customer.",
-    summary: "CRM, purchases and fulfilment pulled into one lifecycle view, then campaigns rebuilt around the segments that behave differently.",
-    services: ["LIFECYCLE MODEL", "SEGMENTATION", "FORECASTING"],
+    headline: "One customer, 360°.",
+    summary: "CRM, orders and fulfilment joined into one customer. Demand is forecast, segments act on their own, and agents escalate the exceptions. Repeat orders up ~11%.",
+    services: ["LIFECYCLE CRM", "SEGMENTATION", "DEMAND FORECAST", "AGENTS"],
     col: "7 / 13",
     row: "1",
     visual: <MooVisual />,
@@ -96,35 +88,35 @@ const CARDS: Card[] = [
   {
     n: "03",
     client: "UCLA ANDERSON",
-    headline: "A classroom sim that runs itself.",
-    summary: "Spreadsheets rebuilt as a React app, run unattended by ~600 participants across 7 MBA courses.",
-    services: ["REACT APP", "USAGE TELEMETRY", "ADAPTIVE SCENARIOS"],
+    headline: "A Lean line you can run.",
+    summary: "A spreadsheet-run production exercise rebuilt as a React app on Azure with a live what-if simulator.",
+    services: ["REACT + AZURE", "AI SIMULATOR", "USAGE TELEMETRY"],
     col: "1 / 5",
     row: "2",
     visual: <UclaVisual />,
     status: "UPLOADING"
   },
   {
-    n: "05",
-    client: "COMPETITIVE ANALYSIS AGENT",
-    headline: "Deciding what's worth watching.",
-    summary: "Which sources, how often, and which decision each one feeds.",
-    services: ["SCOPING", "SOURCE DESIGN", "EVAL PLAN"],
+    n: "04",
+    client: "CLINICAL TRIAL RISK",
+    headline: "Open the riskiest trial first.",
+    summary: "Regulatory filings unified Spark to Snowflake, then every trial ranked by termination risk.",
+    services: ["SPARK ETL", "SNOWFLAKE", "RISK CLASSIFIER"],
     col: "5 / 9",
     row: "2",
-    visual: <CompVisual />,
-    status: "IN PROGRESS"
+    visual: <ClinVisual />,
+    status: "UPLOADING"
   },
   {
-    n: "04",
-    client: "DISPATCH AGENT",
-    headline: "The report that emails itself.",
-    summary: "Five agents on a LangGraph hand off to a writer, and the leadership report lands in an inbox, not a terminal.",
-    services: ["LANGGRAPH ORCHESTRATION", "RAG", "ANOMALY DETECTION", "DELIVERY"],
+    n: "05",
+    client: "BRAIN",
+    headline: "Throw anything in. Never forget it.",
+    summary: "Anything I throw in stays findable and linked, so I can draw connections between ideas. Ask any time; every answer cites its source.",
+    services: ["RAG", "HYBRID SEARCH", "KNOWLEDGE GRAPH", "MCP", "CLAIM CHECKS"],
     col: "9 / 13",
     row: "2 / 4",
-    visual: <DispatchVisual />,
-    status: "UPLOADING"
+    visual: <BrainVisual />,
+    status: "IN USE"
   },
   {
     n: "06",

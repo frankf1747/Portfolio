@@ -17,9 +17,9 @@ import {
 const WIN = { x: 214, y: 6, w: 486, h: 388 };
 const MX = 256, MR = 688;
 const LOOP = 9000;
-const SUMMARY = ["142 shipments moving.", "3 running late, all RTM.", "2 orders at risk.", "Suggest: notify early."];
-const QUESTION = "Why are 3 shipments late?";
-const ANSWER = "Port congestion at RTM, ETA +2 days. Notify customers?";
+const SUMMARY = ["142 dogs out walking.", "3 late, all at the park.", "2 sticks at risk.", "Suggest: more treats."];
+const QUESTION = "Why are 3 walks late?";
+const ANSWER = "Squirrel spotted at the park, ETA +20 min. Send treats?";
 const TOOLS = [
   { t: "sql.query", g: "Data", be: "Warehouse", bs: "SQL", y: 254, win: [3750, 4350] },
   { t: "rag.search", g: "Knowledge", be: "Docs", bs: "Vector DB", y: 302, win: [4350, 4950] },
@@ -84,7 +84,7 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
   /* ---- DATA IN: sources → connectors → the app's live views ---- */
   group(30, 112, "Data in");
   const cf: Wire[] = [];
-  ([["CRM", 40], ["ERP", 74], ["IoT / GPS", 108]] as const).forEach(([t, y], i) => {
+  ([["Vet CRM", 40], ["Treat ERP", 74], ["Collar GPS", 108]] as const).forEach(([t, y], i) => {
     cf.push(wire(g, curve([74, y + 13], [95, 86]), { filter: wob(i) }));
     node(g, { x: 0, y, w: 74, h: 26, t }, i, { size: 9.5 });
   });
@@ -123,7 +123,7 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
   el(g, "path", { d: `M${WIN.x},${WIN.y + 30} L${WIN.x + WIN.w},${WIN.y + 30}`, stroke: INK, "stroke-width": 1.1, filter: "url(#wob1)" });
   [0, 1, 2].forEach((k) => el(g, "circle", { cx: WIN.x + 16 + k * 14, cy: WIN.y + 15, r: 4, fill: "none", stroke: INK, "stroke-width": 1 }));
   el(g, "path", { d: rr(WIN.x + 70, WIN.y + 7, 180, 16, 8), fill: "none", stroke: FAINT, "stroke-width": 1 });
-  tx(g, WIN.x + 82, WIN.y + 18.5, "ops.app / today", { size: 8, fill: MUTE });
+  tx(g, WIN.x + 82, WIN.y + 18.5, "woof.app / today", { size: 8, fill: MUTE });
   ["CS", "PM", "OP"].forEach((t, k) => {
     const cx = WIN.x + WIN.w - 22 - k * 18, cy = WIN.y + 15, me = k === 2;
     el(g, "circle", { cx, cy, r: 9, fill: me ? INK : PAPER, stroke: INK, "stroke-width": 1.1 });
@@ -139,7 +139,7 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
 
   /* ---- live map ---- */
   el(g, "path", { d: rr(MX, 60, 262, 188, 6), fill: "none", stroke: INK, "stroke-width": 1.2, filter: "url(#wob1)" });
-  tx(g, MX + 10, 76, "Shipments · live", { size: 8.5, fill: MUTE });
+  tx(g, MX + 10, 76, "Walks · live", { size: 8.5, fill: MUTE });
   el(g, "path", { d: landDots(), fill: "rgb(38 32 72 / 0.5)" });
   const routes = ROUTES.map(([a, b, late], k) => {
     const p0 = proj(HUBS[a]), p1 = proj(HUBS[b]);
@@ -165,7 +165,7 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
     }))
   );
   tx(g, MX + 10, 240, "", { size: 8.5 }).innerHTML =
-    `142 in transit &#160;·&#160; <tspan fill="${PINK}" font-weight="700">3 late</tspan> &#160;·&#160; 98% on time`;
+    `142 walking &#160;·&#160; <tspan fill="${PINK}" font-weight="700">3 late</tspan> &#160;·&#160; 98% happy`;
 
   /* ---- grounded summary ---- */
   el(g, "path", { d: rr(526, 60, 162, 188, 6), fill: "none", stroke: INK, "stroke-width": 1.2, filter: "url(#wob3)" });
@@ -186,15 +186,16 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
     const t = tx(gg, x + 10, 304.5, "", { size: 8, weight: 700 });
     return { gg, f, t, name: tl.t };
   });
-  tx(g, MX + 356, 304.5, "via MCP", { size: 8, fill: MUTE });
+  /* labels the tool calls, so it arrives with the first one */
+  const via = tx(g, MX + 356, 304.5, "via MCP", { size: 8, fill: MUTE });
   const ab = el(g, "g", { opacity: 0 });
   el(ab, "path", { d: rr(MX + 10, 316, 344, 22, 11), fill: PAPER, stroke: PINK, "stroke-width": 1.2 });
   const abT = tx(ab, MX + 22, 330.5, "", { size: 8.5 });
   const ac = el(g, "g", { opacity: 0 });
   el(ac, "path", { d: rr(MX + 10, 344, 108, 17, 8.5), fill: PINK });
-  tx(ac, MX + 64, 355.5, "Notify customers", { size: 8, weight: 700, fill: PAPER, anchor: "middle" });
+  tx(ac, MX + 64, 355.5, "Send treats", { size: 8, weight: 700, fill: PAPER, anchor: "middle" });
   el(ac, "path", { d: rr(MX + 124, 344, 100, 17, 8.5), fill: "none", stroke: PINK, "stroke-width": 1 });
-  tx(ac, MX + 174, 355.5, "Open shipments", { size: 8, weight: 700, fill: PINK, anchor: "middle" });
+  tx(ac, MX + 174, 355.5, "Open the map", { size: 8, weight: 700, fill: PINK, anchor: "middle" });
   el(g, "path", { d: rr(MX + 10, 366, MR - MX - 20, 17, 8.5), fill: "none", stroke: FAINT, "stroke-width": 1 });
   const inT = tx(g, MX + 20, 377.5, "", { size: 8.5, fill: MUTE });
   const sx = MR - 19, sy = 374.5;
@@ -285,6 +286,7 @@ export function appScene(g: SVGGElement, reduced: boolean): Scene {
         ch.t.setAttribute("fill", done ? INK : PINK);
         ch.f.setAttribute("stroke", done ? INK : PINK);
       });
+      show(via, tt >= TOOLS[0].win[0] ? live : 0);
       const tk = tok as { w: Wire; p: number; back: boolean } | null;
       if (tk) {
         along(mtok, tk.w, tk.p);

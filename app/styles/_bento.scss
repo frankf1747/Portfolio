@@ -119,7 +119,7 @@
   padding: 28rem 30rem 0;
   /* only the last sliver fades — any higher and the tall card's email
      step, the point of that chart, went grey */
-  mask-image: linear-gradient(to bottom, #000 86%, transparent);
+  mask-image: linear-gradient(to bottom, #000 94%, transparent);
 }
 
 .bento__stage {
@@ -792,6 +792,73 @@
   }
 }
 
+/* ============================================================
+   SKETCH COVERS — components/works/visuals.tsx. SVG in the About
+   figure's hand: wobbled ink, mono labels, the accent on one thing.
+   ============================================================ */
+
+.sk {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  text {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    fill: var(--pc-mute);
+  }
+
+  .sk-ink {
+    fill: var(--ink);
+  }
+
+  .sk-pk {
+    fill: var(--c);
+  }
+}
+
+.sk-ln {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: url(#wobS);
+
+  .sk-faint {
+    stroke: var(--pc-faint);
+  }
+
+  .sk-thin {
+    stroke-width: 1;
+  }
+
+  &.sk-pkline {
+    stroke: var(--c);
+    stroke-width: 1.8;
+  }
+}
+
+.sk-hink {
+  fill: rgb(38 32 72 / 0.5);
+}
+
+.sk-hpk {
+  fill: var(--c);
+}
+
+/* the thing in motion — a token on its wire */
+.sk-tok {
+  fill: var(--c);
+}
+
+/* the cover leans in a touch on hover, like the old visuals did */
+.bento__card:hover .sk-pkline {
+  stroke-width: 2.2;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 1024px) {
@@ -806,7 +873,7 @@
     grid-row: span 1;
   }
 
-  .bento__cell:has(.v-disp) {
+  .bento__cell:has(.sk-brain) {
     grid-row: span 2;
   }
 
@@ -855,6 +922,11 @@
   .bento__card:hover .v-wires path,
   .v-stop.is-now i {
     animation: none;
+  }
+
+  /* SMIL motion cannot be paused from CSS, so the token simply goes */
+  .sk-tok {
+    display: none;
   }
 }
 
