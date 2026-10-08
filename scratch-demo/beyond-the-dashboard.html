@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beyond the Dashboard — page demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4f1ea;
+    --white: #ffffff;
+    --ink: #24203d;
+    --navy: #1f2a5c;
+    --mute: #7a7690;
+    --line: #e3dfd5;
+    --tint: #f6f4ef;
+    --pink: #f2247a;
+    --pinkS: #fde4ef;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Archivo", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); }
+  .demo-tag { position: fixed; left: 12px; bottom: 12px; z-index: 50; font: 500 10px var(--mono); letter-spacing: .06em; padding: 4px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+
+  /* ================= the stage ================= */
+  .deck { position: relative; }
+  .stage {
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    /* the slide frame: 16:9, as large as the window allows while leaving
+       margins wide enough for things to break out into */
+    --fh: min(calc(100vh - 150px), calc((100vw - 440px) * 0.5625));
+    --fw: calc(var(--fh) * 16 / 9);
+    --u: calc(var(--fw) / 1000);
+    --fx: calc(50% - var(--fw) / 2);
+    --fy: calc(50% - var(--fh) / 2 + 18px);
+  }
+  .top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 18px 28px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mute); z-index: 5; }
+  .top b { color: var(--ink); font-weight: 500; }
+  .top .pk { color: var(--pink); }
+
+  .frame {
+    position: absolute; left: var(--fx); top: var(--fy); width: var(--fw); height: var(--fh);
+    background: var(--white); border-radius: calc(6 * var(--u));
+    box-shadow: 0 1px 0 rgb(36 32 61 / .04), 0 30px 60px -30px rgb(36 32 61 / .35), 0 0 0 1px rgb(36 32 61 / .06);
+    transition: background .6s ease;
+  }
+  .frame.dark { background: var(--ink); }
+  .chrome { position: absolute; left: var(--fx); top: var(--fy); width: var(--fw); height: var(--fh); pointer-events: none; z-index: 3; }
+  .chrome .ft { position: absolute; left: calc(48 * var(--u)); right: calc(48 * var(--u)); bottom: calc(18 * var(--u)); display: flex; justify-content: space-between; font: 500 calc(10 * var(--u)) var(--mono); letter-spacing: .06em; text-transform: uppercase; color: #b3afc2; transition: color .6s; }
+  .chrome.dark .ft { color: #6d688a; }
+
+  .dotsNav { position: absolute; left: 50%; bottom: 14px; translate: -50% 0; display: flex; gap: 6px; z-index: 5; }
+  .dotsNav button { width: 22px; height: 4px; border: 0; padding: 0; border-radius: 2px; background: #d6d1c4; cursor: pointer; transition: background .3s, width .3s; }
+  .dotsNav button.on { background: var(--pink); width: 36px; }
+
+  /* ================= a slide ================= */
+  .slide { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .slide.on { pointer-events: auto; z-index: 4; }
+  .in { position: absolute; left: var(--fx); top: var(--fy); width: var(--fw); height: var(--fh); padding: calc(40 * var(--u)) calc(48 * var(--u)) calc(48 * var(--u)); }
+  .out { position: absolute; }
+
+  /* everything on a slide arrives; the pieces that break the frame travel
+     from inside it, so they read as escaping the slide, not appearing */
+  .a { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 10px)) rotate(var(--r0, 0deg)); transition: opacity .5s ease, transform .8s cubic-bezier(.2, .8, .2, 1); transition-delay: 0s; }
+  .slide.on .a { opacity: 1; transform: translate(0, 0) rotate(var(--r, 0deg)); transition-delay: var(--d, 0s); }
+
+  .kick { font: 500 calc(11 * var(--u)) var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--pink); }
+  .h { font-size: calc(32 * var(--u)); line-height: 1.08; letter-spacing: -.015em; font-weight: 700; margin: calc(8 * var(--u)) 0 calc(6 * var(--u)); color: var(--navy); }
+  .sub { font-size: calc(14.5 * var(--u)); line-height: 1.45; color: var(--mute); margin: 0; max-width: 62ch; }
+  .lab { font: 500 calc(10 * var(--u)) var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--mute); }
+  .bl { font-size: calc(13.5 * var(--u)); line-height: 1.45; margin: 0; }
+  .bl b { color: var(--navy); }
+  .punch { position: absolute; left: calc(48 * var(--u)); right: calc(48 * var(--u)); bottom: calc(44 * var(--u)); font-size: calc(15 * var(--u)); font-weight: 600; color: var(--pink); }
+
+  .box { border: 1.5px solid var(--navy); border-radius: calc(8 * var(--u)); padding: calc(10 * var(--u)) calc(12 * var(--u)); background: var(--white); font-size: calc(12.5 * var(--u)); line-height: 1.35; }
+  .box.fill { background: var(--navy); color: #fff; }
+  .box.pk { border-color: var(--pink); }
+  .box.pkf { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .box.dash { border-style: dashed; }
+  .box b { display: block; font-size: calc(12.5 * var(--u)); }
+  .box p b { display: inline; font-size: inherit; }
+  .box span { color: inherit; opacity: .75; font-size: calc(11.5 * var(--u)); }
+
+  /* a wire that carries something: dashes travel along it */
+  .wire { height: calc(2 * var(--u)); background: repeating-linear-gradient(90deg, var(--navy) 0 calc(6 * var(--u)), transparent calc(6 * var(--u)) calc(11 * var(--u))); background-size: calc(11 * var(--u)) 100%; animation: run 0.9s linear infinite; position: relative; }
+  .wire::after { content: ""; position: absolute; right: calc(-2 * var(--u)); top: 50%; translate: 0 -50%; border: calc(5 * var(--u)) solid transparent; border-left: calc(7 * var(--u)) solid var(--navy); border-right: 0; }
+  .wire.pk { background-image: repeating-linear-gradient(90deg, var(--pink) 0 calc(6 * var(--u)), transparent calc(6 * var(--u)) calc(11 * var(--u))); }
+  .wire.pk::after { border-left-color: var(--pink); }
+  .vwire { width: calc(2 * var(--u)); background: repeating-linear-gradient(180deg, var(--navy) 0 calc(6 * var(--u)), transparent calc(6 * var(--u)) calc(11 * var(--u))); background-size: 100% calc(11 * var(--u)); animation: runv 0.9s linear infinite; margin: 0 auto; position: relative; }
+  .vwire::after { content: ""; position: absolute; bottom: calc(-2 * var(--u)); left: 50%; translate: -50% 0; border: calc(5 * var(--u)) solid transparent; border-top: calc(7 * var(--u)) solid var(--navy); border-bottom: 0; }
+  @keyframes run { to { background-position: calc(11 * var(--u)) 0; } }
+  @keyframes runv { to { background-position: 0 calc(11 * var(--u)); } }
+
+  /* margin notes — speaker notes made visible */
+  .note { font: italic 400 calc(13 * var(--u)) / 1.4 var(--sans); color: var(--mute); width: calc(170 * var(--u)); }
+  .note::before { content: ""; display: block; width: calc(24 * var(--u)); height: 1.5px; background: var(--pink); margin-bottom: calc(8 * var(--u)); }
+
+  /* paper scraps (the manual way) */
+  .scrap { background: #fff; border: 1px solid var(--line); border-radius: calc(4 * var(--u)); box-shadow: 0 10px 24px -14px rgb(36 32 61 / .45); padding: calc(10 * var(--u)); font: calc(10.5 * var(--u)) / 1.45 var(--mono); color: var(--ink); }
+  .scrap .t { font: 500 calc(9.5 * var(--u)) var(--mono); letter-spacing: .06em; color: var(--mute); text-transform: uppercase; margin-bottom: calc(6 * var(--u)); display: flex; justify-content: space-between; }
+  .cells { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .cells i { font-style: normal; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: calc(2 * var(--u)) calc(4 * var(--u)); }
+  .cells i.z { background: var(--pinkS); color: var(--pink); }
+
+  /* email / notification cards (the pushed way) */
+  .mail { background: #fff; border-radius: calc(10 * var(--u)); box-shadow: 0 18px 40px -20px rgb(36 32 61 / .5), 0 0 0 1px rgb(36 32 61 / .06); padding: calc(12 * var(--u)) calc(14 * var(--u)); width: calc(250 * var(--u)); font-size: calc(12 * var(--u)); line-height: 1.4; }
+  .mail .m1 { display: flex; justify-content: space-between; font: 500 calc(9.5 * var(--u)) var(--mono); letter-spacing: .05em; color: var(--mute); text-transform: uppercase; }
+  .mail .m2 { font-weight: 700; margin: calc(4 * var(--u)) 0 calc(3 * var(--u)); color: var(--navy); }
+  .mail .m3 { color: var(--mute); }
+  .mail .tag { display: inline-block; font: 500 calc(9 * var(--u)) var(--mono); letter-spacing: .05em; padding: calc(2 * var(--u)) calc(6 * var(--u)); border-radius: 99px; background: var(--pinkS); color: var(--pink); margin-top: calc(6 * var(--u)); }
+
+  .big { font-weight: 800; letter-spacing: -.04em; line-height: .85; color: var(--pink); }
+  .stat b { display: block; font-size: calc(34 * var(--u)); font-weight: 800; letter-spacing: -.03em; color: var(--navy); line-height: 1; }
+  .stat span { font-size: calc(12.5 * var(--u)); color: var(--mute); display: block; margin-top: calc(6 * var(--u)); line-height: 1.35; }
+  .chip { display: inline-block; font: 500 calc(10 * var(--u)) var(--mono); letter-spacing: .05em; padding: calc(3 * var(--u)) calc(8 * var(--u)); border-radius: 99px; border: 1px solid currentColor; }
+
+  /* below the deck */
+  .after { max-width: 1000px; margin: 0 auto; padding: 60px 28px 90px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; font-size: 14px; color: var(--mute); }
+  .after h3 { font: 500 11px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink); margin: 0 0 10px; }
+  .after .chips span { display: inline-block; font: 500 11px var(--mono); padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); background: #fff; margin: 0 6px 6px 0; color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .a, .slide.on .a { transition: opacity .3s; transform: none; }
+    .wire, .vwire { animation: none; }
+  }
+</style>
+</head>
+<body>
+<span class="demo-tag">DESIGN DEMO · BIOMARIN FEATURED PROJECT</span>
+
+<div class="deck" id="deck">
+  <div class="stage" id="stage">
+    <div class="top">
+      <span>← <b>Projects</b> &nbsp;/&nbsp; <span class="pk">(01) BioMarin</span> &nbsp;·&nbsp; Featured project</span>
+      <span><b id="count">01</b> / <span id="total"></span> &nbsp;·&nbsp; scroll or ← →</span>
+    </div>
+
+    <div class="frame" id="frame"></div>
+
+    <!-- ============ 01 · TITLE ============ -->
+    <section class="slide" data-dark>
+      <div class="in" style="display:flex;flex-direction:column;justify-content:center;padding-left:calc(64 * var(--u))">
+        <span class="kick a" style="--d:.05s">Insights &amp; Analytics · summer 2026 · 12 weeks</span>
+        <h1 class="a" style="--d:.12s;font-size:calc(64 * var(--u));line-height:.95;letter-spacing:-.03em;color:#fff;margin:calc(14 * var(--u)) 0">Beyond the<br />Dashboard</h1>
+        <p class="a" style="--d:.2s;font-size:calc(18 * var(--u));color:#c9c6d8;margin:0;max-width:30ch;line-height:1.4">Turning operations data from something we process into something we decide with.</p>
+        <p class="a" style="--d:.28s;font:500 calc(11 * var(--u)) var(--mono);letter-spacing:.06em;color:#8d89a8;margin-top:calc(26 * var(--u))">FRANK FU · INSIGHTS &amp; ANALYTICS INTERN · BIOMARIN</p>
+      </div>
+      <!-- the four-leg ring, half outside the slide: the whole project in one shape -->
+      <div class="out a" style="--d:.35s;--tx:calc(-60 * var(--u));left:calc(var(--fx) + var(--fw) - 230 * var(--u));top:calc(var(--fy) + var(--fh) / 2 - 190 * var(--u));width:calc(380 * var(--u));height:calc(380 * var(--u))">
+        <svg viewBox="0 0 380 380" width="100%" height="100%">
+          <circle cx="190" cy="190" r="140" fill="none" stroke="#f2247a" stroke-width="1.5" stroke-dasharray="4 7" />
+          <g font-family="IBM Plex Mono" font-size="12" font-weight="500" text-anchor="middle" letter-spacing=".8">
+            <circle cx="190" cy="50" r="44" fill="#fff" /><text x="190" y="54" fill="#1f2a5c">ASSET</text>
+            <circle cx="330" cy="190" r="44" fill="#f2247a" /><text x="330" y="194" fill="#fff">MEANING</text>
+            <circle cx="190" cy="330" r="44" fill="#fff" /><text x="190" y="334" fill="#1f2a5c">DELIVERY</text>
+            <circle cx="50" cy="190" r="44" fill="#1f2a5c" stroke="#fff" stroke-width="1.5" /><text x="50" y="194" fill="#fff">ACTION</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ============ 02 · IN ONE SLIDE ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">The project in one slide</span>
+        <h2 class="h a" style="--d:.06s">A scorecard that was assembled by hand<br />now assembles itself — and says what to do</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:calc(26 * var(--u));margin-top:calc(30 * var(--u))">
+          <div class="a" style="--d:.14s"><span class="lab">The problem</span><p class="bl" style="margin-top:calc(8 * var(--u))">Every month, operations figures were <b>transcribed from reports and pasted onto slides</b>. The numbers arrived too late to act on, and the cause of a problem lived in someone's inbox.</p></div>
+          <div class="a" style="--d:.22s"><span class="lab">What I built</span><p class="bl" style="margin-top:calc(8 * var(--u))"><b>Pipelines straight from the source systems</b> into a lakehouse that people and agents can query, and automations that <b>push a read and a next step</b> to whoever can act on it.</p></div>
+          <div class="a" style="--d:.3s"><span class="lab">Why it matters</span><p class="bl" style="margin-top:calc(8 * var(--u))">The build is <b>85% faster</b>, a monthly number became a <b>weekly nudge</b>, and the data underneath is now <b>ready for agents</b> to work on safely.</p></div>
+        </div>
+        <div class="punch a" style="--d:.4s">A dashboard answers the question we thought to build. Context answers the ones we didn't.</div>
+      </div>
+      <!-- the headline number is bigger than the slide -->
+      <div class="out a" style="--d:.5s;--ty:calc(30 * var(--u));right:calc(var(--fx) - 120 * var(--u));top:calc(var(--fy) - 40 * var(--u));text-align:right">
+        <div class="big" style="font-size:calc(150 * var(--u))">−85%</div>
+        <div class="lab" style="margin-top:calc(10 * var(--u))">scorecard build time</div>
+      </div>
+      <div class="out note a" style="--d:.6s;left:calc(var(--fx) - 200 * var(--u));top:calc(var(--fy) + var(--fh) - 150 * var(--u))">If you only read one slide, this is the project.</div>
+    </section>
+
+    <!-- ============ 03 · BEFORE ============ -->
+    <section class="slide">
+      <div class="in" style="padding-left:calc(300 * var(--u))">
+        <span class="kick a">Before</span>
+        <h2 class="h a" style="--d:.06s">The scorecard was a monthly assembly job</h2>
+        <p class="sub a" style="--d:.1s">Four things were true at once, and none of them was a charting problem.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:calc(22 * var(--u)) calc(30 * var(--u));margin-top:calc(26 * var(--u))">
+          <div class="a" style="--d:.16s"><span class="lab" style="color:var(--pink)">01 · By hand</span><p class="bl" style="margin-top:calc(6 * var(--u))"><b>Figures transcribed</b> from one report and copied onto a slide, sometimes from a source the team had no access to.</p></div>
+          <div class="a" style="--d:.22s"><span class="lab" style="color:var(--pink)">02 · Too late</span><p class="bl" style="margin-top:calc(6 * var(--u))"><b>One monthly rate</b>, read after the due dates had already passed. No lead time to act.</p></div>
+          <div class="a" style="--d:.28s"><span class="lab" style="color:var(--pink)">03 · Two meanings</span><p class="bl" style="margin-top:calc(6 * var(--u))"><b>One system code covered two different quality events</b>, so the same number meant different things to different teams.</p></div>
+          <div class="a" style="--d:.34s"><span class="lab" style="color:var(--pink)">04 · Cause elsewhere</span><p class="bl" style="margin-top:calc(6 * var(--u))"><b>Cause, owner and outcome</b> were held outside the systems that measure the result.</p></div>
+        </div>
+      </div>
+      <!-- the manual way spills off the slide: scraps of spreadsheet and screenshot -->
+      <div class="out scrap a" style="--d:.2s;--tx:calc(160 * var(--u));--r:-6deg;--r0:0deg;left:calc(var(--fx) - 150 * var(--u));top:calc(var(--fy) + 40 * var(--u));width:calc(270 * var(--u))">
+        <div class="t"><span>scorecard_FINAL_v7.xlsx</span><span>⌘V</span></div>
+        <div class="cells"><i>site</i><i>month</i><i>rate</i><i>note</i><i>A</i><i>Aug</i><i class="z">#N/A</i><i>?</i><i>B</i><i>Aug</i><i>0.0%</i><i>chk</i><i>C</i><i>Aug</i><i class="z">#REF!</i><i></i></div>
+      </div>
+      <div class="out scrap a" style="--d:.32s;--tx:calc(140 * var(--u));--r:4deg;left:calc(var(--fx) - 110 * var(--u));top:calc(var(--fy) + 190 * var(--u));width:calc(240 * var(--u))">
+        <div class="t"><span>screenshot_report.png</span><span>📋</span></div>
+        <div style="height:calc(60 * var(--u));display:flex;align-items:flex-end;gap:calc(5 * var(--u))"><span style="flex:1;height:60%;background:#cfd3e6"></span><span style="flex:1;height:85%;background:#cfd3e6"></span><span style="flex:1;height:45%;background:#cfd3e6"></span><span style="flex:1;height:70%;background:#cfd3e6"></span><span style="flex:1;height:55%;background:#cfd3e6"></span></div>
+        <div style="margin-top:calc(6 * var(--u));color:var(--mute)">“retype the figure onto the slide”</div>
+      </div>
+      <div class="out scrap a" style="--d:.44s;--tx:calc(120 * var(--u));--r:-3deg;left:calc(var(--fx) - 170 * var(--u));top:calc(var(--fy) + 330 * var(--u));width:calc(250 * var(--u))">
+        <div class="t"><span>RE: RE: FW: why is site B late?</span><span>14</span></div>
+        <div style="color:var(--mute)">“I think it was the carrier? Let me check with the team and get back to you…”</div>
+      </div>
+      <div class="out note a" style="--d:.6s;right:calc(var(--fx) - 200 * var(--u));top:calc(var(--fy) + 60 * var(--u))">A spreadsheet in the path means a number nobody can re-derive next quarter.</div>
+    </section>
+
+    <!-- ============ 04 · THE FRAME ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">The frame</span>
+        <h2 class="h a" style="--d:.06s">Four legs — and where my work sat</h2>
+        <p class="sub a" style="--d:.1s">Every piece of work I touched was doing one of these four things.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:calc(14 * var(--u)) calc(34 * var(--u));margin-top:calc(26 * var(--u));max-width:calc(600 * var(--u))">
+          ${legs}
+        </div>
+      </div>
+      <div class="out a" style="--d:.2s;--tx:calc(-80 * var(--u));left:calc(var(--fx) + var(--fw) - 300 * var(--u));top:calc(var(--fy) + 70 * var(--u));width:calc(400 * var(--u));height:calc(400 * var(--u))">
+        <svg viewBox="0 0 400 400" width="100%" height="100%">
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3afc2" /></marker></defs>
+          <g fill="none" stroke="#b3afc2" stroke-width="1.5" marker-end="url(#ar)">
+            <path d="M245,82 Q310,95 318,150" /><path d="M318,250 Q310,305 245,318" /><path d="M155,318 Q90,305 82,250" /><path d="M82,150 Q90,95 155,82" />
+          </g>
+          <g font-family="IBM Plex Mono" font-size="12.5" font-weight="500" text-anchor="middle" letter-spacing=".8">
+            <circle cx="200" cy="70" r="50" fill="#1f2a5c" /><text x="200" y="74" fill="#fff">ASSET</text>
+            <circle cx="330" cy="200" r="50" fill="#1f2a5c" /><text x="330" y="204" fill="#fff">MEANING</text>
+            <circle cx="200" cy="330" r="50" fill="#1f2a5c" /><text x="200" y="334" fill="#fff">DELIVERY</text>
+            <circle cx="70" cy="200" r="50" fill="#fff" stroke="#f2247a" stroke-width="1.5" stroke-dasharray="4 4" /><text x="70" y="204" fill="#f2247a">ACTION</text>
+          </g>
+          <g font-family="IBM Plex Mono" font-size="10.5" fill="#f2247a" text-anchor="middle">
+            <text x="300" y="100">define once</text><text x="300" y="306">deliver in context</text><text x="100" y="306">decide</text><text x="100" y="100">record it</text>
+          </g>
+        </svg>
+      </div>
+      <div class="out note a" style="--d:.5s;right:calc(var(--fx) - 205 * var(--u));top:calc(var(--fy) + var(--fh) - 130 * var(--u))">Action is the leg I couldn't reach in 12 weeks. It's where I'd go next.</div>
+    </section>
+
+    <!-- ============ 05 · ASSET ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Asset · the foundation · 1</span>
+        <h2 class="h a" style="--d:.06s">Closer to the source</h2>
+        <p class="sub a" style="--d:.1s">No spreadsheet in the path: source tables, landed raw, joined at line-item grain, modelled once and queryable by people and agents.</p>
+        <div class="a" style="--d:.18s;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:calc(12 * var(--u));margin:calc(34 * var(--u)) 0 0">
+          <div class="box"><b>Bronze</b><span>landed raw, pinned snapshot</span></div><div class="wire" style="width:calc(40 * var(--u))"></div>
+          <div class="box"><b>Silver</b><span>joined at line-item grain, keys normalised</span></div><div class="wire" style="width:calc(40 * var(--u))"></div>
+          <div class="box fill"><b>Gold</b><span>modelled, defined, queryable</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:calc(20 * var(--u));margin-top:calc(34 * var(--u))">
+          <div class="a" style="--d:.26s"><span class="lab">Straight from source</span><p class="bl" style="margin-top:calc(6 * var(--u))">ERP tables joined on Databricks.</p></div>
+          <div class="a" style="--d:.32s"><span class="lab">Modelled end to end</span><p class="bl" style="margin-top:calc(6 * var(--u))">Transfer history rebuilt at line-item grain.</p></div>
+          <div class="a" style="--d:.38s"><span class="lab">Filled the gaps</span><p class="bl" style="margin-top:calc(6 * var(--u))">Recovered the change states the system overwrites.</p></div>
+          <div class="a" style="--d:.44s"><span class="lab">Validated</span><p class="bl" style="margin-top:calc(6 * var(--u))">Each metric confirmed, with who owns and uses it.</p></div>
+        </div>
+        <div class="punch a" style="--d:.5s">Ground truth an agent can be trusted to run on.</div>
+      </div>
+      <!-- the data comes from outside the slide and leaves it -->
+      <div class="out a" style="--d:.1s;--tx:calc(60 * var(--u));left:calc(var(--fx) - 190 * var(--u));top:calc(var(--fy) + 205 * var(--u));display:flex;align-items:center;gap:calc(10 * var(--u))">
+        <div class="box fill" style="width:calc(150 * var(--u))"><b>Source systems</b><span>ERP · quality · HR</span></div>
+        <div class="wire" style="width:calc(70 * var(--u))"></div>
+      </div>
+      <div class="out a" style="--d:.55s;--tx:calc(-60 * var(--u));left:calc(var(--fx) + var(--fw) - 60 * var(--u));top:calc(var(--fy) + 205 * var(--u));display:flex;align-items:center;gap:calc(10 * var(--u))">
+        <div class="wire pk" style="width:calc(70 * var(--u))"></div>
+        <div style="display:grid;gap:calc(6 * var(--u));width:calc(150 * var(--u))">
+          <div class="box pk"><b>People</b><span>scorecards, reviews</span></div>
+          <div class="box pkf"><b>Agents</b><span>query the Delta tables</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 · AUTOMATION 1 ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Automation 1 · deviation rate</span>
+        <h2 class="h a" style="--d:.06s">One run builds the metric, the database and the read</h2>
+        <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:calc(34 * var(--u));margin-top:calc(22 * var(--u))">
+          <div class="a" style="--d:.14s;display:grid;gap:calc(5 * var(--u));font-size:calc(12 * var(--u))">
+            <div class="box fill" style="text-align:center"><b>Quality system · semantic model</b></div>
+            <div class="vwire" style="height:calc(18 * var(--u))"></div>
+            <div class="box dash" style="text-align:center"><span class="lab" style="opacity:1">Notebook · two scripts, one run</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:calc(6 * var(--u));margin-top:calc(6 * var(--u))"><div class="box" style="padding:calc(6 * var(--u))"><b>load_deviation.py</b><span>builds the database</span></div><div class="box" style="padding:calc(6 * var(--u))"><b>load_metrics.py</b><span>builds the metric</span></div></div></div>
+            <div class="vwire" style="height:calc(18 * var(--u))"></div>
+            <div class="box dash" style="text-align:center"><span class="lab" style="opacity:1">Lakehouse · one run writes three stores</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:calc(6 * var(--u));margin-top:calc(6 * var(--u))"><div class="box pkf" style="padding:calc(6 * var(--u))"><b>For agents</b><span>5 Delta tables</span></div><div class="box" style="padding:calc(6 * var(--u))"><b>For people</b><span>one sheet per metric</span></div><div class="box fill" style="padding:calc(6 * var(--u))"><b>The metric</b><span>month × site</span></div></div></div>
+          </div>
+          <div style="display:grid;gap:calc(14 * var(--u));align-content:start">
+            <div class="a" style="--d:.22s"><span class="lab">Before</span><p class="bl" style="margin-top:calc(4 * var(--u))">The figure was transcribed by hand from a report, then copied onto the slide.</p></div>
+            <div class="a" style="--d:.3s"><span class="lab">Now</span><p class="bl" style="margin-top:calc(4 * var(--u))"><b>One Power Automate flow runs every step.</b> Two scripts build the database and calculate the monthly rate from a single data pull.</p></div>
+            <div class="a" style="--d:.38s"><span class="lab">Outcome</span><p class="bl" style="margin-top:calc(4 * var(--u))">Less manual processing, more frequent reporting, <b>deeper commentary on trends and recurrence</b>, and a data layer ready for agents.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- what the run produces lands outside the slide -->
+      <div class="out a" style="--d:.5s;--tx:calc(-180 * var(--u));--r:2deg;left:calc(var(--fx) + var(--fw) - 70 * var(--u));top:calc(var(--fy) + 60 * var(--u))">
+        <div class="mail"><div class="m1"><span>Agent · trend read</span><span>Mon 07:02</span></div><div class="m2">Deviations: what changed this month</div><div class="m3">Recurrence up at two sites, same root-cause family as Q2. Most likely: a process step, not an equipment fault.</div><span class="tag">deep dive attached</span></div>
+      </div>
+      <div class="out a" style="--d:.65s;--tx:calc(-180 * var(--u));--r:-2deg;left:calc(var(--fx) + var(--fw) - 40 * var(--u));top:calc(var(--fy) + 250 * var(--u))">
+        <div class="mail" style="width:calc(220 * var(--u))"><div class="m1"><span>Copilot agent</span><span>review deck</span></div><div style="margin-top:calc(8 * var(--u));border:1px solid var(--line);border-radius:calc(4 * var(--u));aspect-ratio:16/9;padding:calc(8 * var(--u));display:grid;grid-template-rows:auto 1fr;gap:calc(6 * var(--u))"><span style="height:calc(5 * var(--u));width:55%;background:var(--navy);border-radius:2px"></span><span style="display:flex;align-items:flex-end;gap:calc(4 * var(--u))"><i style="flex:1;height:50%;background:#cfd3e6"></i><i style="flex:1;height:72%;background:#cfd3e6"></i><i style="flex:1;height:40%;background:#cfd3e6"></i><i style="flex:1;height:88%;background:var(--pink)"></i></span></div><div class="m3" style="margin-top:calc(6 * var(--u))">Builds the monthly slide from the numbers.</div></div>
+      </div>
+      <div class="out note a" style="--d:.6s;left:calc(var(--fx) - 200 * var(--u));top:calc(var(--fy) + 80 * var(--u))">The agent reads the Delta tables, never the slide. Numbers and words come from the same run.</div>
+    </section>
+
+    <!-- ============ 07 · AUTOMATION 2 ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Automation 2 · training compliance</span>
+        <h2 class="h a" style="--d:.06s">From a monthly number to a weekly nudge</h2>
+        <p class="sub a" style="--d:.1s">Training and HR records meet in one semantic model. A weekly run does three jobs.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:calc(14 * var(--u));margin-top:calc(26 * var(--u))">
+          <div class="a" style="--d:.16s"><div class="box fill"><b>1 · Get the rate</b></div><p class="bl" style="margin-top:calc(8 * var(--u))">On-time completion and average days late, 13 months by month.</p></div>
+          <div class="a" style="--d:.24s"><div class="box fill"><b>2 · Find the causes</b></div><p class="bl" style="margin-top:calc(8 * var(--u))">Overdue by manager, by learner and per course, with days overdue.</p></div>
+          <div class="a" style="--d:.32s"><div class="box pkf"><b>3 · Notify</b></div><p class="bl" style="margin-top:calc(8 * var(--u))">Who is late, on what, and which due dates are coming up. Emailed to the learner and their manager.</p></div>
+        </div>
+        <div class="a" style="--d:.4s;display:grid;grid-template-columns:1fr 1fr;gap:calc(30 * var(--u));margin-top:calc(30 * var(--u));padding-top:calc(16 * var(--u));border-top:1px solid var(--line)">
+          <div><span class="lab">Before</span><p class="bl" style="margin-top:calc(4 * var(--u))">One monthly compliance rate. By the time anyone saw it, the due dates had passed.</p></div>
+          <div><span class="lab">Now</span><p class="bl" style="margin-top:calc(4 * var(--u))">Weekly tracking and a targeted email to <b>the people who can act</b>, supporting a 95% on-time target.</p></div>
+        </div>
+      </div>
+      <!-- the notifications leave the slide and land on the page -->
+      ${notifs}
+      <div class="out note a" style="--d:.6s;left:calc(var(--fx) - 200 * var(--u));top:calc(var(--fy) + var(--fh) - 170 * var(--u))">Same data as before. The difference is who it reaches, and when.</div>
+    </section>
+
+    <!-- ============ 08 · DELIVERY ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Delivery · the last mile · 3</span>
+        <h2 class="h a" style="--d:.06s">From description to direction</h2>
+        <p class="sub a" style="--d:.1s">The joining happens upstream, so what arrives is a read and a next step, not another table to interpret.</p>
+        <div class="a" style="--d:.18s;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:calc(12 * var(--u));margin-top:calc(40 * var(--u));max-width:calc(700 * var(--u))">
+          <div class="box"><b>Connected context</b><span>batch · shipment · deviation · delay</span></div><div class="wire" style="width:calc(34 * var(--u))"></div>
+          <div class="box"><b>An agent drafts a read</b><span>what changed · why, most likely · what we could do</span></div><div class="wire" style="width:calc(34 * var(--u))"></div>
+          <div class="box fill"><b>The expert confirms</b><span>human in the loop, by design</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:calc(24 * var(--u));margin-top:calc(46 * var(--u))">
+          <div class="a" style="--d:.3s"><span class="lab">Description → direction</span><p class="bl" style="margin-top:calc(6 * var(--u))">Every read carries a recommended next step.</p></div>
+          <div class="a" style="--d:.36s"><span class="lab">Leaders stop assembling</span><p class="bl" style="margin-top:calc(6 * var(--u))">Senior time goes to judgement, not to joining tables.</p></div>
+          <div class="a" style="--d:.42s"><span class="lab">One content set, many shapes</span><p class="bl" style="margin-top:calc(6 * var(--u))">Sponsors get the position. Experts get the detail.</p></div>
+        </div>
+      </div>
+      <!-- three shapes fan out past the slide's edge -->
+      <div class="out" style="left:calc(var(--fx) + var(--fw) - 190 * var(--u));top:calc(var(--fy) + 100 * var(--u));display:grid;gap:calc(10 * var(--u));width:calc(300 * var(--u))">
+        <div class="box pkf a" style="--d:.45s;--tx:calc(-120 * var(--u))"><b>Needs attention now</b><span>a message, to the person who can act</span></div>
+        <div class="box a" style="--d:.55s;--tx:calc(-120 * var(--u));margin-left:calc(30 * var(--u))"><b>Routine</b><span>a weekly email, trend and risk first</span></div>
+        <div class="box a" style="--d:.65s;--tx:calc(-120 * var(--u));margin-left:calc(60 * var(--u))"><b>Before a meeting</b><span>a pre-read that says what needs deciding</span></div>
+      </div>
+    </section>
+
+    <!-- ============ 09 · MEANING ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Meaning · the context layer · 2</span>
+        <h2 class="h a" style="--d:.06s">What the data was hiding</h2>
+        <p class="sub a" style="--d:.1s">Before anything could be automated, it had to mean one thing. Three findings that changed what people did.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:calc(16 * var(--u));margin-top:calc(28 * var(--u))">
+          <div class="a box" style="--d:.16s;padding:calc(16 * var(--u))"><span class="lab" style="color:var(--pink)">Blended metric</span><p class="bl" style="margin-top:calc(8 * var(--u))"><b>Most “shipments” never physically moved.</b> Internal transfers sat in the same on-time rate as real cross-site shipments. Split, the result moved in the unflattering direction.</p></div>
+          <div class="a box" style="--d:.24s;padding:calc(16 * var(--u))"><span class="lab" style="color:var(--pink)">One code, two events</span><p class="bl" style="margin-top:calc(8 * var(--u))"><b>Two quality events shared one system code</b>, and the system could not separate them. Proposed: change the code, or the definition.</p></div>
+          <div class="a box" style="--d:.32s;padding:calc(16 * var(--u))"><span class="lab" style="color:var(--pink)">Silent failure</span><p class="bl" style="margin-top:calc(8 * var(--u))"><b>Two key-padding conventions</b> collapsed a join's match rate without raising an error. Now a test, not a surprise.</p></div>
+        </div>
+        <div class="punch a" style="--d:.42s">Agree the words before the numbers.</div>
+      </div>
+      <!-- review notes stuck to the outside of the slide -->
+      <div class="out a" style="--d:.5s;--ty:calc(-30 * var(--u));--r:-3deg;left:calc(var(--fx) + 330 * var(--u));top:calc(var(--fy) - 48 * var(--u));background:#fff3a8;padding:calc(10 * var(--u)) calc(12 * var(--u));width:calc(190 * var(--u));font-size:calc(12.5 * var(--u));box-shadow:0 10px 20px -12px rgb(0 0 0 / .4)"><b>Confirm:</b> do we include conditional release?</div>
+      <div class="out a" style="--d:.62s;--tx:calc(-40 * var(--u));--r:3deg;left:calc(var(--fx) + var(--fw) - 70 * var(--u));top:calc(var(--fy) + 150 * var(--u));background:#fff3a8;padding:calc(10 * var(--u)) calc(12 * var(--u));width:calc(190 * var(--u));font-size:calc(12.5 * var(--u));box-shadow:0 10px 20px -12px rgb(0 0 0 / .4)"><b>Confirm:</b> which open majors does the rate leave out?</div>
+      <div class="out note a" style="--d:.7s;left:calc(var(--fx) - 200 * var(--u));top:calc(var(--fy) + 220 * var(--u))">I recomputed the on-time metric under six definitions. The spread stayed narrow, so the number survives the argument.</div>
+    </section>
+
+    <!-- ============ 10 · IMPACT ============ -->
+    <section class="slide">
+      <div class="in">
+        <span class="kick a">Is it meaningful?</span>
+        <h2 class="h a" style="--d:.06s">What changed, and why it compounds</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:calc(26 * var(--u)) calc(30 * var(--u));margin-top:calc(28 * var(--u));max-width:calc(560 * var(--u))">
+          <div class="stat a" style="--d:.14s"><b>−85%</b><span>time to build the scorecard</span></div>
+          <div class="stat a" style="--d:.2s"><b>Monthly → weekly</b><span>a number read late became a nudge sent early</span></div>
+          <div class="stat a" style="--d:.26s"><b>Pushed</b><span>a read and a next step arrive, nobody has to go fetch</span></div>
+          <div class="stat a" style="--d:.32s"><b>Agent-ready</b><span>Delta tables an assistant can query with provenance</span></div>
+        </div>
+        <div class="punch a" style="--d:.4s">The backbone before the brain: each layer only holds if the one beneath it does.</div>
+      </div>
+      <!-- the stack, its top above the slide -->
+      <div class="out a" style="--d:.3s;--ty:calc(40 * var(--u));left:calc(var(--fx) + var(--fw) - 400 * var(--u));top:calc(var(--fy) - 70 * var(--u));width:calc(360 * var(--u))">
+        <svg viewBox="0 0 360 470" width="100%">
+          <g font-family="IBM Plex Mono" font-size="11" font-weight="500" letter-spacing=".8" text-anchor="middle">
+            <path d="M180,10 L222,90 L138,90 Z" fill="#f2247a" /><text x="180" y="78" fill="#fff" font-size="9.5">GOAL</text>
+            <path d="M134,98 L226,98 L262,168 L98,168 Z" fill="none" stroke="#f2247a" stroke-width="1.5" stroke-dasharray="4 4" /><text x="180" y="138" fill="#f2247a">DECISION</text>
+            <path d="M94,176 L266,176 L302,246 L58,246 Z" fill="#5a62a8" /><text x="180" y="216" fill="#fff">CONTEXT</text>
+            <path d="M54,254 L306,254 L342,324 L18,324 Z" fill="#3b4488" /><text x="180" y="294" fill="#fff">SEMANTIC</text>
+            <path d="M14,332 L346,332 L360,360 L360,402 L0,402 L0,360 Z" fill="#1f2a5c" /><text x="180" y="372" fill="#fff">FOUNDATION</text>
+          </g>
+          <text x="180" y="440" font-family="IBM Plex Mono" font-size="10.5" fill="#7a7690" text-anchor="middle">where my 12 weeks went: the bottom three</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ============ 11 · CLOSE ============ -->
+    <section class="slide" data-dark data-nofoot>
+      <div class="in" style="display:flex;flex-direction:column;justify-content:center;padding:0 calc(70 * var(--u)) calc(40 * var(--u))">
+        <span class="kick a">What I took away</span>
+        <p class="a" style="--d:.1s;font-size:calc(36 * var(--u));line-height:1.15;letter-spacing:-.015em;font-weight:700;color:#fff;margin:calc(14 * var(--u)) 0 0;max-width:24ch">Most of us are pointing AI at <span style="color:#8d89a8">knowing</span>. The leverage is pointing it at <span style="color:var(--pink)">improving</span>.</p>
+        <p class="a" style="--d:.2s;font-size:calc(14.5 * var(--u));color:#c9c6d8;max-width:52ch;line-height:1.5;margin-top:calc(22 * var(--u))">Every incident gets resolved. Fewer of them accumulate into something that changes what happens next. The next step is the loop: did the action hold, have we seen this before, is it coming again.</p>
+      </div>
+      <!-- the improvement loop runs past both edges of the slide -->
+      <div class="out a" style="--d:.35s;--ty:calc(-30 * var(--u));left:calc(var(--fx) - 120 * var(--u));width:calc(var(--fw) + 240 * var(--u));top:calc(var(--fy) + var(--fh) - 62 * var(--u));display:grid;grid-template-columns:repeat(5,1fr);gap:calc(10 * var(--u))">
+        ${loop}
+      </div>
+    </section>
+
+    <div class="chrome" id="chrome"><div class="ft"><span>Beyond the Dashboard · Frank Fu</span><span id="pg"></span></div></div>
+    <div class="dotsNav" id="dots"></div>
+  </div>
+</div>
+
+<div class="after">
+  <div><h3>Stack</h3><div class="chips"><span>Databricks</span><span>Delta Lake</span><span>PySpark · SQL</span><span>Microsoft Fabric</span><span>Power BI · DAX</span><span>Power Automate</span><span>Copilot agents</span><span>REST APIs</span></div></div>
+  <div><h3>A note on what's shown</h3>System and workspace names are generalised and internal figures are left out; the −85% is the reported result. The diagrams follow the real flows.</div>
+</div>
+
+<script>
+/* fill the repeated bits, then wire up the deck */
+const LEGS = [
+  ["Asset · the foundation", "Excel replaced by direct source tables; transfer history rebuilt at line-item grain."],
+  ["Meaning · the layer", "Metric definitions and contracts: one reading across Quality, Operations and Logistics."],
+  ["Delivery · the last mile", "Digests and lifecycle views, pushed rather than fetched, with known limits on the page."],
+  ["Action · where it re-opens", "Cause, owner and outcome still live outside the systems that measure the result."]
+];
+const NOTIFS = [
+  ["Due in 3 days", "GMP refresher, module 4", "to learner · cc manager", 0],
+  ["Overdue · 6 days", "Cleanroom gowning, annual", "to learner · cc manager", 1],
+  ["Team roll-up", "4 overdue, worst 11 days", "to manager", 0]
+];
+const LOOP = [["Flagged", "the signal reaches someone"], ["Decided", "the call gets made"], ["Acted", "the action is taken"], ["Reviewed", "did the action hold?"], ["Recognised", "seen before, coming again"]];
+
+let html = document.getElementById("deck").innerHTML;
+html = html.replace("${legs}", LEGS.map(([t, d], k) => `<div class="a" style="--d:${0.16 + k * 0.06}s"><span class="lab" style="color:${k === 3 ? "var(--pink)" : "var(--navy)"}">${t}</span><p class="bl" style="margin-top:calc(5 * var(--u));color:var(--mute)">${d}</p></div>`).join(""));
+html = html.replace("${notifs}", NOTIFS.map(([a, b, c, hot], k) => `<div class="out a" style="--d:${0.45 + k * 0.12}s;--tx:calc(-200 * var(--u));--r:${[2, -1.5, 1][k]}deg;left:calc(var(--fx) + var(--fw) - ${[90, 40, 90][k]} * var(--u));top:calc(var(--fy) + ${[40, 165, 400][k]} * var(--u))"><div class="mail"><div class="m1"><span>Training · weekly run</span><span>Mon 08:00</span></div><div class="m2" style="${hot ? "color:var(--pink)" : ""}">${a}</div><div class="m3">${b}<br>${c}</div></div></div>`).join(""));
+html = html.replace("${loop}", LOOP.map(([t, d], k) => `<div class="box ${k < 3 ? "fill" : "dash"}" style="${k >= 3 ? "border-color:var(--pink);color:var(--pink);background:#fff" : ""};text-align:center;box-shadow:0 14px 30px -18px rgb(36 32 61 / .5)"><b>${t}</b><span>${d}</span></div>`).join(""));
+document.getElementById("deck").innerHTML = html;
+
+const deck = document.getElementById("deck");
+const slides = [...document.querySelectorAll(".slide")];
+const N = slides.length;
+const PER = 0.9; // viewport heights of scroll per slide
+deck.style.height = `calc(${(N - 1) * PER * 100}vh + 100vh)`;
+document.getElementById("total").textContent = String(N).padStart(2, "0");
+const dots = document.getElementById("dots");
+dots.innerHTML = slides.map((_, k) => `<button aria-label="Slide ${k + 1}"></button>`).join("");
+
+let cur = -1;
+function show(k) {
+  if (k === cur) return;
+  cur = k;
+  slides.forEach((s, j) => s.classList.toggle("on", j === k));
+  const dark = slides[k].hasAttribute("data-dark");
+  document.getElementById("frame").classList.toggle("dark", dark);
+  document.getElementById("chrome").classList.toggle("dark", dark);
+  document.getElementById("chrome").style.opacity = slides[k].hasAttribute("data-nofoot") ? 0 : 1;
+  document.getElementById("count").textContent = String(k + 1).padStart(2, "0");
+  document.getElementById("pg").textContent = `${String(k + 1).padStart(2, "0")} / ${String(N).padStart(2, "0")}`;
+  [...dots.children].forEach((d, j) => d.classList.toggle("on", j === k));
+}
+const yOf = (k) => deck.offsetTop + k * PER * innerHeight;
+function onScroll() {
+  const k = Math.round((scrollY - deck.offsetTop) / (PER * innerHeight));
+  show(Math.max(0, Math.min(N - 1, k)));
+}
+addEventListener("scroll", onScroll, { passive: true });
+addEventListener("resize", onScroll);
+addEventListener("keydown", (e) => {
+  if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(e.key)) return;
+  e.preventDefault();
+  const k = Math.max(0, Math.min(N - 1, cur + (e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1)));
+  scrollTo({ top: yOf(k), behavior: "smooth" });
+});
+[...dots.children].forEach((d, k) => (d.onclick = () => scrollTo({ top: yOf(k), behavior: "smooth" })));
+onScroll();
+</script>
+</body>
+</html>

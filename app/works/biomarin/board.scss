@@ -1,0 +1,626 @@
+/* ============================================================
+   BIOMARIN — the project as one whiteboard (/works/biomarin).
+   Behaviour in components/works/board/BioMarinBoard.tsx.
+
+   Two coordinate systems on purpose:
+   · the BOARD is drawn in plain px at a fixed 3900 × 2040 and scaled as a
+     whole by the camera, so nothing inside it may use rem — rem already
+     scales with the window and the two would compound;
+   · the CHROME around it (crumb, caption, minimap) is in rem like every
+     other page, so it sits at the same size as /progress.
+
+   Type uses the two site faces at the weights the layout loads (400, 500,
+   700). Every text block sets its own line-height: body's 1.45 at 20rem is
+   tuned for reading copy and spaced the board's labels apart in Chrome.
+   ============================================================ */
+
+.wb {
+  --navy: var(--ink);
+  --mute: #77738a;
+  --line: #e2ded4;
+  --pinkS: #ffe1ee;
+  --stick: #fff2a6;
+  --blueS: #e3e8ff;
+  --boardBg: #fbfaf7;
+
+  position: relative;
+  color: var(--ink);
+}
+
+/* ---------------- the stage and the camera ---------------- */
+
+.wb__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.wb__crumb {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rem;
+  padding: 32rem var(--margin) 28rem;
+  /* the board travels under the crumb; a fade of paper keeps the trail
+     readable without drawing a hard bar across the top */
+  background: linear-gradient(var(--paper) 62%, rgb(245 243 236 / 0));
+  pointer-events: none;
+
+  .crumbs,
+  .wb__hint {
+    pointer-events: auto;
+  }
+}
+
+.wb__hint {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13rem;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.wb__board {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3900px;
+  height: 2040px;
+  transform-origin: 0 0;
+  border-radius: 18px;
+  background-color: var(--boardBg);
+  background-image: radial-gradient(#d9d4c8 1.4px, transparent 1.4px);
+  background-size: 28px 28px;
+  box-shadow:
+    0 0 0 1px rgb(38 32 72 / 0.06),
+    0 40px 80px -40px rgb(38 32 72 / 0.3);
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: 0;
+
+  p {
+    margin: 0;
+  }
+
+  /* no line may end on a single word: pretty for running text, balance for
+     anything set large, where one stray word carries the most weight */
+  p,
+  span,
+  div {
+    text-wrap: pretty;
+  }
+
+  b,
+  h4,
+  .wb-stat b,
+  .wb-sticky {
+    text-wrap: balance;
+  }
+}
+
+.wb__wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* caption — the narrator */
+.wb__cap {
+  position: absolute;
+  left: 50%;
+  bottom: 22rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 14rem;
+  width: min(820rem, calc(100vw - 2 * var(--margin)));
+  padding: 10rem 10rem 10rem 18rem;
+  border-radius: 14rem;
+  translate: -50% 0;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 20rem 40rem -20rem rgb(38 32 72 / 0.6);
+
+  button {
+    flex: none;
+    width: 34rem;
+    height: 34rem;
+    border: 0;
+    border-radius: 9rem;
+    background: rgb(255 255 255 / 0.12);
+    color: var(--paper);
+    font-size: 16rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--accent);
+    }
+  }
+}
+
+.wb__capN {
+  flex: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12rem;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a19dba;
+  white-space: nowrap;
+}
+
+.wb__capT {
+  flex: 1;
+  text-wrap: pretty;
+  font-size: 16rem;
+  line-height: 1.35;
+
+  b {
+    font-weight: 500;
+    color: #ff7fb4;
+  }
+}
+
+.wb__mini {
+  position: absolute;
+  right: var(--margin);
+  bottom: 22rem;
+  z-index: 6;
+  width: 168rem;
+  height: 88rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8rem;
+  background: rgb(255 255 255 / 0.9);
+
+  i {
+    position: absolute;
+    border-radius: 2px;
+    background: #e9e5f2;
+  }
+
+  i.is-on {
+    background: var(--pinkS);
+    outline: 1px solid var(--accent);
+  }
+}
+
+.wb__vp {
+  position: absolute;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+}
+
+/* ---------------- board furniture ---------------- */
+
+.wb-region {
+  position: absolute;
+  border: 2px solid #e6e2d8;
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.55);
+  transition: opacity 0.5s ease;
+}
+
+.wb-dim {
+  opacity: 0.25;
+  transition: opacity 0.5s ease;
+}
+
+.wb-flow {
+  transition: opacity 0.5s ease;
+}
+
+.wb-tab {
+  position: absolute;
+  left: 26px;
+  top: -22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px 9px 10px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font: 500 17px/1 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  span {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent);
+  }
+}
+
+.wb-k {
+  font: 500 15px/1.3 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--mute);
+
+  &.is-pk {
+    color: var(--accent);
+  }
+}
+
+.wb-strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.wb-card {
+  position: absolute;
+  padding: 20px 22px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 24px -18px rgb(38 32 72 / 0.35);
+
+  h4 {
+    margin: 6px 0 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  p {
+    margin-top: 8px;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--mute);
+  }
+}
+
+.wb-sticky {
+  position: absolute;
+  padding: 24px 26px;
+  border-radius: 4px;
+  font-size: 21px;
+  line-height: 1.35;
+  box-shadow: 0 16px 26px -18px rgb(0 0 0 / 0.45);
+
+  &.is-y { background: var(--stick); }
+  &.is-p { background: var(--pinkS); }
+  &.is-b { background: var(--blueS); }
+
+  b {
+    font-weight: 700;
+  }
+}
+
+/* ---------------- the flowchart ---------------- */
+
+.wb-node {
+  position: absolute;
+  padding: 18px 20px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: #fff;
+
+  > b {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  > p {
+    margin-top: 6px;
+    font-size: 18px;
+    line-height: 1.38;
+    color: var(--mute);
+  }
+
+  &.is-src,
+  &.is-out {
+    background: var(--ink);
+
+    > b { color: #fff; }
+    > p { color: #c4c0dc; }
+  }
+
+  &.is-ag {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 6px var(--pinkS);
+
+    > b { color: var(--accent); }
+  }
+
+  &.is-sig {
+    border-color: var(--accent);
+    border-style: dashed;
+
+    > b { color: var(--accent); }
+  }
+
+  &.is-ppl {
+    border-color: var(--pinkS);
+    background: var(--pinkS);
+  }
+}
+
+.wb-chip {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #fff;
+  font: 500 13px/1 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.06em;
+}
+
+.wb-row {
+  display: grid;
+  grid-template-columns: 124px 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--mute);
+
+  &:first-of-type {
+    border-top: 0;
+  }
+
+  b {
+    padding-top: 1px;
+    font: 500 14px/1.3 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+}
+
+.wb-sub {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+
+  b {
+    display: block;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  span {
+    display: block;
+    margin-top: 3px;
+    font-size: 16px;
+    line-height: 1.35;
+    color: var(--mute);
+  }
+
+  &.is-pk {
+    border-color: var(--accent);
+
+    b { color: var(--accent); }
+  }
+
+  &.is-dark {
+    border-color: rgb(255 255 255 / 0.25);
+
+    b { color: #fff; }
+    span { color: #c4c0dc; }
+  }
+}
+
+.wb-colhead {
+  position: absolute;
+
+  .wb-num {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font: 500 16px/1 var(--font-mono), ui-monospace, monospace;
+    vertical-align: middle;
+  }
+
+  b {
+    font: 500 20px/1 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    vertical-align: middle;
+  }
+
+  span:last-child {
+    display: block;
+    margin-top: 8px;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--mute);
+  }
+}
+
+.wb-lane {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 15px/1 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+/* a tool that runs on the connector: drawn as a node sitting on the wire */
+.wb-tool {
+  position: absolute;
+  z-index: 2;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 18px -12px rgb(38 32 72 / 0.5);
+  text-align: center;
+  white-space: nowrap;
+
+  b {
+    font: 500 14px/1.15 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  span {
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--mute);
+  }
+
+  &.is-pk {
+    border-color: var(--accent);
+
+    b { color: var(--accent); }
+  }
+}
+
+.wb-elab {
+  position: absolute;
+  padding: 0 6px;
+  background: var(--boardBg);
+  font: 500 15px/1.2 var(--font-mono), ui-monospace, monospace;
+  color: var(--accent);
+}
+
+/* ---------------- value ---------------- */
+
+.wb-stat {
+  b {
+    display: block;
+    font-size: 46px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  span {
+    display: block;
+    margin-top: 10px;
+    font-size: 21px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+}
+
+/* before / now: a small label over its own line of text, never run in */
+.wb-bn {
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+
+  b {
+    display: block;
+    margin-bottom: 6px;
+    font: 500 13px/1 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.4;
+    color: var(--mute);
+  }
+
+  &.is-now {
+    margin-top: 16px;
+
+    b { color: var(--accent); }
+    p { color: var(--ink); }
+  }
+}
+
+/* ---------------- below the board ---------------- */
+
+.wb__after {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40rem;
+  padding: 60rem var(--margin) 120rem;
+  font-size: 16rem;
+  line-height: 1.5;
+  color: var(--mute);
+
+  h3 {
+    margin: 0 0 10rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 13rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+/* the minimap sits beside the caption; below this the two would meet */
+@media (max-width: 1240px) {
+  .wb__mini {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .wb__mini,
+  .wb__hint {
+    display: none;
+  }
+
+  .wb__capN {
+    display: none;
+  }
+
+  .wb__after {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-region,
+  .wb-dim,
+  .wb-flow {
+    transition: none;
+  }
+}

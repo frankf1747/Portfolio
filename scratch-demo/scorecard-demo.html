@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scorecard — page demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4f1ea;
+    --card: #fbfaf6;
+    --ink: #24203d;
+    --mute: #77738a;
+    --line: #dcd7cb;
+    --soft: #ebe7dd;
+    --pink: #f2247a;
+    --pinkS: #fde3ee;
+    --ok: #1f7a5a;
+    --okS: #dff1e9;
+    --warn: #b35a00;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Archivo", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 var(--sans); }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 72px); }
+  .k { font: 500 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mute); }
+  .demo-tag { position: fixed; left: 12px; bottom: 12px; z-index: 9; font: 500 10px var(--mono); letter-spacing: .06em; padding: 4px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+
+  /* ---------- head ---------- */
+  header { padding: 44px 0 22px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: end; }
+  h1 { font-size: clamp(34px, 4.2vw, 56px); line-height: 1; letter-spacing: -.02em; margin: 10px 0 12px; font-weight: 700; }
+  .lede { color: var(--mute); max-width: 52ch; margin: 0; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--line); }
+  .facts div { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .facts b { display: block; font-weight: 600; font-size: 14px; margin-top: 2px; }
+  .facts .big b { font-size: 22px; color: var(--pink); }
+
+  /* ---------- simulator shell ---------- */
+  .sim { display: grid; grid-template-columns: 1fr 300px; gap: 14px; height: min(520px, calc(100vh - 150px)); min-height: 460px; }
+  .win { background: var(--card); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 1px 0 #fff inset, 0 12px 30px -18px rgb(36 32 61 / .25); }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--soft); }
+  .dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: #cfc9bc; }
+  .modes { display: flex; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+  .modes button { border: 0; background: none; font: 500 12px var(--mono); letter-spacing: .04em; padding: 5px 12px; border-radius: 6px; color: var(--mute); cursor: pointer; }
+  .modes button.on { background: var(--ink); color: var(--paper); }
+  .clock { margin-left: auto; display: flex; align-items: baseline; gap: 10px; font-family: var(--mono); }
+  .clock b { font-size: 18px; font-weight: 500; }
+  .clock span { font-size: 11px; color: var(--mute); }
+  .clock.late b { color: var(--pink); }
+  .steps { display: flex; gap: 4px; padding: 10px 14px 0; }
+  .steps i { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background .4s; }
+  .steps i.done { background: var(--ink); } .steps i.now { background: var(--pink); }
+  .stage { flex: 1; padding: 16px 18px; overflow: auto; position: relative; }
+  .foot { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); }
+  .say { font-size: 14px; flex: 1; } .say em { font-style: normal; color: var(--mute); }
+  .btn { border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font: 500 12px var(--mono); letter-spacing: .04em; padding: 8px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  .btn.ghost { background: none; color: var(--ink); }
+  .btn.pk { background: var(--pink); border-color: var(--pink); }
+  .btn:disabled { opacity: .35; cursor: default; }
+
+  /* ---------- behind the scenes ---------- */
+  .bts { background: var(--ink); color: #e9e6f2; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+  .bts .k { color: #9b97b3; }
+  .bts h3 { margin: 4px 0 0; font-size: 17px; line-height: 1.25; font-weight: 600; color: #fff; }
+  .bts p { margin: 4px 0 0; font-size: 13px; color: #c9c6d8; }
+  .tool { display: inline-block; font: 500 11px var(--mono); padding: 3px 8px; border-radius: 99px; border: 1px solid #4a4566; margin: 4px 4px 0 0; color: #fff; }
+  .layers { margin-top: auto; display: grid; gap: 4px; }
+  .layers div { font: 500 10.5px var(--mono); letter-spacing: .05em; padding: 6px 8px; border-radius: 6px; background: #2f2a4d; color: #8d89a8; transition: all .35s; }
+  .layers div.on { background: var(--pink); color: #fff; }
+
+  /* ---------- shared stage pieces ---------- */
+  .fade { animation: in .45s ease both; }
+  @keyframes in { from { opacity: 0; transform: translateY(6px); } }
+  .panel { border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .row { display: flex; gap: 12px; }
+  .mail { padding: 14px 16px; max-width: 560px; }
+  .mail .from { display: flex; justify-content: space-between; font-size: 13px; color: var(--mute); }
+  .mail h4 { margin: 6px 0; font-size: 17px; }
+  .grid { width: 100%; border-collapse: collapse; font: 12px var(--mono); }
+  .grid th, .grid td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; white-space: nowrap; }
+  .grid th { background: var(--soft); font-weight: 500; color: var(--mute); }
+  .grid td.z { color: var(--pink); background: var(--pinkS); }
+  .fx { font: 12px var(--mono); padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; margin-bottom: 10px; }
+  .fx b { color: var(--mute); font-weight: 500; margin-right: 8px; }
+  .prog { height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .prog i { display: block; height: 100%; width: 0; background: var(--ink); transition: width 1.6s ease; }
+  .log { font: 12.5px/1.75 var(--mono); padding: 12px 14px; background: #1d1a33; color: #d8d5e6; border-radius: 10px; min-height: 230px; }
+  .log .ok { color: #6fd3a8; } .log .pk { color: #ff7fb4; } .log .mu { color: #8580a3; }
+  .flag { border-left: 3px solid var(--pink); background: var(--pinkS); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 13.5px; }
+  .meter { height: 10px; border-radius: 5px; background: var(--soft); overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--pink); transition: width .8s ease; }
+  .meter.ok i { background: var(--ok); }
+  .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice button { text-align: left; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; font: inherit; color: inherit; transition: border-color .2s; }
+  .choice button:hover { border-color: var(--ink); }
+  .choice button.picked { border-color: var(--pink); box-shadow: 0 0 0 2px var(--pinkS); }
+  .choice .v { font-size: 34px; font-weight: 700; letter-spacing: -.02em; display: block; margin: 4px 0; }
+  .agents { display: grid; gap: 8px; }
+  .agent { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 10px 12px; }
+  .agent .who { font: 500 11px var(--mono); letter-spacing: .05em; }
+  .agent .who i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-right: 6px; }
+  .agent p { margin: 0; font-size: 13.5px; }
+  .cite { font: 11px var(--mono); color: var(--mute); }
+  .sc { display: grid; grid-template-columns: repeat(3, 1fr) 1.4fr; gap: 10px; }
+  .tile { padding: 12px; }
+  .tile .v { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .tile .d { font: 11px var(--mono); }
+  .bars { display: grid; gap: 6px; padding: 12px; }
+  .bars div { display: grid; grid-template-columns: 44px 1fr 34px; gap: 8px; align-items: center; font: 11px var(--mono); }
+  .bars span.b { height: 8px; border-radius: 4px; background: var(--ink); }
+  .bars span.b.pk { background: var(--pink); }
+  .act { padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; border-top: 1px solid var(--line); }
+  .act:first-child { border-top: 0; }
+  .chk { width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 4px; flex: none; margin-top: 2px; }
+  .chk.on { background: var(--ink); box-shadow: inset 0 0 0 3px #fff; }
+  .result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .result div { padding: 12px; border-radius: 10px; background: var(--ink); color: #fff; }
+  .result b { display: block; font-size: 24px; }
+  .result span { font: 11px var(--mono); color: #b6b2cc; }
+
+  /* ---------- below the sim ---------- */
+  section { padding: 56px 0 0; }
+  h2 { font-size: 26px; letter-spacing: -.01em; margin: 6px 0 18px; }
+  .val { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .val div { padding: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .val b { font-size: 34px; letter-spacing: -.02em; display: block; }
+  .val p { margin: 6px 0 0; color: var(--mute); font-size: 14px; }
+  .tag { font: 500 10px var(--mono); letter-spacing: .06em; padding: 2px 7px; border-radius: 99px; border: 1px solid currentColor; }
+  .tag.m { color: var(--ok); } .tag.i { color: var(--mute); }
+  .stack { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .stack div { padding: 14px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+  .stack b { display: block; font-size: 14px; margin: 6px 0 4px; }
+  .stack p { margin: 0; font-size: 12.5px; color: var(--mute); }
+  .learn { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .learn div { padding: 14px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 34px 1fr; }
+  .learn b { font-weight: 600; } .learn p { margin: 2px 0 0; color: var(--mute); font-size: 14px; grid-column: 2; }
+  footer { padding: 48px 0 60px; color: var(--mute); font: 12px var(--mono); }
+
+  @media (max-width: 960px) {
+    header { grid-template-columns: 1fr; }
+    .sim { grid-template-columns: 1fr; height: auto; }
+    .stage { min-height: 420px; }
+    .stack { grid-template-columns: repeat(2, 1fr); }
+    .val, .learn, .sc { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<span class="demo-tag">DESIGN DEMO · SYNTHETIC DATA</span>
+
+<div class="wrap">
+  <header>
+    <div>
+      <span class="k">(01) BioMarin · Insights &amp; Analytics · Summer 2026</span>
+      <h1>The scorecard that builds itself.</h1>
+      <p class="lede">The monthly operations scorecard was a day of exports, lookups and pasted charts, and it still published a number that pointed the team at the wrong lanes. I rebuilt it as a pipeline that runs before anyone logs in.</p>
+    </div>
+    <div class="facts">
+      <div><span class="k">Role</span><b>Analytics intern, end to end</b></div>
+      <div><span class="k">Timeframe</span><b>Jun – Sep 2026</b></div>
+      <div><span class="k">Stack</span><b>SAP · Databricks · Power BI</b></div>
+      <div class="big"><span class="k">Result</span><b>−85% build time</b></div>
+    </div>
+  </header>
+
+  <div class="sim">
+    <div class="win">
+      <div class="bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="modes" role="tablist">
+          <button id="mBefore" class="on">BEFORE · MANUAL</button>
+          <button id="mAfter">AFTER · AUTOMATED</button>
+        </div>
+        <div class="clock" id="clock"><span>SCORECARD DAY</span><b id="time">08:00</b><span id="spent">0 min spent</span></div>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div class="stage" id="stage"></div>
+      <div class="foot">
+        <div class="say" id="say"></div>
+        <button class="btn ghost" id="back">BACK</button>
+        <button class="btn" id="next">START</button>
+      </div>
+    </div>
+
+    <aside class="bts">
+      <div><span class="k">Behind the scenes</span><h3 id="btsH"></h3></div>
+      <div><span class="k">Running</span><div id="btsT"></div></div>
+      <div><span class="k">Why it matters</span><p id="btsW"></p></div>
+      <div class="layers" id="layers"><span class="k" id="layersK">The pipeline</span>
+        <div data-l="sap">SAP · SOURCE</div>
+        <div data-l="bronze">BRONZE · RAW</div>
+        <div data-l="silver">SILVER · CLEAN + KEYS</div>
+        <div data-l="gold">GOLD · METRICS</div>
+        <div data-l="agents">AGENT TEAM</div>
+        <div data-l="bi">POWER BI · SCORECARD</div>
+      </div>
+    </aside>
+  </div>
+
+  <section>
+    <span class="k">What it's worth</span>
+    <h2>The value, measured and modelled</h2>
+    <div class="val">
+      <div><span class="tag m">MEASURED</span><b>−85%</b><p>Time to build the monthly scorecard, from a working day of manual steps to a review over coffee.</p></div>
+      <div><span class="tag i">ILLUSTRATED</span><b>~5.5 h</b><p>Given back each cycle to the analyst, now spent on the causes instead of the copy-paste.</p></div>
+      <div><span class="tag m">MEASURED</span><b>1 number</b><p>The on-time metric split by shipment type, so the actions land on the lanes that are actually late.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="k">How it's built</span>
+    <h2>The stack, layer by layer</h2>
+    <div class="stack">
+      <div><span class="k">01 Source</span><b>SAP</b><p>Deliveries, orders and change documents, landed as they are.</p></div>
+      <div><span class="k">02 Bronze</span><b>Databricks · Delta</b><p>Raw, append-only, pinned snapshot for reproducible numbers.</p></div>
+      <div><span class="k">03 Silver</span><b>PySpark · SQL</b><p>Typed, de-duplicated, key formats normalised, tested.</p></div>
+      <div><span class="k">04 Gold</span><b>Semantic model</b><p>One definition per metric, with an owner and provenance.</p></div>
+      <div><span class="k">05 Agents</span><b>LLM agents + evals</b><p>Trend, root cause, drafted actions. A human approves.</p></div>
+      <div><span class="k">06 Serve</span><b>Power BI</b><p>The scorecard, refreshed on schedule, actions attached.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="k">What it taught me</span>
+    <h2>Judgment calls worth keeping</h2>
+    <div class="learn">
+      <div><span class="k">01</span><b>Segment before you publish.</b><p>An average across two populations that behave differently describes neither.</p></div>
+      <div><span class="k">02</span><b>The errors that don't raise errors are the expensive ones.</b><p>A join that silently drops rows is worse than one that crashes.</p></div>
+      <div><span class="k">03</span><b>Ask what a timestamp physically means.</b><p>Systems record administrative acts, not events.</p></div>
+      <div><span class="k">04</span><b>Test a metric against its own definition.</b><p>Six definitions of on-time, one narrow spread, shipped as provenance.</p></div>
+    </div>
+  </section>
+
+  <footer>Synthetic data throughout. Partner sites, SKUs and figures are invented; only the −85% is a reported result. · Agent team: pending confirmation (built or designed).</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const START = 8 * 60;
+const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+/* ---------- the two mornings ---------- */
+const BEFORE = [
+  {
+    t: 0, say: "<b>It's scorecard day.</b> <em>The ops review wants the monthly numbers.</em>", btn: "OPEN SAP EXPORT",
+    bts: ["You, starting from zero", ["Email", "Calendar"], "Every month starts from a blank workbook. Nothing carries over from last time except habit."], layers: [],
+    html: () => `<div class="panel mail fade"><div class="from"><span>Ops Review · 07:52</span><span>Today</span></div><h4>Monthly scorecard — need it for the 2pm review</h4><p style="margin:0;color:var(--mute)">Can you send the on-time view by lane, same as last month? Leadership will ask about the partner sites again.</p></div>`
+  },
+  {
+    t: 45, say: "<b>Export three reports from SAP.</b> <em>Deliveries, orders, partner master. Wait for each.</em>", btn: "PASTE INTO EXCEL",
+    bts: ["Manual extract", ["SAP GUI", "CSV"], "Three exports, three timestamps. If one runs late the numbers no longer describe the same moment."], layers: [],
+    html: () => `<div class="fade">${["DELIVERIES_0926.csv · 41,208 rows", "ORDERS_0926.csv · 18,944 rows", "PARTNERS.csv · 312 rows"].map((f, i) => `<div class="panel" style="padding:12px 14px;margin-bottom:8px"><div class="row" style="justify-content:space-between;font:12px var(--mono)"><span>${f}</span><span class="k">export ${i + 1}/3</span></div><div class="prog"><i style="transition-delay:${i * .5}s"></i></div></div>`).join("")}</div>`,
+    after: () => document.querySelectorAll(".prog i").forEach((e) => requestAnimationFrame(() => (e.style.width = "100%")))
+  },
+  {
+    t: 150, say: "<b>Join them with a lookup.</b> <em>No errors. Looks fine.</em>", btn: "REBUILD THE CHARTS",
+    bts: ["The silent failure", ["Excel", "VLOOKUP", "IFERROR"], "One system pads material IDs to 18 digits, the other doesn't. The lookup misses most rows, and IFERROR turns every miss into a quiet zero."], layers: [],
+    html: () => `<div class="fade"><div class="fx"><b>D2</b>=IFERROR(VLOOKUP(A2, ORDERS!A:F, 4, FALSE), 0)</div><table class="grid"><tr><th>material_id</th><th>delivery</th><th>order_qty</th><th>partner</th><th>days_late</th></tr>${[["000000000000104411", "80031122", "0", "P-03", "0"], ["104412", "80031123", "240", "P-07", "4"], ["000000000000104418", "80031127", "0", "P-03", "0"], ["000000000000104420", "80031130", "0", "P-11", "0"], ["104425", "80031141", "96", "P-07", "2"], ["000000000000104431", "80031150", "0", "P-03", "0"]].map((r) => `<tr>${r.map((c, j) => `<td class="${(j === 2 || j === 4) && c === "0" && r[0].startsWith("0000") ? "z" : ""}">${c}</td>`).join("")}</tr>`).join("")}</table><p class="cite" style="margin-top:10px">Highlighted cells are misses dressed as zeros. Nothing on screen tells you.</p></div>`
+  },
+  {
+    t: 120, say: "<b>Rebuild the charts and paste them in.</b> <em>Same as last month, by hand.</em>", btn: "SEND IT",
+    bts: ["Copy-paste reporting", ["Pivot tables", "PowerPoint"], "The on-time rate blends internal transfers, which are instant, with real cross-site shipments. The average looks healthy."], layers: [],
+    html: () => `<div class="sc fade"><div class="panel tile"><span class="k">On-time</span><div class="v">91%</div><div class="d" style="color:var(--ok)">▲ looks fine</div></div><div class="panel tile"><span class="k">Shipments</span><div class="v">41.2K</div><div class="d">all types</div></div><div class="panel tile"><span class="k">Late lines</span><div class="v">3.7K</div><div class="d">no cause</div></div><div class="panel bars">${[["P-03", 94], ["P-07", 92], ["P-11", 89], ["P-02", 88]].map(([l, v]) => `<div><span>${l}</span><span class="b" style="width:${v}%"></span><span>${v}%</span></div>`).join("")}</div></div>`
+  },
+  {
+    t: 85, end: true, say: "<b>Sent, after a full day.</b> <em>And the headline number is wrong.</em>", btn: "TRY THE AUTOMATED DAY →",
+    bts: ["What leadership received", ["Email attachment"], "A blended 91% on-time. The cross-site lanes that matter were running at 68%, and no one would ask why."], layers: [],
+    html: () => `<div class="fade"><div class="flag"><b>Sent 14:40.</b> 6 h 40 min of manual work, and the on-time rate everyone will quote mixes two populations. The real cross-site figure is 68%, and the lookup dropped most of the order quantities.</div><div class="result"><div><b>400 min</b><span>BUILD TIME</span></div><div><b>91%</b><span>THE WRONG NUMBER</span></div><div><b>0</b><span>CAUSES EXPLAINED</span></div></div></div>`
+  }
+];
+
+const AFTER = [
+  {
+    t: 0, say: "<b>It's scorecard day.</b> <em>The pipeline ran at 06:00. Check the run log.</em>", btn: "REVIEW THE CHECK",
+    bts: ["Scheduled pipeline", ["Databricks Jobs", "Delta Lake", "PySpark"], "SAP lands in bronze, gets cleaned and keyed in silver, and becomes one governed metric in gold. Every row count is checked on the way."], layers: ["sap", "bronze", "silver", "gold"],
+    html: () => `<div class="log fade" id="log"></div>`,
+    after: () => typeLog([
+      ["mu", "06:00:02  job scorecard_monthly · run #47 started"],
+      ["", "06:00:41  bronze.sap_deliveries      41,208 rows  <span class='ok'>✓ schema</span>"],
+      ["", "06:01:10  bronze.sap_orders          18,944 rows  <span class='ok'>✓ schema</span>"],
+      ["", "06:03:55  silver.stock_transfers     40,977 rows  <span class='ok'>✓ dedup</span>"],
+      ["pk", "06:03:56  check key_format_match     <b>WARN</b>  mixed padding on material_id"],
+      ["ok", "06:03:57  normalised to 18 chars → match rate 99.6%"],
+      ["", "06:05:12  gold.on_time_by_lane       96 lanes     <span class='ok'>✓ tests 14/14</span>"],
+      ["mu", "06:05:13  run #47 succeeded · 5m 11s"]
+    ])
+  },
+  {
+    t: 6, say: "<b>The check caught the join before it broke anything.</b> <em>Toggle it to see what it prevents.</em>", btn: "CHOOSE THE HEADLINE",
+    bts: ["Data-quality gate", ["PySpark", "expectations"], "The same failure that silently emptied the Excel lookup is now a test. It raises a flag instead of returning fewer rows."], layers: ["silver"],
+    html: () => `<div class="fade"><div class="flag" style="margin-bottom:16px">Source A stores <b>000000000000104411</b>, source B stores <b>104411</b>. Same material.</div><div class="row" style="align-items:center;margin-bottom:8px"><span class="k" style="width:160px">Match rate</span><div class="meter ok" style="flex:1" id="mm"><i style="width:99.6%"></i></div><b id="mv" style="width:70px;text-align:right;font-family:var(--mono)">99.6%</b></div><label style="display:flex;gap:8px;align-items:center;font-size:14px;margin-top:14px;cursor:pointer"><input type="checkbox" id="pad" checked /> Normalise key padding</label><p class="cite" style="margin-top:14px">Untick it: the join still "succeeds". That is the problem.</p></div>`,
+    after: () => ($("pad").onchange = (e) => { const on = e.target.checked; $("mm").className = "meter" + (on ? " ok" : ""); $("mm").firstElementChild.style.width = on ? "99.6%" : "11%"; $("mv").textContent = on ? "99.6%" : "11.0%"; })
+  },
+  {
+    t: 4, gate: true, say: "<b>Pick the headline for leadership.</b> <em>Both are correct arithmetic.</em>", btn: "RUN THE AGENTS",
+    bts: ["Metric definition", ["Gold layer", "semantic model"], "Internal transfers move instantly and inflate the average. The metric has to be split before it is published."], layers: ["gold"],
+    html: () => `<div class="fade"><div class="choice"><button data-c="b"><span class="k">Blended · all movements</span><span class="v">91%</span><span style="font-size:13px;color:var(--mute)">One clean number for the slide.</span></button><button data-c="s"><span class="k">Split · cross-site only</span><span class="v">68%</span><span style="font-size:13px;color:var(--mute)">Internal transfers reported separately.</span></button></div><div id="why" style="margin-top:14px"></div></div>`,
+    after: () => document.querySelectorAll(".choice button").forEach((b) => (b.onclick = () => {
+      document.querySelectorAll(".choice button").forEach((x) => x.classList.toggle("picked", x === b));
+      const blend = b.dataset.c === "b";
+      $("why").innerHTML = blend
+        ? `<div class="flag fade">91% is mostly internal transfers that never left the building. Leadership would relax, and the late partner lanes would keep slipping. <b>Try the split.</b></div>`
+        : `<div class="flag fade" style="border-color:var(--ok);background:var(--okS)">Right call. 68% is the number the partner lanes actually live with, and it points the actions at P-03 and P-07.</div>`;
+      $("next").disabled = blend;
+    }))
+  },
+  {
+    t: 20, say: "<b>The agent team reads the gold tables.</b> <em>Each claim cites the query behind it.</em>", btn: "REVIEW THE ACTIONS",
+    bts: ["Agent team", ["LLM agents", "SQL tools", "evals"], "Three narrow agents instead of one broad one: trends, root cause, actions. An eval checks every claim is grounded in a query before it reaches you."], layers: ["agents"],
+    html: () => `<div class="agents" id="ag"></div>`,
+    after: () => streamAgents([
+      ["TREND", "Cross-site on-time fell 6 pts over three weeks, concentrated on P-03 and P-07.", "q_lane_trend · 06:07"],
+      ["ROOT CAUSE", "71% of late lines on those lanes carry more than one delivery against a single order line. Split deliveries, not carrier delays.", "q_multi_delivery · 06:08"],
+      ["ACTIONS", "Draft: consolidate deliveries per order line on P-03 and P-07; planning to stop raising duplicate orders.", "drafted · needs approval"],
+      ["EVAL", "3 of 3 claims grounded in a cited query. No figure without a source.", "✓ passed"]
+    ])
+  },
+  {
+    t: 30, end: true, say: "<b>Approve, and the scorecard publishes.</b> <em>Before 09:00, with the cause attached.</em>", btn: "REPLAY",
+    bts: ["Power BI scorecard", ["Power BI", "scheduled refresh"], "The scorecard is the last step, not the job. It ships with its provenance and the actions someone has agreed to own."], layers: ["bi"],
+    html: () => `<div class="fade"><div class="sc"><div class="panel tile"><span class="k">Cross-site on-time</span><div class="v" style="color:var(--pink)">68%</div><div class="d" style="color:var(--pink)">▼ 6 pts · 3 wks</div></div><div class="panel tile"><span class="k">Internal moves</span><div class="v">99%</div><div class="d">reported apart</div></div><div class="panel tile"><span class="k">Top cause</span><div class="v">Split</div><div class="d">deliveries · 71%</div></div><div class="panel bars">${[["P-03", 54, 1], ["P-07", 58, 1], ["P-11", 74], ["P-02", 81]].map(([l, v, p]) => `<div><span>${l}</span><span class="b${p ? " pk" : ""}" style="width:${v}%"></span><span>${v}%</span></div>`).join("")}</div></div><div class="panel" style="margin-top:10px">${["Consolidate deliveries per order line · P-03, P-07 · owner Planning", "Stop duplicate order creation · owner Planning", "Re-check lanes in 4 weeks · owner Analytics"].map((a) => `<div class="act"><span class="chk on"></span>${a}</div>`).join("")}</div><div class="result"><div><b>60 min</b><span>BUILD TIME · WAS 400</span></div><div><b>68%</b><span>THE RIGHT NUMBER</span></div><div><b>3</b><span>ACTIONS WITH OWNERS</span></div></div></div>`
+  }
+];
+
+let mode = "before", i = -1;
+const flow = () => (mode === "before" ? BEFORE : AFTER);
+
+function typeLog(lines) {
+  const el = $("log"); let n = 0;
+  const tick = () => { if (!el.isConnected || n >= lines.length) return; const [c, t] = lines[n++]; el.insertAdjacentHTML("beforeend", `<div class="${c}">${t}</div>`); setTimeout(tick, 320); };
+  tick();
+}
+function streamAgents(items) {
+  const el = $("ag"); let n = 0;
+  const tick = () => { if (!el.isConnected || n >= items.length) return; const [w, p, c] = items[n++]; el.insertAdjacentHTML("beforeend", `<div class="panel agent fade"><span class="who"><i></i>${w}</span><div><p>${p}</p><span class="cite">${c}</span></div></div>`); setTimeout(tick, 700); };
+  tick();
+}
+
+function render() {
+  const f = flow();
+  $("mBefore").classList.toggle("on", mode === "before");
+  $("mAfter").classList.toggle("on", mode === "after");
+  $("steps").innerHTML = f.map((_, k) => `<i class="${k < i ? "done" : k === i ? "now" : ""}"></i>`).join("");
+  const spent = i < 0 ? 0 : f.slice(0, i + 1).reduce((s, x) => s + x.t, 0);
+  $("time").textContent = fmt(START + (mode === "after" && i >= 0 ? spent : spent));
+  $("spent").textContent = `${spent} min spent`;
+  $("clock").classList.toggle("late", mode === "before" && spent > 300);
+  $("back").disabled = i <= 0;
+  $("next").disabled = false;
+
+  if (i < 0) {
+    $("stage").innerHTML = `<div class="fade" style="max-width:520px;padding-top:30px"><span class="k">${mode === "before" ? "The manual morning" : "The automated morning"}</span><h2 style="margin:8px 0">${mode === "before" ? "Build the scorecard the old way." : "Same morning, after the rebuild."}</h2><p style="color:var(--mute)">${mode === "before" ? "Five steps, played in first person. Watch the clock." : "The pipeline ran before you logged in. You review, decide and approve."}</p></div>`;
+    $("say").innerHTML = `<em>${mode === "before" ? "Start at 08:00." : "Start at 08:00. The 06:00 run has finished."}</em>`;
+    $("next").textContent = "START";
+    $("btsH").textContent = mode === "before" ? "A day of manual steps" : "A pipeline that runs before you do";
+    $("btsT").innerHTML = "";
+    $("btsW").textContent = "Click through each step. This panel shows what is running and why.";
+    setLayers([]);
+    return;
+  }
+  const s = f[i];
+  $("stage").innerHTML = s.html();
+  $("say").innerHTML = s.say;
+  $("next").textContent = s.btn;
+  $("btsH").textContent = s.bts[0];
+  $("btsT").innerHTML = s.bts[1].map((t) => `<span class="tool">${t}</span>`).join("");
+  $("btsW").textContent = s.bts[2];
+  setLayers(s.layers);
+  if (s.gate) $("next").disabled = true;
+  s.after && s.after();
+}
+function setLayers(on) { $("layersK").textContent = mode === "before" ? "The pipeline · not built yet" : "The pipeline"; document.querySelectorAll("#layers div").forEach((d) => d.classList.toggle("on", on.includes(d.dataset.l))); }
+
+$("next").onclick = () => {
+  const f = flow();
+  if (i >= 0 && f[i].end) { if (mode === "before") { mode = "after"; i = -1; } else { i = -1; } render(); return; }
+  i++; render();
+};
+$("back").onclick = () => { if (i > 0) { i--; render(); } };
+$("mBefore").onclick = () => { mode = "before"; i = -1; render(); };
+$("mAfter").onclick = () => { mode = "after"; i = -1; render(); };
+render();
+</script>
+</body>
+</html>

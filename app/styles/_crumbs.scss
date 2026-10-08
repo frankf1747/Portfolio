@@ -13,6 +13,53 @@
   gap: 20rem;
 }
 
+/* ← BACK — a quiet outlined pill in the trail's mono type, so it reads as
+   part of the row rather than as a second header. Fills with the mark on
+   hover, and the arrow leans the way it goes. Behaviour in BackLink.tsx. */
+.crumbs__back {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8rem;
+  padding: 7rem 14rem 7rem 11rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 99rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+
+  span {
+    transition: translate 0.2s;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--mark);
+    background: var(--mark);
+    color: #fff;
+
+    span {
+      translate: -3rem 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crumbs__back,
+  .crumbs__back span {
+    transition: none;
+  }
+}
+
 .crumbs__list {
   display: flex;
   flex-wrap: wrap;

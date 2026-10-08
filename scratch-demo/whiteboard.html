@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BioMarin board — page demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4f1ea;
+    --board: #fbfaf7;
+    --ink: #24203d;
+    --navy: #1f2a5c;
+    --mute: #77738a;
+    --line: #e2ded4;
+    --pink: #f2247a;
+    --pinkS: #ffe1ee;
+    --yellow: #fff2a6;
+    --blue: #e3e8ff;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Archivo", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); }
+  .demo-tag { position: fixed; left: 12px; bottom: 12px; z-index: 50; font: 500 10px var(--mono); letter-spacing: .06em; padding: 4px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+
+  /* ================= stage + camera ================= */
+  .tour { position: relative; }
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--paper); }
+  .board {
+    position: absolute; left: 0; top: 0; width: 3600px; height: 2100px; transform-origin: 0 0;
+    background-color: var(--board);
+    background-image: radial-gradient(#d9d4c8 1.4px, transparent 1.4px);
+    background-size: 28px 28px;
+    border-radius: 18px;
+    box-shadow: 0 0 0 1px rgb(36 32 61 / .06), 0 40px 80px -40px rgb(36 32 61 / .3);
+  }
+
+  .top { position: absolute; inset: 0 0 auto 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 26px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mute); z-index: 5; pointer-events: none; }
+  .top b { color: var(--ink); font-weight: 500; }
+  .top .pk { color: var(--pink); }
+
+  .cap { position: absolute; left: 50%; bottom: 18px; translate: -50% 0; z-index: 6; display: flex; align-items: center; gap: 14px; background: var(--ink); color: #fff; border-radius: 14px; padding: 10px 10px 10px 16px; width: min(780px, calc(100vw - 260px)); box-shadow: 0 20px 40px -20px rgb(36 32 61 / .6); }
+  .cap .n { font: 500 11px var(--mono); letter-spacing: .06em; color: #9b97b3; white-space: nowrap; }
+  .cap .t { font-size: 14.5px; line-height: 1.35; flex: 1; }
+  .cap .t b { color: var(--pink); font-weight: 600; }
+  .cap button { flex: none; border: 0; background: #3a355a; color: #fff; width: 32px; height: 32px; border-radius: 9px; cursor: pointer; font-size: 15px; }
+  .cap button:hover { background: var(--pink); }
+
+  .mini { position: absolute; right: 22px; top: 50px; width: 168px; height: 98px; z-index: 6; background: rgb(255 255 255 / .9); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .mini i { position: absolute; border-radius: 2px; background: #e9e5f2; }
+  .mini i.on { background: var(--pinkS); outline: 1px solid var(--pink); }
+  .mini .vp { position: absolute; border: 1.5px solid var(--ink); border-radius: 2px; }
+
+  /* ================= board furniture ================= */
+  .region { position: absolute; border-radius: 22px; background: rgb(255 255 255 / .55); border: 2px solid #e6e2d8; transition: opacity .5s ease; }
+  .region.dim { opacity: .25; }
+  .tab { position: absolute; left: 26px; top: -22px; display: flex; align-items: center; gap: 12px; background: var(--ink); color: #fff; font: 600 17px var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 9px 18px 9px 10px; border-radius: 12px; }
+  .tab span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--pink); }
+
+  .k { font: 600 15px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--mute); }
+  .k.pk { color: var(--pink); }
+  .card { position: absolute; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 20px 22px; box-shadow: 0 10px 24px -18px rgb(36 32 61 / .35); }
+  .card h4 { margin: 6px 0 0; font-size: 24px; line-height: 1.2; color: var(--navy); }
+  .card p { margin: 8px 0 0; font-size: 17px; line-height: 1.4; color: var(--mute); }
+  .sticky { position: absolute; padding: 24px 26px; font-size: 22px; line-height: 1.35; box-shadow: 0 16px 26px -18px rgb(0 0 0 / .45); border-radius: 4px; }
+  .sticky.y { background: var(--yellow); }
+  .sticky.p { background: var(--pinkS); }
+  .sticky.b { background: var(--blue); }
+
+  /* flowchart nodes — positioned in board coordinates */
+  .fc { transition: opacity .5s ease; }
+  .fc.dim { opacity: .25; }
+  .node { position: absolute; border-radius: 16px; padding: 18px 20px; background: #fff; border: 2px solid var(--navy); }
+  .node > b { display: block; font-size: 24px; line-height: 1.2; color: var(--navy); }
+  .node > span { display: block; font-size: 18px; color: var(--mute); margin-top: 6px; line-height: 1.38; }
+  .node.src { background: var(--navy); }
+  .node.src > b { color: #fff; } .node.src > span { color: #c4c9e6; }
+  .node.ag { border-color: var(--pink); box-shadow: 0 0 0 6px var(--pinkS); }
+  .node.ag > b { color: var(--pink); }
+  .node.sig { border-color: var(--pink); border-style: dashed; }
+  .node.sig > b { color: var(--pink); }
+  .node.out { background: var(--navy); }
+  .node.out > b { color: #fff; } .node.out > span { color: #c4c9e6; }
+  .node.ppl { background: var(--pinkS); border-color: var(--pinkS); }
+  .node > span.chip, .chip { display: inline-block; margin-top: 0; font: 600 13px var(--mono); letter-spacing: .06em; padding: 4px 10px; border-radius: 99px; background: var(--pink); color: #fff; margin-bottom: 10px; }
+  .row { display: grid; grid-template-columns: 128px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 16px; line-height: 1.3; color: var(--mute); }
+  .row:first-of-type { border-top: 0; }
+  .row b { font: 600 14px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); padding-top: 2px; }
+  .sub { border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
+  .sub b { display: block; font-size: 19px; color: var(--navy); }
+  .sub span { display: block; font-size: 16px; color: var(--mute); margin-top: 3px; line-height: 1.35; }
+  .colhead { position: absolute; }
+  .colhead .num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 16px var(--mono); margin-right: 10px; vertical-align: middle; }
+  .colhead b { font: 600 20px var(--mono); letter-spacing: .06em; vertical-align: middle; }
+  .colhead span { display: block; font-size: 17px; color: var(--mute); margin-top: 6px; }
+  .lane { position: absolute; font: 600 15px var(--mono); letter-spacing: .07em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+  .lane i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .elab { position: absolute; font: 500 15px var(--mono); color: var(--mute); background: var(--board); padding: 0 6px; }
+
+  .stat b { display: block; font-size: 46px; white-space: nowrap; font-weight: 800; letter-spacing: -.035em; line-height: .95; color: var(--navy); }
+  .stat span { display: block; font-size: 21px; color: var(--ink); margin-top: 10px; font-weight: 600; }
+  .bn { font-size: 18px; line-height: 1.4; margin: 0; color: var(--mute); }
+  .bn b { font: 600 13px var(--mono); letter-spacing: .07em; color: var(--mute); margin-right: 8px; }
+  .bn.now { color: var(--ink); } .bn.now b { color: var(--pink); }
+
+  .after { max-width: 980px; margin: 0 auto; padding: 50px 28px 90px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; font-size: 14px; color: var(--mute); }
+  .after h3 { font: 500 11px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink); margin: 0 0 10px; }
+</style>
+</head>
+<body>
+<span class="demo-tag">DESIGN DEMO · WHITEBOARD</span>
+
+<div class="tour" id="tour">
+  <div class="stage" id="stage">
+    <div class="board" id="board">
+      <svg id="wires" width="3600" height="2100" style="position:absolute;inset:0;pointer-events:none;overflow:visible"></svg>
+
+      <!-- ===== 01 WHAT IT'S ABOUT ===== -->
+      <div class="region" id="rA" style="left:80px;top:90px;width:1100px;height:640px">
+        <div class="tab"><span>1</span>What it's about</div>
+        <div style="position:absolute;left:56px;top:70px;right:56px">
+          <div class="k pk">BioMarin · External Operations · Summer 2026</div>
+          <div style="font-size:76px;font-weight:800;letter-spacing:-.03em;line-height:.98;color:var(--navy);margin-top:16px">The scorecard<br />that builds itself</div>
+          <p style="font-size:24px;line-height:1.42;color:var(--mute);margin:20px 0 0;max-width:40ch">Automated metric tracking for the monthly operations review, with an agent team that drafts the <b style="color:var(--ink)">root-cause deep dive</b> and <b style="color:var(--ink)">signals the owner</b> before a miss.</p>
+        </div>
+        <div class="card" style="left:56px;top:448px;width:236px;height:152px"><div class="k">The company</div><h4>Rare-disease biotech</h4><p>GMP-regulated. Every batch matters.</p></div>
+        <div class="card" style="left:308px;top:448px;width:236px;height:152px"><div class="k">The team</div><h4>External Ops</h4><p>Manages contract manufacturers.</p></div>
+        <div class="card" style="left:560px;top:448px;width:236px;height:152px"><div class="k">The scorecard</div><h4>12 metrics</h4><p>Quality, release, training. Monthly.</p></div>
+        <div class="card" style="left:812px;top:448px;width:236px;height:152px;border-color:var(--pink)"><div class="k pk">My role</div><h4>Built it end to end</h4><p>Insights &amp; Analytics intern.</p></div>
+      </div>
+
+      <!-- ===== 02 THE BUSINESS QUESTION ===== -->
+      <div class="region" id="rB" style="left:1260px;top:90px;width:1020px;height:640px">
+        <div class="tab"><span>2</span>The business question</div>
+        <div class="sticky y" style="left:56px;top:70px;width:610px;rotate:-1.5deg;padding:32px 34px">
+          <div class="k" style="color:#8a7a2a">The ask</div>
+          <div style="font-size:34px;font-weight:700;line-height:1.2;margin-top:12px;color:var(--ink)">Can the scorecard build itself, so the team's time goes to root cause, and owners hear about a miss while it's still avoidable?</div>
+        </div>
+        <div class="k" style="position:absolute;left:712px;top:78px">Today</div>
+        <div class="sticky p" style="left:704px;top:112px;width:270px;rotate:2deg;font-size:20px">Data <b>pulled by hand</b> from four systems and pasted onto the deck, every cycle.</div>
+        <div class="sticky p" style="left:716px;top:286px;width:258px;rotate:-1.5deg;font-size:20px">Little time left for <b>root-cause analysis</b>. The deck says what, not why.</div>
+        <div class="sticky p" style="left:700px;top:460px;width:274px;rotate:1.5deg;font-size:20px">Misses are flagged at the monthly review, <b>after they were avoidable</b>.</div>
+        <div style="position:absolute;left:66px;top:440px;width:580px;font-size:21px;line-height:1.45;color:var(--mute)">In a GMP operation a late deviation closure or a lapsed training record is a compliance risk, not just a red cell. <b style="color:var(--ink)">The value is in seeing it early and knowing why.</b></div>
+      </div>
+
+      <!-- ===== 03 HOW IT'S BUILT (frame; the flowchart is drawn on the board) ===== -->
+      <div class="region" id="rC" style="left:80px;top:810px;width:2200px;height:1230px">
+        <div class="tab"><span>3</span>How it's built</div>
+        <div style="position:absolute;left:44px;top:36px;font-size:22px;color:var(--mute);max-width:1500px">Every source lands in one governed layer and is calculated in one run. <b style="color:var(--ink)">The main path ends in one drafted deck; a weekly branch signals owners, and their answers flow back into it.</b></div>
+      </div>
+      <div class="fc" id="flow"></div>
+
+      <!-- ===== 04 BUSINESS VALUE ===== -->
+      <div class="region" id="rD" style="left:2360px;top:90px;width:1160px;height:780px">
+        <div class="tab"><span>4</span>What it brings the business</div>
+        <div style="position:absolute;left:50px;top:66px;right:50px;display:flex;align-items:flex-end;gap:30px;padding-bottom:30px;border-bottom:2px solid var(--line)">
+          <div style="font-size:150px;font-weight:800;letter-spacing:-.04em;line-height:.9;color:var(--pink)">85%</div>
+          <div style="padding-bottom:12px"><div style="font-size:30px;font-weight:700;color:var(--navy)">less manual data processing</div><div style="font-size:21px;color:var(--mute);margin-top:6px;max-width:32ch">The other 15% is on purpose: it's where people review, judge and sign off.</div></div>
+        </div>
+        <div style="position:absolute;left:50px;right:50px;top:330px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px">
+          <div><div class="stat"><b>Why, not what</b><span>Time moves to root cause</span></div><p class="bn" style="margin-top:16px"><b>BEFORE</b>Hours pulling and pasting; the deck described the month.</p><p class="bn now" style="margin-top:10px"><b>NOW</b>The deep dive arrives drafted; the team tests and refines it.</p></div>
+          <div><div class="stat"><b>Weekly</b><span>Act while it's avoidable</span></div><p class="bn" style="margin-top:16px"><b>BEFORE</b>Misses surfaced at the monthly review.</p><p class="bn now" style="margin-top:10px"><b>NOW</b>Early warnings reach the named owner days before the due date.</p></div>
+          <div><div class="stat"><b>Days → 1 run</b><span>Meetings become a schedule</span></div><p class="bn" style="margin-top:16px"><b>BEFORE</b>Days of coordination and manual pulls each cycle.</p><p class="bn now" style="margin-top:10px"><b>NOW</b>One scheduled source-to-deck run, refreshed more often.</p></div>
+        </div>
+      </div>
+
+      <!-- ===== 05 WHAT I PROPOSED ===== -->
+      <div class="region" id="rE" style="left:2360px;top:950px;width:1160px;height:760px">
+        <div class="tab"><span>5</span>What I proposed next</div>
+        <div style="position:absolute;left:50px;top:60px;width:570px">
+          <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:var(--navy)">Every closed loop makes the next one smarter</div>
+          <p style="font-size:20px;line-height:1.45;color:var(--mute);margin:16px 0 0">Today a deviation is investigated, closed, then forgotten. If cause, owner, action and outcome are written back into one context layer, people and AI can ask:</p>
+          <div style="display:grid;gap:12px;margin-top:20px">
+            <div class="sticky b" style="position:relative;font-size:20px;padding:14px 18px"><b>Did the CAPA work?</b> Effectiveness, not just closure.</div>
+            <div class="sticky b" style="position:relative;font-size:20px;padding:14px 18px"><b>Have we seen this before?</b> Similar deviations, causes and fixes.</div>
+            <div class="sticky b" style="position:relative;font-size:20px;padding:14px 18px"><b>Is it coming again?</b> Recurrence spotted before the event.</div>
+          </div>
+        </div>
+        <svg style="position:absolute;left:640px;top:50px" width="480" height="480" viewBox="0 0 480 480">
+          <defs><marker id="m" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1f2a5c" /></marker><marker id="mp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f2247a" /></marker></defs>
+          <circle cx="240" cy="240" r="170" fill="none" stroke="#e2ded4" stroke-width="2" />
+          <path d="M295,79 A170,170 0 0 1 405,195" fill="none" stroke="#1f2a5c" stroke-width="3" marker-end="url(#m)" />
+          <path d="M403,295 A170,170 0 0 1 305,399" fill="none" stroke="#1f2a5c" stroke-width="3" marker-end="url(#m)" />
+          <path d="M175,399 A170,170 0 0 1 77,295" fill="none" stroke="#f2247a" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#mp)" />
+          <path d="M75,195 A170,170 0 0 1 185,79" fill="none" stroke="#f2247a" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#mp)" />
+          <g font-family="IBM Plex Mono" font-weight="600" font-size="17" text-anchor="middle" letter-spacing="1">
+            <rect x="185" y="45" width="110" height="44" rx="22" fill="#1f2a5c" /><text x="240" y="73" fill="#fff">FLAG</text>
+            <rect x="375" y="218" width="100" height="44" rx="22" fill="#1f2a5c" /><text x="425" y="246" fill="#fff">DECIDE</text>
+            <rect x="190" y="391" width="100" height="44" rx="22" fill="#1f2a5c" /><text x="240" y="419" fill="#fff">ACT</text>
+            <rect x="5" y="218" width="104" height="44" rx="22" fill="#fff" stroke="#f2247a" stroke-width="2" stroke-dasharray="5 4" /><text x="57" y="246" fill="#f2247a">REVIEW</text>
+          </g>
+          <circle cx="240" cy="240" r="94" fill="#ffe1ee" />
+          <text x="240" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-weight="600" font-size="17" fill="#f2247a" letter-spacing="1">CONTEXT</text>
+          <text x="240" y="252" text-anchor="middle" font-family="Archivo" font-size="16" fill="#24203d">cause · owner</text>
+          <text x="240" y="274" text-anchor="middle" font-family="Archivo" font-size="16" fill="#24203d">action · outcome</text>
+          <text x="305" y="36" font-family="IBM Plex Mono" font-size="14" fill="#77738a">well served today</text>
+          <text x="20" y="455" font-family="IBM Plex Mono" font-size="14" fill="#f2247a">the missing half: in inboxes</text>
+        </svg>
+        <div style="position:absolute;left:50px;right:50px;top:560px;padding-top:22px;border-top:2px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:19px;line-height:1.45;color:var(--mute)">
+          <div><b style="color:var(--ink)">The first step is already built.</b> When an owner answers a weekly signal, their cause and action are captured. That is the start of the loop.</div>
+          <div><b style="color:var(--ink)">What it takes:</b> an operating-model change, not another agent. Record the outcome where the work happens, and check effectiveness later.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="top">
+      <span>← <b>Projects</b> &nbsp;/&nbsp; <span class="pk">(01) BioMarin</span> &nbsp;·&nbsp; Featured project</span>
+      <span>Scroll to walk the board · ← → also work</span>
+    </div>
+    <div class="mini" id="mini"></div>
+    <div class="cap"><button id="prev" aria-label="Previous">←</button><span class="n" id="capN"></span><span class="t" id="capT"></span><button id="next" aria-label="Next">→</button></div>
+  </div>
+</div>
+
+<div class="after">
+  <div><h3>Stack</h3>Databricks (medallion, SQL) · Fivetran · Microsoft Fabric (Python notebooks) · Power BI semantic models (REST and DAX queries) · Delta tables · Power Automate · Copilot · agent evals</div>
+  <div><h3>A note on what's shown</h3>The flow follows the real build. Signal thresholds and examples are illustrative; internal names and figures are left out. The 85% is the reported result.</div>
+</div>
+
+<script>
+/* ================= the flowchart ================= */
+const N_ = (x, y, w, h, cls, inner) => `<div class="node ${cls}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${inner}</div>`;
+let f = "";
+
+/* column heads */
+[[130, "1", "SOURCES", "GxP systems of record"], [520, "2", "GOVERN", "one model, one key"], [930, "3", "CALCULATE", "12 metrics, one run"], [1310, "4", "ANALYSE", "agents draft"], [1720, "5", "DELIVER", "one deck, or a signal"], [2050, "6", "DECIDE", "people own the call"]]
+  .forEach(([x, n, t, s]) => (f += `<div class="colhead" style="left:${x}px;top:888px"><span class="num">${n}</span><b>${t}</b><span>${s}</span></div>`));
+
+/* lanes */
+f += `<div class="lane" style="left:1310px;top:982px;color:var(--navy)"><i style="background:var(--navy)"></i>Monthly · the scorecard</div>`;
+f += `<div class="lane" style="left:1310px;top:1362px;color:var(--pink)"><i style="background:var(--pink)"></i>Weekly · proactive signals</div>`;
+
+/* 1 sources */
+f += N_(130, 1010, 300, 140, "src", `<b>Veeva QMS</b><span>deviations · CAPAs</span>`);
+f += N_(130, 1180, 300, 140, "src", `<b>SAP S/4HANA</b><span>batch release decisions · shipments</span>`);
+f += N_(130, 1350, 300, 140, "src", `<b>LMS + HR</b><span>GMP training records · people</span>`);
+
+/* 2 govern */
+f += N_(520, 1010, 330, 480, "", `<b>Governed layer</b><span>read-only from every source</span>
+  <div class="sub"><b>Databricks medallion</b><span>SAP via Fivetran · bronze → silver → gold</span></div>
+  <div class="sub"><b>Power BI semantic models</b><span>quality + training, queried by REST and DAX</span></div>
+  <div class="sub" style="border-color:var(--pink)"><b style="color:var(--pink)">One key</b><span>batch · site · month, so metrics join</span></div>`);
+
+/* 3 calculate */
+f += N_(930, 1120, 300, 260, "", `<b>12 metrics, one run</b><span>Fabric + Databricks notebooks. Rate vs target, by site × month, 13-month history.</span><div class="sub" style="margin-top:14px"><b>Delta metric store</b><span>one source for the deck and the agents</span></div>`);
+
+/* 4–6 monthly path */
+f += N_(1310, 1020, 340, 292, "ag", `<span class="chip">AGENT TEAM</span><b>Root-cause deep dive</b>
+  <div class="row" style="margin-top:8px"><b>Trend</b>what changed this month</div>
+  <div class="row"><b>Root cause</b>likely driver by site, product, category</div>
+  <div class="row"><b>Recurrence</b>seen this before?</div>`);
+f += N_(1720, 1020, 280, 292, "out", `<b>Draft scorecard deck</b><span>Copilot builds it from the metric store: 12 metrics, commentary on each miss, recommended actions.</span>`);
+f += N_(2050, 1020, 200, 292, "ppl", `<b>SME reviews</b><span>edits the read, then leadership signs off at the monthly review.</span>`);
+
+/* 4–6 weekly branch */
+f += N_(1310, 1400, 340, 292, "sig", `<span class="chip">EARLY WARNING</span><b>Weekly checks</b>
+  <div class="row" style="margin-top:8px"><b>Deviation</b>open day 21 of 30, closure at risk</div>
+  <div class="row"><b>Recurrence</b>3rd time at one site this quarter</div>
+  <div class="row"><b>Training</b>GMP course due in ≤ 7 days</div>`);
+f += N_(1720, 1400, 280, 292, "", `<b>Signal to the owner</b><span>Power Automate sends a Teams message or email: what's at risk, the context, and a drafted read.</span>`);
+f += N_(2050, 1400, 200, 292, "ppl", `<b>Owner acts</b><span>confirms the cause, sets the action and an owner.</span>`);
+
+/* evals */
+f += `<div class="sticky y" style="left:1560px;top:968px;width:230px;font-size:16px;padding:9px 13px;rotate:2deg;z-index:2"><b>Evals</b> check every claim cites the metric store.</div>`;
+f += `<div class="elab" style="left:1700px;top:1334px;color:var(--pink)">cause + action flow into the draft</div>`;
+
+/* orchestration + guardrails */
+f += `<div style="position:absolute;left:130px;top:1730px;width:2120px;height:100px;border-radius:14px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:36px;padding:0 30px">
+  <div style="font:600 20px var(--mono);letter-spacing:.06em;white-space:nowrap">⚡ POWER AUTOMATE</div>
+  <div style="font-size:19px;color:#c9c6d8;line-height:1.4">Runs the schedule: <b style="color:#fff">the scorecard monthly, the checks weekly</b>. Moves files, triggers the SAP query, sends the signals. Fabric and Databricks schedule their own notebooks.</div></div>`;
+f += `<div class="k" style="position:absolute;left:130px;top:1858px;color:var(--ink)">GxP guardrails</div>`;
+[["Read-only", "Agents never write to a GxP system of record."], ["QA-confirmed definitions", "Each metric's logic is signed off before it's automated."], ["Agents draft, people approve", "Nothing reaches leadership without SME review."], ["Grounded and scored", "Evals check every figure traces to the metric store."]]
+  .forEach(([t, d], k) => (f += `<div class="card" style="left:${130 + k * 536}px;top:1890px;width:512px;height:124px;padding:16px 20px"><h4 style="margin:0;font-size:21px">${t}</h4><p style="margin-top:6px">${d}</p></div>`));
+document.getElementById("flow").innerHTML = f;
+
+/* ================= wires ================= */
+const A = (id, c) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`;
+let w = `<defs>${A("an", "#1f2a5c")}${A("ap", "#f2247a")}${A("ag", "#9a96ad")}</defs>`;
+const L = (d, c = "#1f2a5c", m = "an", extra = "") => `<path d="${d}" fill="none" stroke="${c}" stroke-width="3" marker-end="url(#${m})" ${extra}/>`;
+/* sources converge */
+w += L("M430,1080 C480,1080 470,1150 514,1150");
+w += L("M430,1250 L514,1250");
+w += L("M430,1420 C480,1420 470,1350 514,1350");
+/* govern → calculate */
+w += L("M850,1250 L924,1250");
+/* calculate forks */
+w += L("M1230,1210 C1270,1210 1260,1166 1304,1166");
+w += L("M1230,1290 C1270,1290 1260,1546 1304,1546", "#f2247a", "ap", 'stroke-dasharray="9 7"');
+/* monthly path */
+w += L("M1650,1166 L1714,1166");
+w += L("M2000,1166 L2044,1166");
+/* weekly path */
+w += L("M1650,1546 L1714,1546", "#f2247a", "ap", 'stroke-dasharray="9 7"');
+w += L("M2000,1546 L2044,1546", "#f2247a", "ap", 'stroke-dasharray="9 7"');
+/* owner's answer flows back into the draft */
+w += L("M2150,1400 C2150,1350 1860,1370 1860,1318", "#f2247a", "ap", 'stroke-dasharray="9 7"');
+/* edge labels */
+const EL = (x, y, t) => `<text x="${x}" y="${y}" font-family="IBM Plex Mono" font-size="14" fill="#77738a" text-anchor="middle">${t}</text>`;
+w += EL(472, 1112, "REST") + EL(472, 1240, "Fivetran") + EL(472, 1400, "DAX");
+
+/* reading path between regions */
+const RP = (d) => `<path d="${d}" fill="none" stroke="#f2247a" stroke-width="4" stroke-dasharray="12 10" marker-end="url(#ap)" opacity=".8"/>`;
+w += RP("M1180,410 L1250,410");
+w += RP("M1770,730 C1770,780 1300,760 1240,800");
+w += RP("M2280,1000 C2330,1000 2310,640 2350,640");
+w += RP("M2940,870 C2940,900 2940,915 2940,940");
+document.getElementById("wires").innerHTML = w;
+
+/* ================= the tour ================= */
+const board = document.getElementById("board");
+const R = (id) => { const e = document.getElementById(id); return [e.offsetLeft, e.offsetTop - 30, e.offsetWidth, e.offsetHeight + 30]; };
+const STOPS = [
+  { r: [0, 0, 3600, 2100], focus: null, n: "Overview", t: "One project on one board. <b>Scroll</b> and I'll walk you through it in order." },
+  { r: R("rA"), focus: "rA", n: "01 · What it's about", t: "One monthly scorecard, <b>automated end to end</b>, with agents that explain it and warn early." },
+  { r: R("rB"), focus: "rB", n: "02 · The question", t: "Time went into pulling data, not into why. <b>Can it build itself and warn before a miss?</b>" },
+  { r: [80, 780, 2200, 1260], focus: "rC", n: "03 · How it's built", t: "Left to right. <b>One path ends in the deck</b>; a weekly branch signals owners and feeds back into it." },
+  { r: [100, 870, 1160, 640], focus: "rC", n: "03 · Govern and calculate", t: "Three GxP sources, <b>one governed layer with one key</b>, twelve metrics in a single run." },
+  { r: [1280, 945, 1000, 380], focus: "rC", n: "03 · Monthly: the deep dive", t: "An agent team drafts the trend and likely root cause; <b>Copilot drafts the deck; an SME reviews.</b>" },
+  { r: [1280, 1320, 1000, 390], focus: "rC", n: "03 · Weekly: the early warning", t: "Checks catch a risk while it's avoidable. <b>The owner's cause and action flow back into the draft.</b>" },
+  { r: [100, 1710, 2180, 330], focus: "rC", n: "03 · Guardrails", t: "Built for a GMP setting: <b>read-only, QA-confirmed, and nothing ships without a person.</b>" },
+  { r: R("rD"), focus: "rD", n: "04 · Business value", t: "<b>85% less manual processing</b>, and the time moves to root cause and to acting early." },
+  { r: R("rE"), focus: "rE", n: "05 · What's next", t: "The scorecard is the foundation. <b>The closed loop is the payoff.</b>" },
+  { r: [0, 0, 3600, 2100], focus: null, n: "The whole board", t: "The backbone before the brain: <b>each layer only holds if the one beneath it does.</b>" }
+];
+const N = STOPS.length, PER = 0.85;
+const tour = document.getElementById("tour");
+tour.style.height = `calc(${(N - 1) * PER * 100}vh + 100vh)`;
+
+function camFor([x, y, w, h]) {
+  const vw = innerWidth, top = 52, bot = 84, vh = innerHeight - top - bot;
+  const s = Math.min((vw - 110) / w, vh / h);
+  return { s, cx: x + w / 2, cy: y + h / 2, vw, mid: top + vh / 2 };
+}
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const dimmable = ["rA", "rB", "rC", "rD", "rE"].map((id) => document.getElementById(id));
+const flow = document.getElementById("flow");
+const mini = document.getElementById("mini");
+const MS = 168 / 3600;
+mini.innerHTML = dimmable.map((e) => `<i data-id="${e.id}" style="left:${e.offsetLeft * MS}px;top:${e.offsetTop * MS}px;width:${e.offsetWidth * MS}px;height:${e.offsetHeight * MS}px"></i>`).join("") + `<div class="vp" id="vp"></div>`;
+
+let shown = -1;
+function frame() {
+  const p = Math.max(0, Math.min(N - 1, (scrollY - tour.offsetTop) / (PER * innerHeight)));
+  const k = Math.min(N - 2, Math.floor(p));
+  const t = ease(Math.max(0, Math.min(1, (p - k - 0.2) / 0.6)));
+  const a = camFor(STOPS[k].r), b = camFor(STOPS[k + 1].r);
+  const s = Math.exp(Math.log(a.s) + (Math.log(b.s) - Math.log(a.s)) * t);
+  const cx = a.cx + (b.cx - a.cx) * t, cy = a.cy + (b.cy - a.cy) * t;
+  const tx = a.vw / 2 - cx * s, ty = a.mid - cy * s;
+  board.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+
+  const near = Math.round(p);
+  if (near !== shown) {
+    shown = near;
+    const st = STOPS[near];
+    document.getElementById("capN").textContent = `${String(near + 1).padStart(2, "0")} / ${N} · ${st.n}`;
+    document.getElementById("capT").innerHTML = st.t;
+    dimmable.forEach((e) => e.classList.toggle("dim", !!st.focus && e.id !== st.focus));
+    flow.classList.toggle("dim", !!st.focus && st.focus !== "rC");
+    mini.querySelectorAll("i").forEach((e) => e.classList.toggle("on", e.dataset.id === st.focus));
+  }
+  const vp = document.getElementById("vp");
+  vp.style.left = `${Math.max(0, (-tx / s) * MS)}px`; vp.style.top = `${Math.max(0, (-ty / s) * MS)}px`;
+  vp.style.width = `${Math.min(168, (innerWidth / s) * MS)}px`; vp.style.height = `${Math.min(98, (innerHeight / s) * MS)}px`;
+}
+const yOf = (k) => tour.offsetTop + k * PER * innerHeight;
+const go = (d) => scrollTo({ top: yOf(Math.max(0, Math.min(N - 1, shown + d))), behavior: "smooth" });
+document.getElementById("next").onclick = () => go(1);
+document.getElementById("prev").onclick = () => go(-1);
+addEventListener("keydown", (e) => { if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); go(1); } if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); go(-1); } });
+addEventListener("scroll", frame, { passive: true });
+addEventListener("resize", frame);
+frame();
+</script>
+</body>
+</html>

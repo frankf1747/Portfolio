@@ -274,13 +274,16 @@ export function ClinVisual() {
 /* ---------- 05 BRAIN — throw anything in; ask for it back any time,
    and get it with receipts ---------- */
 
-const INTAKE = ["NOTES", "DOCS", "LINKS", "PHOTOS", "CHATS"];
+const INTAKE = ["NOTES", "JDS", "PAPERS", "EXPERTS", "CHATS"];
 
 export function BrainVisual() {
-  const passages: [string, string, boolean?][] = [
-    ["P1", ".88", true],
-    ["P2", ".43"],
-    ["P3", ".42"]
+  /* The example asks across sources rather than for one fact: the answer
+     is drawn from job posts and research together, which is the point of
+     keeping everything in one place. */
+  const passages: [string, string, string, boolean?][] = [
+    ["P1", ".88", "JD", true],
+    ["P2", ".81", "EXPERT"],
+    ["P3", ".77", "PAPER"]
   ];
   return (
     <svg className="sk sk-brain" viewBox="0 0 370 524" preserveAspectRatio="xMidYMid meet">
@@ -315,10 +318,12 @@ export function BrainVisual() {
         {passages.map(([p], i) => (
           <g key={p}>
             <rect x="20" y={198 + i * 40} width="330" height="32" rx="6" fill="var(--paper)" />
-            <path d={`M108,${210 + i * 40} H${330 - i * 40} M108,${219 + i * 40} H${290 - i * 30}`} className="sk-faint" />
+            <path d={`M146,${210 + i * 40} H${330 - i * 40} M146,${219 + i * 40} H${290 - i * 30}`} className="sk-faint" />
           </g>
         ))}
-        <path d="M185,318 V328" />
+        {/* the three shown are the top of a deeper pile */}
+        <path d="M24,314 H346 M30,318 H340" className="sk-faint" />
+        <path d="M185,320 V328" />
         <rect x="20" y="330" width="330" height="64" rx="10" />
       </g>
       <g className="sk-ln sk-pkline">
@@ -328,24 +333,27 @@ export function BrainVisual() {
       <circle r="4" className="sk-tok">
         <animateMotion dur="3.6s" repeatCount="indefinite" path="M185,70 V140 M185,168 V196" />
       </circle>
-      <T x={185} y={40} a="middle" k="ink" s={12} w={700}>“WHAT DID I SHIP AT</T>
-      <T x={185} y={56} a="middle" k="ink" s={12} w={700}>BIOMARIN?”</T>
+      <T x={185} y={40} a="middle" k="ink" s={12} w={700}>“WHAT IS PHARMA TRYING</T>
+      <T x={185} y={56} a="middle" k="ink" s={12} w={700}>TO SOLVE WITH AI?”</T>
       {["VECTOR", "KEYWORD", "GRAPH"].map((t, i) => (
         <T key={t} x={60 + i * 125} y={104} a="middle" k="ink">
           {t}
         </T>
       ))}
       <T x={185} y={158} a="middle" k="ink" w={700}>RERANK</T>
-      {passages.map(([p, sc, top], i) => (
+      {passages.map(([p, sc, src, top], i) => (
         <g key={p}>
+          <T x={96} y={218 + i * 40} k={top ? "pk" : undefined}>{src}</T>
           <T x={34} y={218 + i * 40} k={top ? "pk" : "ink"} w={700}>
             [{p}]
           </T>
           <T x={64} y={218 + i * 40} k={top ? "pk" : undefined}>{sc}</T>
         </g>
       ))}
-      <T x={36} y={354} k="ink">CUT THE SCORECARD BUILD 85%,</T>
-      <T x={36} y={369} k="ink">AUTOMATED END TO END. [P1]</T>
+      <T x={36} y={354} k="ink">FASTER TRIALS, SILOED DATA,</T>
+      <T x={36} y={369} k="ink">AI THEY CAN VALIDATE. [P1–P45]</T>
+      <T x={36} y={386}>30 JDS · 5 PAPERS · 10 EXPERTS</T>
+      <T x={350} y={324} a="end">+42 MORE</T>
       <T x={336} y={386} a="end" k="pk" w={700}>✓ VERIFIED</T>
       <T x={185} y={412} a="middle">SERVED TO CLAUDE OVER MCP</T>
       </g>

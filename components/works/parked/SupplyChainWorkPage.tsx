@@ -4,7 +4,8 @@
    longer links here. Content is still in data/works.ts under "biomarin".
 
    To restore: move this file back to app/works/<slug>/page.tsx (a route
-   needs that exact path and name) and give a card `href: "/works/<slug>"`. */
+   needs that exact path and name) and give a card `href: "/works/<slug>"`.
+   Not "biomarin": /works/biomarin is now the scorecard whiteboard. */
 
 import type { Metadata } from "next";
 import WorkPage from "@/components/works/WorkPage";
