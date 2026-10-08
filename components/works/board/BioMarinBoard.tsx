@@ -240,6 +240,8 @@ export default function BioMarinBoard() {
     const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
     const frame = () => {
+      /* a hidden tab can report no height yet; 0 / 0 would make p NaN. resize runs this again */
+      if (!window.innerHeight) return;
       const N = STOPS.length;
       const p = Math.max(0, Math.min(N - 1, (window.scrollY - tour.offsetTop) / (PER * window.innerHeight)));
       const k = Math.min(N - 2, Math.floor(p));
@@ -335,9 +337,9 @@ export default function BioMarinBoard() {
               <div className="wb-k" style={{ color: "#8a7a2a" }}>
                 The ask
               </div>
-              <div style={{ fontSize: 33, fontWeight: 700, lineHeight: 1.22, marginTop: 12 }}>
-                Can every number on the scorecard arrive with its context, its likely cause and an owner, early enough to prevent the miss
-                instead of just reporting it?
+              <div style={{ fontSize: 33, fontWeight: 700, lineHeight: 1.22, marginTop: 12, fontStyle: "italic" }}>
+                &ldquo;Can every number on the scorecard arrive with its context, its likely cause and an owner, early enough to prevent the miss
+                instead of just reporting it?&rdquo;
               </div>
             </div>
             <p style={{ position: "absolute", left: 66, top: 448, width: 650, fontSize: 21, lineHeight: 1.45, color: "var(--mute)" }}>

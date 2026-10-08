@@ -5,9 +5,21 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { Suspense } from "react";
 import ProgressPage from "@/components/progress/ProgressPage";
 
+const description = "Live progress on what Frank Fu is building, updated as the work happens.";
+
+/* openGraph replaces the layout's rather than merging with it, so the whole
+   object is restated here. */
 export const metadata: Metadata = {
-  title: "Frank Fu — Progress",
-  description: "Live progress on what Frank Fu is building, updated as the work happens."
+  title: "Live projects",
+  description,
+  openGraph: {
+    type: "website",
+    siteName: "Frank Fu",
+    url: "/progress",
+    title: "Live projects · Frank Fu",
+    description,
+    images: [{ url: "/og/progress.png", width: 1200, height: 630, alt: "Live projects · Frank Fu" }]
+  }
 };
 
 /* Everything below needs the ?p= search param, which under a static export

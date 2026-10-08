@@ -1,4 +1,5 @@
 import SmartText from "../SmartText";
+import ContactPortrait from "../ContactPortrait";
 
 /* §11 contact + footer. Footer links are Type B (§7): present at rest,
    wiping away on hover. Navigation gains an underline, content loses one. */
@@ -12,16 +13,23 @@ const LINKS = [
 export default function Contact() {
   return (
     <section className="contact-section" id="contact">
-      <div className="contact-section__head">
-        <SmartText className="small index">06 — CONTACT</SmartText>
-        <SmartText className="small">OPEN TO JAN 2027 ROLES</SmartText>
+      {/* The stage holds everything above the footer rule, so the portrait
+          can stand on that rule: its bottom edge is the stage's bottom. */}
+      <div className="contact-section__stage">
+        <div className="contact-section__head">
+          <SmartText className="small index">06 — CONTACT</SmartText>
+          <SmartText className="small">OPEN TO JAN 2027 ROLES</SmartText>
+        </div>
+
+        <SmartText className="super-small contact-section__big">SAY HELLO</SmartText>
+
+        <a className="contact-section__email" href="mailto:frankfu1747@gmail.com">
+          frankfu1747@gmail.com
+        </a>
+
+        {/* a face beside "say hello", sized so it never covers the type */}
+        <ContactPortrait />
       </div>
-
-      <SmartText className="super-small contact-section__big">SAY HELLO</SmartText>
-
-      <a className="contact-section__email" href="mailto:frankfu1747@gmail.com">
-        frankfu1747@gmail.com
-      </a>
 
       <footer className="foot">
         <span className="foot__group">

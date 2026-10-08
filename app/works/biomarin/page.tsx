@@ -5,7 +5,7 @@ import Cursor from "@/components/Cursor";
 import BioMarinBoard from "@/components/works/board/BioMarinBoard";
 
 export const metadata: Metadata = {
-  title: "Frank Fu — BioMarin",
+  title: "BioMarin",
   description:
     "From processing to adaptive learning: an automated operations scorecard with a root-cause agent team and proactive signals to owners."
 };

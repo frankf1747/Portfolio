@@ -24,10 +24,30 @@ const body = Archivo({
   variable: "--font-body"
 });
 
+/* Tab titles: the page first, the name last. A tab truncates from the right,
+   so the word that tells two tabs apart has to lead; "· Frank Fu" follows
+   when there is room. Sub-pages give only their own name (the template adds
+   the rest); the homepage and the invite paths, which set no title, get the
+   default. */
+const description =
+  "Frank Fu works at both ends of the same job: scoping a fuzzy problem, finding what is causing it, then building the thing that fixes it — and measuring whether people keep using it.";
+
+/* Link previews (LinkedIn, Slack, iMessage) read Open Graph tags from the raw
+   HTML, never from what the client renders — so they live here, and the card
+   images are static PNGs in public/og/ (1200×630, LinkedIn's 1.91:1). */
 export const metadata: Metadata = {
-  title: "Frank Fu - A Data/Product Guy",
-  description:
-    "Frank Fu works at both ends of the same job: scoping a fuzzy problem, finding what is causing it, then building the thing that fixes it — and measuring whether people keep using it."
+  metadataBase: new URL("https://frankfu.me"),
+  title: { default: "Frank Fu · Data & Product", template: "%s · Frank Fu" },
+  description,
+  openGraph: {
+    type: "website",
+    siteName: "Frank Fu",
+    url: "/",
+    title: "Frank Fu · Data & Product",
+    description,
+    images: [{ url: "/og/home.png", width: 1200, height: 630, alt: "Frank Fu · Data & Product" }]
+  },
+  twitter: { card: "summary_large_image" }
 };
 
 export const viewport: Viewport = {

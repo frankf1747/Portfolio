@@ -14,7 +14,7 @@ import { getWork } from "@/data/works";
 const work = getWork("biomarin")!;
 
 export const metadata: Metadata = {
-  title: `Frank Fu — ${work.client}`,
+  title: work.client,
   description: work.thesis
 };
 
