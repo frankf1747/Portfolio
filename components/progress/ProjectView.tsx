@@ -93,7 +93,7 @@ function Detail({ detail, now }: { detail: ProjectDetail; now: Date }) {
             <span className="pg-chip">{projectStatusLabel(project.status)}</span>
             <span>UPDATED {relativeTime(project.updated_at, now).toUpperCase()}</span>
             {project.target_date && <span>TARGET {project.target_date}</span>}
-            {project.repo_url && (
+            {project.repo_url?.startsWith("https://") && (
               <a className="link-b" href={project.repo_url} target="_blank" rel="noreferrer">
                 REPO ↗
               </a>

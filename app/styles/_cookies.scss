@@ -1,0 +1,402 @@
+@use "sketch" as *;
+
+/* ============================================================
+   COOKIE BANNER — a consent banner, taken literally. Behaviour in
+   components/CookieBanner.tsx.
+
+   The timeline, in ms from the click:
+     ACCEPT   0–900 cookie flies to the middle, spinning and growing
+              1100 a bite comes out of it; crumbs fall
+              2700 it fades; 3000 the banner folds away
+     DECLINE  0–250 the bin pops up; 150–400 its lid opens
+              250–1000 the cookie is lobbed in
+              1050 the lid shuts; the bin rocks
+              2400 banner and bin fold away
+   ============================================================ */
+
+.ck {
+  @include sketch-edge(wob2, 1.5px, 10rem);
+
+  position: fixed;
+  left: 24rem;
+  bottom: 24rem;
+  /* over the page, the dog (900) and the live dot (950); under the cursor */
+  z-index: 960;
+  width: 380rem;
+  padding: 20rem 22rem 18rem;
+  background: var(--paper);
+  color: var(--ink);
+  animation: ck-in 0.6s var(--ease) both;
+
+  &.is-yes {
+    animation: ck-out 0.6s var(--ease) 3000ms both;
+  }
+
+  &.is-no {
+    animation: ck-out 0.6s var(--ease) 2400ms both;
+  }
+}
+
+.ck__row {
+  display: flex;
+  gap: 16rem;
+  align-items: flex-start;
+}
+
+.ck__icon {
+  flex: none;
+  width: 44rem;
+  height: 44rem;
+  transition: opacity 0.15s;
+
+  .is-yes &,
+  .is-no & {
+    opacity: 0;
+  }
+}
+
+.ck__t {
+  margin: 0;
+  min-height: 3.9em;
+  font-size: 17rem;
+  line-height: 1.3;
+  text-wrap: pretty;
+
+  b {
+    font-weight: 700;
+  }
+}
+
+.ck__btns {
+  display: flex;
+  gap: 10rem;
+  margin-top: 14rem;
+  padding-left: 60rem;
+}
+
+.ck__btn {
+  padding: 9rem 16rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 99rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+
+  &.is-yes {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  &:not(.is-yes):hover,
+  &:not(.is-yes):focus-visible {
+    border-color: var(--ink);
+    background: var(--ink);
+  }
+}
+
+/* ---------- the drawings ---------- */
+
+.ck svg,
+.ck-fly svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: url(#wobS);
+}
+
+.ck-dough {
+  fill: #e8c88e;
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+
+.ck-chips path {
+  fill: var(--ink);
+}
+
+.ck__bin {
+  position: absolute;
+  right: 30rem;
+  bottom: calc(100% + 6rem);
+  width: 72rem;
+  height: 90rem;
+  opacity: 0;
+  pointer-events: none;
+
+  svg {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .is-no & {
+    transform-origin: 50% 100%;
+    animation:
+      ck-bin-in 0.25s var(--ease) both,
+      ck-bin-rock 0.45s ease-in-out 1150ms forwards;
+  }
+}
+
+/* the lid hinges at its left end */
+.ck-lid {
+  transform-box: view-box;
+  transform-origin: 6px 23px;
+
+  .is-no & {
+    animation: ck-lid 1.25s var(--ease) 150ms both;
+  }
+}
+
+/* ---------- the flight ----------
+   Three nested spans so each axis gets its own easing: x is steady, y
+   rises then drops (a throw), and the innermost spins and scales. */
+
+.ck-fly {
+  position: fixed;
+  z-index: 970;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.ck-fly__x,
+.ck-fly__y,
+.ck-fly__spin {
+  position: absolute;
+  inset: 0;
+}
+
+.ck-fly__x {
+  animation: ck-x var(--fly) linear both;
+}
+
+.ck-fly__y {
+  animation: ck-y var(--fly) both;
+}
+
+.ck-fly__spin {
+  animation: ck-spin var(--fly) var(--ease) both;
+}
+
+.ck-fly.is-no {
+  /* in the bin: gone the moment it drops past the rim */
+  animation: ck-into calc(var(--fly) + 250ms) both;
+
+  .ck-fly__x,
+  .ck-fly__y,
+  .ck-fly__spin {
+    animation-delay: 250ms;
+  }
+}
+
+.ck-fly.is-yes {
+  animation: ck-eaten 0.5s var(--ease) 2700ms both;
+}
+
+.ck-bite {
+  transform-box: fill-box;
+  transform-origin: 70% 30%;
+  scale: 0;
+
+  .is-yes & {
+    animation: ck-bite 0.16s ease-out 1100ms both;
+  }
+}
+
+.ck-crumbs i {
+  position: absolute;
+  top: 18%;
+  right: 12%;
+  width: 7%;
+  aspect-ratio: 1;
+  border-radius: 30%;
+  background: #c99b5a;
+  outline: 1px solid var(--ink);
+  opacity: 0;
+  animation: ck-crumb 0.9s cubic-bezier(0.4, 0, 0.9, 0.5) 1150ms forwards;
+
+  &:nth-child(2) {
+    --cx: 30%;
+    width: 5%;
+    animation-delay: 1180ms;
+  }
+
+  &:nth-child(3) {
+    --cx: -40%;
+    width: 6%;
+    animation-delay: 1210ms;
+  }
+
+  &:nth-child(4) {
+    --cx: 70%;
+    width: 4%;
+    animation-delay: 1240ms;
+  }
+
+  &:nth-child(5) {
+    --cx: -10%;
+    width: 5%;
+    animation-delay: 1270ms;
+  }
+}
+
+@keyframes ck-in {
+  from {
+    opacity: 0;
+    translate: 0 30rem;
+  }
+}
+
+@keyframes ck-out {
+  to {
+    opacity: 0;
+    translate: 0 30rem;
+  }
+}
+
+@keyframes ck-x {
+  to {
+    translate: var(--dx) 0;
+  }
+}
+
+@keyframes ck-y {
+  0% {
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
+  }
+  45% {
+    translate: 0 var(--peak);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0.3);
+  }
+  100% {
+    translate: 0 var(--dy);
+  }
+}
+
+@keyframes ck-spin {
+  /* two whole turns, so it lands upright with the bite top-right */
+  to {
+    rotate: 720deg;
+    scale: var(--s);
+  }
+}
+
+@keyframes ck-into {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ck-eaten {
+  to {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+@keyframes ck-bite {
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes ck-crumb {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: var(--cx, 0) 900%;
+  }
+}
+
+@keyframes ck-bin-in {
+  from {
+    opacity: 0;
+    translate: 0 16rem;
+    scale: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* closes with a little slam, then the bin rocks on its base */
+@keyframes ck-bin-rock {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  25% {
+    rotate: -7deg;
+  }
+  55% {
+    rotate: 5deg;
+  }
+  80% {
+    rotate: -2deg;
+  }
+}
+
+@keyframes ck-lid {
+  0% {
+    rotate: 0deg;
+  }
+  20%,
+  70% {
+    rotate: -38deg;
+  }
+  82% {
+    rotate: 4deg;
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+
+@media (max-width: 720px) {
+  .ck {
+    left: 16rem;
+    right: 16rem;
+    bottom: 16rem;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck,
+  .ck__bin,
+  .ck-lid {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .ck {
+    display: none;
+  }
+}

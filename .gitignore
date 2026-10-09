@@ -10,3 +10,4 @@ next-env.d.ts
 .next-preview/
 tsconfig.tsbuildinfo
 .env*.local
+.wrangler/

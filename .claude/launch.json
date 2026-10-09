@@ -12,6 +12,19 @@
       "autoPort": true
     },
     {
+      "name": "portfolio-prod",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "dev",
+        "--port",
+        "8787",
+        "--compatibility-date",
+        "2026-05-03"
+      ],
+      "port": 8787
+    },
+    {
       "name": "moobox-3d",
       "runtimeExecutable": "python3",
       "runtimeArgs": [

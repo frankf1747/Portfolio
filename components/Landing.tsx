@@ -13,6 +13,7 @@ import Contact from "@/components/sections/Contact";
 import SketchFilters from "@/components/SketchFilters";
 import Dog from "@/components/Dog";
 import LiveDot from "@/components/LiveDot";
+import CookieBanner from "@/components/CookieBanner";
 
 /* The whole site, as one composition. It lives here rather than in
    app/page.tsx because it is rendered at more than one path: "/" and each
@@ -32,6 +33,8 @@ export default function Landing() {
       <Dog />
       {/* the site-wide way in to /progress — see LiveDot.tsx */}
       <LiveDot />
+      {/* a consent banner, taken literally — see CookieBanner.tsx */}
+      <CookieBanner />
 
       <main>
         <Hero />
