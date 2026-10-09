@@ -537,7 +537,30 @@ html[data-touch="false"] .cards:has(.card:hover) .card__pos:not(:has(.card:hover
     height: calc(100% - 110rem);
     width: auto;
     aspect-ratio: 826 / 1100;
-    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+
+    /* the wrapper takes the hover; the images take nothing, so there is
+       no image under the pointer to save, copy or drag */
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    /* the straight face, on hover */
+    .is-serious {
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+
+    &:hover .is-serious {
+      opacity: 1;
+    }
   }
 
   &__head {

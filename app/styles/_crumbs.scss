@@ -7,10 +7,13 @@
    reads at a glance.
    ============================================================ */
 
+/* wraps rather than squeezing: on a narrow window the link pills drop
+   under the trail instead of folding it onto three lines */
 .crumbs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 20rem;
+  gap: 12rem 20rem;
 }
 
 /* ← BACK — a quiet outlined pill in the trail's mono type, so it reads as
@@ -57,6 +60,43 @@
   .crumbs__back,
   .crumbs__back span {
     transition: none;
+  }
+}
+
+/* The page's links out, after the trail: outlined pills in the mark,
+   set off from the trail by a short rule. Fill on hover like ← BACK. */
+.crumbs__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 18rem;
+  padding-left: 18rem;
+  border-left: 1.5px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6rem;
+    padding: 7rem 12rem;
+    border: 1.5px solid var(--mark);
+    border-radius: 99rem;
+    background: var(--paper);
+    color: var(--mark);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mark);
+      color: #fff;
+    }
   }
 }
 

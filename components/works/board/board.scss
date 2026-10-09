@@ -69,42 +69,6 @@
   color: var(--mute);
 }
 
-/* outward links after the breadcrumb: mono like the trail, set apart by a
-   rule, each opening in a new tab */
-.wb__links {
-  display: inline-flex;
-  align-items: center;
-  gap: 18rem;
-  padding-left: 18rem;
-  border-left: 1.5px solid var(--line);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 14rem;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: 6rem;
-    padding: 7rem 12rem;
-    border: 1.5px solid var(--accent);
-    border-radius: 99rem;
-    background: var(--paper);
-    color: var(--accent);
-    text-decoration: none;
-    transition:
-      background-color 0.2s,
-      color 0.2s;
-
-    &:hover,
-    &:focus-visible {
-      background: var(--accent);
-      color: #fff;
-    }
-  }
-}
-
 /* ← → drawn as keyboard keys: a raised cap with a darker bottom edge */
 .wb__key {
   display: inline-grid;

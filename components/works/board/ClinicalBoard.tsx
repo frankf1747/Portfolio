@@ -3,6 +3,7 @@
 import "./clinical.scss";
 
 import { useState } from "react";
+import { progressPage } from "@/data/project-pages";
 import Board, { Region, WireDefs, route, withTab, type Rect, type Stop } from "./Board";
 import snapshot from "@/data/clinical-snapshot.json";
 
@@ -348,7 +349,8 @@ export default function ClinicalBoard() {
       crumb="CLINICAL TRIAL RISK"
       links={[
         { label: "Code", href: REPO },
-        { label: "Live lookup", href: LIVE }
+        { label: "Live lookup", href: LIVE },
+        { label: "Progress", href: progressPage("clinical-trial-risk") }
       ]}
       after={
         <>

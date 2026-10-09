@@ -3,7 +3,7 @@
 import "./board.scss";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import Breadcrumbs, { type CrumbLink } from "@/components/Breadcrumbs";
 
 /* §13 — a project told as one whiteboard.
 
@@ -156,8 +156,8 @@ export default function Board({
   stops: Stop[];
   /* the last breadcrumb step: the project's name */
   crumb: string;
-  /* outward links after the trail: the code, a live demo */
-  links?: { label: string; href: string }[];
+  /* links after the trail: the code, a live demo, the progress page */
+  links?: CrumbLink[];
   /* the notes under the board */
   after: ReactNode;
   /* the board's content, told which regions are dimmed at this stop */
@@ -272,17 +272,7 @@ export default function Board({
           <div className="wb__crumb">
             <Breadcrumbs
               trail={[{ label: "FRANK FU", href: "/" }, { label: "PROJECTS", href: "/#work" }, { label: crumb }]}
-              after={
-                links.length ? (
-                  <span className="wb__links">
-                    {links.map((l) => (
-                      <a key={l.href} href={l.href} target="_blank" rel="noreferrer noopener">
-                        {l.label} <span aria-hidden="true">↗</span>
-                      </a>
-                    ))}
-                  </span>
-                ) : undefined
-              }
+              links={links}
             />
             {/* The way through the board is the arrow keys, and most readers
                 won't guess it: → is drawn as a key, in the mark, and pulses

@@ -11,16 +11,20 @@ import BackLink from "./BackLink";
    step, which is the pattern screen readers announce as a breadcrumb. The
    separators are drawn in CSS so they are not read out.
 
-   `after` is for anything that belongs on the same row after the trail —
-   the progress page's live badge.
+   `links` are the page's way out sideways, drawn as pills after the trail:
+   a project's code and live demo (new tab, ↗), or the same project's other
+   page on this site — its write-up and its live progress point at each
+   other (same tab, →). `after` is anything else that belongs on the row,
+   like the progress page's live badge.
 
    Every trail opens with the same ← BACK pill (BackLink), so getting out of
    a sub-page works the same way everywhere. Without history to return to,
    it goes one step up the trail: the last step that has a link. */
 
 export type Crumb = { label: string; href?: string };
+export type CrumbLink = { label: string; href: string };
 
-export default function Breadcrumbs({ trail, after }: { trail: Crumb[]; after?: ReactNode }) {
+export default function Breadcrumbs({ trail, links = [], after }: { trail: Crumb[]; links?: CrumbLink[]; after?: ReactNode }) {
   const up = [...trail].reverse().find((c, i) => i > 0 && c.href)?.href ?? "/";
   return (
     <div className="crumbs">
@@ -43,6 +47,21 @@ export default function Breadcrumbs({ trail, after }: { trail: Crumb[]; after?: 
           })}
         </ol>
       </nav>
+      {links.length > 0 && (
+        <span className="crumbs__links">
+          {links.map((l) =>
+            l.href.startsWith("/") ? (
+              <Link key={l.href} href={l.href}>
+                {l.label} <span aria-hidden="true">→</span>
+              </Link>
+            ) : (
+              <a key={l.href} href={l.href} target="_blank" rel="noreferrer noopener">
+                {l.label} <span aria-hidden="true">↗</span>
+              </a>
+            )
+          )}
+        </span>
+      )}
       {after}
     </div>
   );

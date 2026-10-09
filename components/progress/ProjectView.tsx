@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useCallback, useEffect } from "react";
 import { localDay, percentComplete, projectStatusLabel, relativeTime } from "@/lib/progress/derive";
+import { PROJECT_PAGES } from "@/data/project-pages";
 import { fetchProject } from "@/lib/progress/load";
 import type { ProjectDetail } from "@/lib/progress/types";
 import { useLive, useNow } from "@/lib/progress/useLive";
@@ -22,12 +23,15 @@ export default function ProjectView({ slug }: { slug: string }) {
   const load = useCallback((db: SupabaseClient) => fetchProject(db, slug), [slug]);
   const { state, retry, live } = useLive(load, `project:${slug}`);
   const now = useNow();
+  /* the same project's write-up, when it has one */
+  const page = PROJECT_PAGES[slug];
 
   return (
     <>
       <Crumb
         state={state}
         live={live}
+        links={page ? [{ label: "Project page", href: page }] : undefined}
         trail={[
           { label: "FRANK FU", href: "/" },
           { label: "LIVE PROJECTS", href: "/progress" },

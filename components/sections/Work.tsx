@@ -131,6 +131,34 @@ const CARDS: Card[] = [
   }
 ];
 
+/* Under the bento: every other project, as quick links only — so the
+   whole body of work is reachable from the homepage before each one has
+   a card and a page of its own. A row rests as one line — name, stack and
+   links: its live progress (same tab, →) and its code (↗) — and unfolds
+   the one line on what it does on hover.
+   When a project gets a card, it moves up and out of this list. */
+type More = { n: string; name: string; line: string; tags: string; links: { label: string; href: string }[] };
+
+const MORE: More[] = [
+  {
+    n: "07",
+    name: "UGC Trend Analyzer",
+    line: "Reads ~10,000 review sentences and ranks what a brand should fix by how much it drags the rating.",
+    tags: "NLP · DEBERTA",
+    links: [
+      { label: "Progress", href: "/progress?p=ugc-trend-analyzer" },
+      { label: "Code", href: "https://github.com/frankf1747/UGC_Trend_Analyzer-05.25" }
+    ]
+  },
+  {
+    n: "08",
+    name: "Chicago Crime & Housing",
+    line: "Joins Chicago crime, ZIP boundaries, Zillow home values and Census population into one ZIP‑level dataset.",
+    tags: "GCP · SPARK · SNOWFLAKE",
+    links: [{ label: "Code", href: "https://github.com/frankf1747/GCP_Snowflake_Data_Pipeline-05.26" }]
+  }
+];
+
 export default function Work() {
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
@@ -255,6 +283,35 @@ export default function Work() {
           );
         })}
       </ul>
+
+      <div className="more">
+        <h3 className="more__head">MORE PROJECTS</h3>
+        <ul className="more__list" role="list">
+          {MORE.map((p) => (
+            <li key={p.n} className="more__row">
+              <span className="more__n">({p.n})</span>
+              <span className="more__name">{p.name}</span>
+              <span className="more__tags">{p.tags}</span>
+              <span className="more__sum">
+                <span className="more__line">{p.line}</span>
+              </span>
+              <span className="more__links">
+                {p.links.map((l) =>
+                  l.href.startsWith("/") ? (
+                    <Link key={l.href} className="link-b" href={l.href}>
+                      {l.label} <span aria-hidden="true">→</span>
+                    </Link>
+                  ) : (
+                    <a key={l.href} className="link-b" href={l.href} target="_blank" rel="noreferrer noopener">
+                      {l.label} <span aria-hidden="true">↗</span>
+                    </a>
+                  )
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

@@ -11,14 +11,18 @@ import { useEffect, useRef } from "react";
    of the headline's last glyph sets how wide he can be, and the height
    follows from the photo's proportions. When that space gets too narrow
    (a short-wide window, a tablet), he steps down under the headline and
-   stands to the right of the email instead. CSS keeps the phone layout. */
+   stands to the right of the email instead. CSS keeps the phone layout.
+
+   Hover him and the smile drops: a second take from the same shoot, cut
+   and printed through the same pipeline at the same crop, sits on top and
+   shows on hover. The wrapper is what's positioned and measured. */
 
 const RATIO = 826 / 1100;
 const GAP = 40; // design px between the type and the outline
 const MIN_H = 240; // below this he looks like a thumbnail; use the lower slot
 
 export default function ContactPortrait() {
-  const ref = useRef<HTMLImageElement | null>(null);
+  const ref = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
     const img = ref.current;
@@ -84,16 +88,39 @@ export default function ContactPortrait() {
   }, []);
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    /* Not for taking: no right-click menu, no drag-out. The images take no
+       pointer events either (see .contact-section__me), so the browser
+       never offers "Save image" or "Copy image" on them. A determined
+       visitor can still pull the file from devtools; this stops the casual
+       copy. */
+    <span
       ref={ref}
       className="contact-section__me"
-      src="/assets/portrait/frank-halftone.webp"
-      alt="Portrait of Frank Fu"
-      width={826}
-      height={1100}
-      loading="lazy"
-      decoding="async"
-    />
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/portrait/frank-halftone.webp"
+        alt="Portrait of Frank Fu"
+        width={826}
+        height={1100}
+        draggable={false}
+        loading="lazy"
+        decoding="async"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="is-serious"
+        src="/assets/portrait/frank-halftone-serious.webp"
+        alt=""
+        aria-hidden="true"
+        width={826}
+        height={1100}
+        draggable={false}
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
   );
 }

@@ -1,4 +1,4 @@
-import Breadcrumbs, { type Crumb as Step } from "../Breadcrumbs";
+import Breadcrumbs, { type Crumb as Step, type CrumbLink } from "../Breadcrumbs";
 import type { LiveState, LiveStatus } from "@/lib/progress/useLive";
 import LiveBadge from "./LiveBadge";
 
@@ -9,15 +9,17 @@ import LiveBadge from "./LiveBadge";
 export default function Crumb<T>({
   state,
   live,
-  trail
+  trail,
+  links
 }: {
   state: LiveState<T>;
   live: LiveStatus;
   trail: Step[];
+  links?: CrumbLink[];
 }) {
   return (
     <div className="pg__crumb">
-      <Breadcrumbs trail={trail} after={<LiveBadge state={state} live={live} />} />
+      <Breadcrumbs trail={trail} links={links} after={<LiveBadge state={state} live={live} />} />
     </div>
   );
 }
