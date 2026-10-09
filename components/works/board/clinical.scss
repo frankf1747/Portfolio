@@ -1,0 +1,520 @@
+/* ============================================================
+   CLINICAL TRIAL RISK — the board's own pieces (ClinicalBoard.tsx):
+   the ETL drawn as pipes and stations, the ROC curve, the trial scatter
+   and its reasons panel. Board px, never rem; see board.scss.
+   ============================================================ */
+
+/* ---------- the one-line message each region leads with ---------- */
+
+.ct-head {
+  position: absolute;
+  left: 56px;
+  top: 44px;
+  margin: 0;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.ct-lede {
+  margin: 26px 0 0;
+  font-size: 40px;
+  line-height: 1.42;
+  color: var(--mute);
+  max-width: 62ch;
+
+  b {
+    color: var(--ink);
+  }
+}
+
+.ct-msgs {
+  position: absolute;
+  left: 2000px;
+  right: 56px;
+  top: 64px;
+  display: grid;
+  gap: 18px;
+}
+
+.ct-msg {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 18px 26px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+
+  > span {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font: 500 24px/1 var(--font-mono), ui-monospace, monospace;
+  }
+
+  b {
+    display: block;
+    font: 500 20px/1.2 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  p {
+    margin-top: 6px;
+    font-size: 36px;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+}
+
+/* ---------- the ETL: zones, pipes, stations ---------- */
+
+.ct-zone {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+
+  b {
+    font: 500 24px/1.2 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  span {
+    font-size: 20px;
+    color: var(--mute);
+  }
+}
+
+.ct-pipe {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  &.is-faers {
+    stroke: var(--accent);
+    stroke-width: 40;
+  }
+
+  &.is-reg {
+    stroke: #8c86b3;
+    stroke-width: 40;
+  }
+
+  &.is-trunk {
+    stroke: var(--ink);
+    stroke-width: 52;
+  }
+}
+
+/* the data in the pipe: white dashes travelling toward the serve end */
+.ct-flow {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 16 30;
+  opacity: 0.85;
+  animation: ct-flow 1.4s linear infinite;
+}
+
+@keyframes ct-flow {
+  to {
+    stroke-dashoffset: -46;
+  }
+}
+
+.ct-stop {
+  position: absolute;
+  z-index: 2;
+  width: 50px;
+  height: 50px;
+  border: 7px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  translate: -50% -50%;
+
+  &.is-key {
+    width: 66px;
+    height: 66px;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 12px rgb(242 36 122 / 0.2);
+  }
+}
+
+/* a station's label: centred on its stop, above the pipe by default */
+.ct-label {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 340px;
+  /* A fixed height, laid out from the top: labels above the pipe are
+     anchored by their bottom edge, so a one-line note would otherwise drop
+     its name below its neighbours'. Tall enough for a two-line note. */
+  height: 140px;
+  align-content: start;
+  translate: -50% calc(-100% - 42px);
+  text-align: center;
+
+  &.is-below {
+    height: auto;
+    translate: -50% 42px;
+  }
+
+  /* beside its stop, up and to the right: the merging pipes fill the
+     space above and below the join */
+  &.is-right {
+    height: auto;
+    justify-items: start;
+    translate: 46px calc(-100% - 36px);
+    text-align: left;
+  }
+
+  &.is-key {
+    width: 360px;
+
+    b {
+      color: var(--accent);
+    }
+  }
+
+  b {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  > span:last-child {
+    font-size: 23px;
+    line-height: 1.3;
+    color: var(--mute);
+    text-wrap: balance;
+  }
+}
+
+.ct-tool {
+  padding: 6px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: #fff;
+  font: 500 17px/1 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* volumes riding on the pipe */
+.ct-vol {
+  position: absolute;
+  z-index: 1;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: var(--ink);
+  color: #fff;
+  font: 500 21px/1 var(--font-mono), ui-monospace, monospace;
+  white-space: nowrap;
+  translate: -50% -50%;
+
+  &.is-pk {
+    background: var(--accent);
+  }
+}
+
+/* ---------- charts ---------- */
+
+.ct-chart {
+  display: block;
+  overflow: visible;
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+}
+
+.ct-plot {
+  fill: #fff;
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.ct-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.ct-tick {
+  font: 400 19px var(--font-mono), ui-monospace, monospace;
+  fill: var(--mute);
+}
+
+.ct-axis {
+  font-size: 23px;
+  font-weight: 500;
+  fill: var(--ink);
+}
+
+.ct-area {
+  fill: rgb(242 36 122 / 0.12);
+}
+
+.ct-curve {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.ct-chance {
+  stroke: var(--mute);
+  stroke-width: 2;
+  stroke-dasharray: 8 8;
+}
+
+.ct-chanceT {
+  font: 400 18px var(--font-mono), ui-monospace, monospace;
+  fill: var(--mute);
+}
+
+.ct-aucT {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  fill: var(--accent);
+}
+
+.ct-pt {
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+
+.ct-lead {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.ct-ptT {
+  font-size: 21px;
+  font-weight: 500;
+  fill: var(--ink);
+}
+
+.ct-explain {
+  position: absolute;
+  left: 830px;
+  right: 56px;
+  top: 210px;
+  display: grid;
+  gap: 30px;
+
+  b {
+    display: block;
+    font: 500 16px/1.2 var(--font-mono), ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  p {
+    margin-top: 8px;
+    font-size: 28px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+}
+
+/* ---------- the trials ---------- */
+
+.ct-trials {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.ct-zoneR {
+  fill: rgb(242 36 122 / 0.06);
+}
+
+.ct-cut {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  opacity: 0.5;
+}
+
+.ct-q {
+  font: 500 19px var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  fill: var(--mute);
+  /* a paper halo, so the notes stay legible where they cross the dots */
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 6px;
+  stroke-linejoin: round;
+
+  &.is-pk {
+    fill: var(--accent);
+  }
+}
+
+.ct-dot {
+  fill: var(--ink);
+  opacity: 0.16;
+}
+
+.ct-trial {
+  cursor: pointer;
+
+  circle {
+    fill: #fff;
+    stroke: var(--ink);
+    stroke-width: 3;
+    transition: r 0.2s;
+  }
+
+  text {
+    font: 500 16px var(--font-mono), ui-monospace, monospace;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+
+  &:hover circle {
+    stroke: var(--accent);
+  }
+
+  &.is-on circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+
+  &.is-on text {
+    fill: #fff;
+  }
+}
+
+.ct-why {
+  padding: 28px 30px;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+
+  h4 {
+    margin: 10px 0 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+}
+
+.ct-sponsor {
+  margin-top: 8px !important;
+  font-size: 18px;
+  color: var(--mute);
+}
+
+.ct-scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 24px;
+
+  b {
+    display: block;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  div:first-child b {
+    color: var(--accent);
+  }
+
+  span {
+    display: block;
+    margin-top: 6px;
+    font-size: 16px;
+    line-height: 1.3;
+    color: var(--mute);
+  }
+}
+
+/* SHAP reasons as a diverging bar from a centre line: raises risk to the
+   right in the mark, lowers it to the left in ink */
+.ct-reasons {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+
+  > div {
+    display: grid;
+    grid-template-columns: 1fr 200px 64px;
+    gap: 14px;
+    align-items: center;
+  }
+}
+
+.ct-rl {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.ct-bar {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(var(--line), var(--line)) 50% 0 / 2px 100% no-repeat;
+
+  i {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    border-radius: 3px;
+  }
+
+  .is-up & i {
+    left: 50%;
+    background: var(--accent);
+  }
+
+  .is-down & i {
+    right: 50%;
+    background: var(--ink);
+  }
+}
+
+.ct-dir {
+  font: 500 13px/1 var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+
+  .is-up & {
+    color: var(--accent);
+  }
+}
+
+.ct-note {
+  margin-top: 22px !important;
+  font-size: 15px;
+  color: var(--mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-flow {
+    animation: none;
+  }
+}

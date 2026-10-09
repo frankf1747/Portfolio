@@ -1,4 +1,4 @@
-import { ogCard } from "@/lib/og-card";
+import { ogCard, themeAt } from "@/lib/og-card";
 import { progressClient } from "@/lib/progress/client";
 import type { TrackedProject } from "@/lib/progress/types";
 
@@ -10,10 +10,17 @@ export const dynamicParams = false;
 
 type Card = Pick<TrackedProject, "slug" | "name" | "description">;
 
+/* Oldest first, so each project's colour is fixed by when it was created and
+   a new project takes the next colour without reshuffling the others. */
+
 async function projects(): Promise<Card[]> {
   const db = progressClient();
   if (!db) return [];
-  const { data, error } = await db.from("projects").select("slug,name,description");
+  const { data, error } = await db
+    .from("projects")
+    .select("slug,name,description")
+    .order("created_at", { ascending: true })
+    .order("slug");
   if (error) throw new Error(error.message);
   return data ?? [];
 }
@@ -24,7 +31,9 @@ export async function generateStaticParams() {
 
 export async function GET(_req: Request, { params }: { params: { file: string } }) {
   const slug = params.file.replace(/\.png$/, "");
-  const p = (await projects()).find((x) => x.slug === slug);
-  if (!p) return new Response("Not found", { status: 404 });
-  return ogCard({ kicker: "LIVE PROJECT", headline: p.name, body: p.description });
+  const all = await projects();
+  const i = all.findIndex((x) => x.slug === slug);
+  if (i < 0) return new Response("Not found", { status: 404 });
+  const p = all[i];
+  return ogCard({ seed: p.slug, headline: p.name, body: p.description, theme: themeAt(i) });
 }

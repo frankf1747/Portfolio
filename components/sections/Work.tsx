@@ -70,7 +70,6 @@ const CARDS: Card[] = [
     col: "1 / 7",
     row: "1",
     visual: <BioVisual />,
-    status: "UPLOADING",
     href: "/works/biomarin",
     big: true
   },
@@ -106,7 +105,7 @@ const CARDS: Card[] = [
     col: "5 / 9",
     row: "2",
     visual: <ClinVisual />,
-    status: "UPLOADING"
+    href: "/works/clinical-trial-risk"
   },
   {
     n: "05",

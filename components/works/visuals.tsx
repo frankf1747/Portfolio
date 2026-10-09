@@ -3,7 +3,8 @@
    weight, and the accent spent on the ONE thing each card is about.
 
    Every figure shown is from the resume (85%, 50K+, ~11% / ~13%, ~600 / 7
-   courses, ~35%, 100GB+ / 50K+ / 0.82). Everything else — row names, IDs,
+   courses, ~35%), except the clinical card, which uses the pipeline repo's
+   own figures (118 GB, 111K trials, AUC 0.71). Everything else — row names, IDs,
    the sample question — is illustrative filler, not a claim.
 
    Drawn as SVG in a viewBox close to the card's own size, so 1 unit ≈ 1px
@@ -264,9 +265,9 @@ export function ClinVisual() {
       ))}
       <T x={256} y={55} k="pk" w={700}>← OPEN FIRST</T>
       <T x={314} y={214} a="middle">ROC</T>
-      <T x={330} y={150} a="middle" k="pk" s={15} w={700}>.82</T>
+      <T x={330} y={150} a="middle" k="pk" s={15} w={700}>.71</T>
       <T x={330} y={164} a="middle">AUC</T>
-      <T x={374} y={22} a="end">100GB+ · 50K+ TRIALS</T>
+      <T x={374} y={22} a="end">118 GB · 111K TRIALS</T>
     </svg>
   );
 }

@@ -1,5 +1,3 @@
-import "./board.scss";
-
 import type { Metadata } from "next";
 import Cursor from "@/components/Cursor";
 import BioMarinBoard from "@/components/works/board/BioMarinBoard";
